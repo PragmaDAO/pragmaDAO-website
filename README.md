@@ -1,2 +1,2 @@
-# pragmaDAO-website
-Landing page for pragmaDAO-website
+# pragmaDAO Website
+Landing page for pragmaDAO Website
