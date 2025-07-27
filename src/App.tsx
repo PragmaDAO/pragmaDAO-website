@@ -317,9 +317,9 @@ const Header: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurre
                     <NavLink onClick={() => setCurrentPage('lessons')}>Lessons</NavLink>
                     <NavLink onClick={() => setCurrentPage('community')}>Community</NavLink>
                 </nav>
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                <a href="https://discord.gg/KspzcBMysa" target="_blank" rel="noopener noreferrer" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     Join Now
-                </button>
+                </a>
             </div>
         </header>
     );
@@ -571,7 +571,7 @@ const Footer: React.FC = () => (
 // --- PAGE COMPONENTS ---
 
 const HomePage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => (
-    <main className="pt-32 flex-grow">
+    <main className="pt-32">
         <Hero setCurrentPage={setCurrentPage} />
         <Features />
         <GetStarted />
@@ -598,7 +598,7 @@ const LessonsPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
     ];
 
     return (
-        <main className="pt-32 pb-20 flex-grow">
+        <main className="pt-32 pb-20">
             <section id="lessons" className="container mx-auto px-6">
                 <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-4">PragmaDAO Lessons</h2>
                 <p className="text-lg md:text-xl text-gray-400 text-center mb-12 max-w-3xl mx-auto">Browse our collection of hands-on lessons to build practical Web3 development skills.</p>
@@ -620,13 +620,13 @@ const CommunityCard: React.FC<CommunityCardProps> = ({ title, description, date,
 );
 
 const CommunityPage: React.FC = () => (
-    <main className="pt-32 pb-20 flex-grow">
+    <main className="pt-32 pb-20">
         <section id="community-hero" className="container mx-auto px-6 text-center">
             <h2 className="text-4xl md:text-5xl font-extrabold mb-4">Join the PragmaDAO Community</h2>
             <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-3xl mx-auto">Connect with thousands of like-minded innovators, builders, and visionaries. Our community is the heart of PragmaDAO.</p>
             <div className="flex justify-center flex-wrap gap-4">
-                <a href="https://discord.gg/jpuZwXNmGh" target="_blank" rel="noopener noreferrer" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg">Join Discord</a>
-                <a href="#" className="bg-sky-400 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg">Follow on Twitter</a>
+                <a href="https://discord.gg/KspzcBMysa" target="_blank" rel="noopener noreferrer" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg">Join Discord</a>
+                <a href="https://x.com/pragma64417" target="_blank" rel="noopener noreferrer" className="bg-sky-400 hover:bg-sky-500 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg">Follow on Twitter</a>
             </div>
         </section>
         <section id="events" className="py-20">
@@ -1013,7 +1013,7 @@ export default function App() {
     };
 
     return (
-        <div className="bg-gray-900 text-white flex flex-col min-h-screen">
+        <div className="bg-gray-900 text-white">
             <GlobalStyles />
             <Header setCurrentPage={setCurrentPage} />
             {renderPage()}
