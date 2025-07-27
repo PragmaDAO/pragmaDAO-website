@@ -1013,10 +1013,12 @@ export default function App() {
     };
 
     return (
-        <div className="bg-gray-900 text-white">
+        <div className="bg-gray-900 text-white min-h-screen flex flex-col">
             <GlobalStyles />
             <Header setCurrentPage={setCurrentPage} />
-            {renderPage()}
+            <div className="flex-grow">
+                {renderPage()}
+            </div>
             <Footer />
         </div>
     );
