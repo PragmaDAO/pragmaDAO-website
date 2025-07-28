@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
 import SolidityEditor from '../components/SolidityEditor';
+import MarkdownLesson from '../components/MarkdownLesson';
+
 import { CompiledOutput, TestCase, AbiItem } from '../types';
 
 const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => {
     const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(null);
     const [testResults, setTestResults] = useState<TestCase[]>([]);
-    const [checkedItems, setCheckedItems] = useState<boolean[]>([false, false, false, false, false, false]);
-    const [activeHint, setActiveHint] = useState<number | null>(null);
-
-    const handleCheckboxClick = (index: number) => {
-        const newCheckedItems = [...checkedItems];
-        newCheckedItems[index] = !newCheckedItems[index];
-        setCheckedItems(newCheckedItems);
-    };
+    
 
     const runTests = () => {
         if (!compiledResult || compiledResult.errors) {
@@ -41,44 +36,15 @@ const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
         ]);
     };
 
-    const instructions = [
-        { text: `Define a contract named <code>MyToken</code>.`, hint: `Just like the last lesson, use the <code>contract</code> keyword.`},
-        { text: `Create a public <code>string</code> variable for the token's <code>name</code>.`, hint: `Example: <code>string public name = "My First Token";</code>`},
-        { text: `Create a public <code>string</code> variable for the token's <code>symbol</code>.`, hint: `Symbols are usually short, like "MFT".`},
-        { text: `Create a public <code>uint8</code> variable for <code>decimals</code> and set it to <code>18</code>.`, hint: `18 is the standard for most ERC20 tokens, as it matches Ether.`},
-        { text: `Create a public <code>uint256</code> for the <code>totalSupply</code>.`, hint: `This will represent the total number of tokens in existence.`},
-        { text: `Create a public <code>mapping</code> called <code>balanceOf</code> to track balances.`, hint: `The mapping should go from an <code>address</code> to a <code>uint256</code>.`}
-    ];
+    
 
     return (
-        <main className="pt-32 pb-20">
+        <main className="pt-32 pb-20 flex-grow">
             <section className="container mx-auto px-6">
                 <button onClick={() => setCurrentPage('lessons')} className="text-indigo-400 hover:text-indigo-300 font-semibold mb-8">&larr; Back to Lessons</button>
                 <div className="lesson-container">
                     <div className="lesson-instructions">
-                        <h2>Lesson 3: ERC20 Token</h2>
-                        <p>The ERC20 standard is the foundation for most cryptocurrencies on Ethereum. In this lesson, you'll build the basic state variables for your own token.</p>
-                        <h3>Instructions</h3>
-                        <ul className="instruction-list">
-                            {instructions.map((item, index) => (
-                                <li key={index}>
-                                    <span className={`instruction-checkbox ${checkedItems[index] ? 'checked' : ''}`} onClick={() => handleCheckboxClick(index)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    </span>
-                                     <div className="flex-1">
-                                        <div className="flex items-center w-full">
-                                            <div className="flex-1" dangerouslySetInnerHTML={{ __html: item.text }} />
-                                            <button onClick={() => setActiveHint(activeHint === index ? null : index)} className="hint-button">Hint</button>
-                                        </div>
-                                        {activeHint === index && (
-                                            <div className="hint-box">
-                                                <p className="text-base" dangerouslySetInnerHTML={{ __html: item.hint }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <MarkdownLesson markdownPath="/lessons/markdown/lesson3.md" />
                     </div>
                     <div className="flex flex-col gap-4">
                         <div className="h-[400px]"><SolidityEditor onCompile={setCompiledResult} initialCode={`// SPDX-License-Identifier: MIT

@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
 import SolidityEditor from '../components/SolidityEditor';
+import MarkdownLesson from '../components/MarkdownLesson';
+
 import { CompiledOutput, TestCase, AbiItem } from '../types';
 
 const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => {
     const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(null);
     const [testResults, setTestResults] = useState<TestCase[]>([]);
-    const [checkedItems, setCheckedItems] = useState<boolean[]>([false, false, false, false]);
-    const [activeHint, setActiveHint] = useState<number | null>(null);
-
-    const handleCheckboxClick = (index: number) => {
-        const newCheckedItems = [...checkedItems];
-        newCheckedItems[index] = !newCheckedItems[index];
-        setCheckedItems(newCheckedItems);
-    };
+    
 
     const runTests = () => {
         if (!compiledResult || compiledResult.errors) {
@@ -37,60 +32,15 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
         ]);
     };
 
-    const instructions = [
-        { text: `Define a contract named <code>VariableTypes</code>.`, hint: `<code>contract VariableTypes {\n    // add your code here\n}</code>`},
-        { text: `Create a public <code>uint</code> variable named <code>myUint</code> and set it to <code>123</code>.`, hint: `<code>uint public myUint = 123;</code>`},
-        { text: `Create a public <code>string</code> variable named <code>myString</code> and set it to <code>"Pragma"</code>.`, hint: `<code>string public myString = "Pragma";</code>`},
-        { text: `Create a public <code>bool</code> variable named <code>myBool</code> and set it to <code>true</code>.`, hint: `<code>bool public myBool = true;</code>`}
-    ];
     
-    const applySyntaxHighlightingToHint = (text: string) => {
-        return text.replace(/<code>(.*?)<\/code>/gs, (match, codeContent) => {
-            const keywords = `\\b(contract|string|public|uint|bool|true|false)\\b`;
-            const comments = `(\\/\\/.*)`;
-            const strings = `(".*?")`;
-            const numbers = `\\b([0-9]+)\\b`;
-            const regex = new RegExp(`(${keywords})|(${comments})|(${strings})|(${numbers})`, 'g');
-            const highlighted = codeContent.replace(regex, (m: string, p1: string, p2: string, p3: string, p4: string) => {
-                if (p1) return `<span class="hl-keyword">${p1}</span>`;
-                if (p2) return `<span class="hl-comment">${p2}</span>`;
-                if (p3) return `<span class="hl-string">${p3}</span>`;
-                if (p4) return `<span class="hl-number">${p4}</span>`;
-                return m;
-            });
-            return `<pre style="margin:0; background:transparent; padding:0; font-family: inherit; font-size: inherit; line-height: 1.5;"><code>${highlighted}</code></pre>`;
-        });
-    };
 
     return (
-        <main className="pt-32 pb-20">
+        <main className="pt-32 pb-20 flex-grow">
             <section className="container mx-auto px-6">
                 <button onClick={() => setCurrentPage('lessons')} className="text-indigo-400 hover:text-indigo-300 font-semibold mb-8">&larr; Back to Lessons</button>
                 <div className="lesson-container">
                     <div className="lesson-instructions">
-                        <h2>Lesson 2: Understanding Variables & Types</h2>
-                        <p>Smart contracts are all about managing state. In this lesson, you'll learn about the fundamental data types in Solidity.</p>
-                        <h3>Instructions</h3>
-                         <ul className="instruction-list">
-                            {instructions.map((item, index) => (
-                                <li key={index}>
-                                    <span className={`instruction-checkbox ${checkedItems[index] ? 'checked' : ''}`} onClick={() => handleCheckboxClick(index)}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    </span>
-                                    <div className="flex-1">
-                                        <div className="flex items-center w-full">
-                                            <div className="flex-1" dangerouslySetInnerHTML={{ __html: item.text }} />
-                                            <button onClick={() => setActiveHint(activeHint === index ? null : index)} className="hint-button">Hint</button>
-                                        </div>
-                                        {activeHint === index && (
-                                            <div className="hint-box">
-                                                <div className="text-base" dangerouslySetInnerHTML={{ __html: applySyntaxHighlightingToHint(item.hint) }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <MarkdownLesson markdownPath="/lessons/markdown/lesson2.md" />
                     </div>
                     <div className="flex flex-col gap-4">
                         <div className="h-[400px]"><SolidityEditor onCompile={setCompiledResult} initialCode={`// SPDX-License-Identifier: MIT
