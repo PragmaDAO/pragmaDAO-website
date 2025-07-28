@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
 import SolidityEditor from '../components/SolidityEditor';
-import MarkdownLesson from '../components/MarkdownLesson';
-
 import { CompiledOutput, TestCase, AbiItem } from '../types';
+import Lesson from "../components/Lesson";
 
 const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => {
     const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(null);
     const [testResults, setTestResults] = useState<TestCase[]>([]);
-    const [checkedItems, setCheckedItems] = useState<boolean[]>([false, false, false, false, false, false]);
-    const [activeHint, setActiveHint] = useState<number | null>(null);
-
-    const handleCheckboxClick = (index: number) => {
-        const newCheckedItems = [...checkedItems];
-        newCheckedItems[index] = !newCheckedItems[index];
-        setCheckedItems(newCheckedItems);
-    };
 
     const runTests = () => {
         if (!compiledResult || compiledResult.errors) {
@@ -43,23 +34,12 @@ const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
         ]);
     };
 
-    const instructions = [
-        { text: `Define a contract named <code>MyToken</code>.`, hint: `Just like the last lesson, use the <code>contract</code> keyword.`},
-        { text: `Create a public <code>string</code> variable for the token's <code>name</code>.`, hint: `Example: <code>string public name = "My First Token";</code>`},
-        { text: `Create a public <code>string</code> variable for the token's <code>symbol</code>.`, hint: `Symbols are usually short, like "MFT".`},
-        { text: `Create a public <code>uint8</code> variable for <code>decimals</code> and set it to <code>18</code>.`, hint: `18 is the standard for most ERC20 tokens, as it matches Ether.`},
-        { text: `Create a public <code>uint256</code> for the <code>totalSupply</code>.`, hint: `This will represent the total number of tokens in existence.`},
-        { text: `Create a public <code>mapping</code> called <code>balanceOf</code> to track balances.`, hint: `The mapping should go from an <code>address</code> to a <code>uint256</code>.`}
-    ];
-
     return (
         <main className="pt-32 pb-20 flex-grow">
             <section className="container mx-auto px-6">
                 <button onClick={() => setCurrentPage('lessons')} className="text-indigo-400 hover:text-indigo-300 font-semibold mb-8">&larr; Back to Lessons</button>
                 <div className="lesson-container">
-                    <div className="lesson-instructions">
-                        <MarkdownLesson markdownPath="/lessons/markdown/lesson3.md" />
-                    </div>
+                    <Lesson markdownPath="/pragmaDAO-website/public/lessons/markdown/lesson3.md" />
                     <div className="flex flex-col gap-4">
                         <div className="h-[400px]"><SolidityEditor onCompile={setCompiledResult} initialCode={`// SPDX-License-Identifier: MIT\npragma solidity ^0.8.7;\n\n// Your contract will go here\n`} /></div>
                         <div className="bg-gray-800/50 rounded-lg p-4">

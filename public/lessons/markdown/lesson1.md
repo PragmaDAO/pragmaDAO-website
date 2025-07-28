@@ -4,19 +4,20 @@ Welcome to Solidity! In this first lesson, you'll write and compile your very fi
 
 ### Objectives
 
-*   Understand the basic structure of a Solidity file.
-*   Declare a contract.
-*   Create a public state variable.
-*   Compile your contract and see the output.
+- Understand the basic structure of a Solidity file.
+- Declare a contract.
+- Create a public state variable.
+- Compile your contract and see the output.
+
 
 ### Instructions
 
-1.  In the editor on the right, define a contract named `HelloWorld`.
+-   In the editor on the right, define a contract named `HelloWorld`.
     Hint: `contract MyContract { ... }`
-2.  Inside the contract, create a public state variable of type `string` named `greet`.
+-   Inside the contract, create a public state variable of type `string` named `greet`. 
     Hint: `string public myString;`
-3.  Initialize the `greet` variable with the value `"Hello World!"`.
+-   Initialize the `greet` variable with the value `"Hello World!"`.
     Hint: `string public myString = "initial value";`
-4.  Click the "Compile" button. If there are no errors, click "Run Tests" to check your work!
+-   Click the "Compile" button. If there are no errors, click "Run Tests" to check your work!
     Hint: Once the 'Compile' button shows a success message, you're ready to run the tests!
-5. Join our discord and give your feedback.
+-   Join our discord and give your feedback.
