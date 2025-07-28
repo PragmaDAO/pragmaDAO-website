@@ -32,7 +32,7 @@ const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
         setStaticMarkdownContent(staticContent);
 
         // Corrected: Escaping backticks for string literal in RegExp constructor
-        const instructionRegex = new RegExp("^-   (.*?)\n\s*Hint:\s*`(.*?)`", "gm");
+        const instructionRegex = new RegExp("^-   ([^\\n]+)(?:\\n\\s*Hint:\\s*(.*))?", "gm");
         const parsedInstructions = Array.from(instructionsText.matchAll(instructionRegex)).map(
           (match) => ({ text: match[1].trim(), hint: `<code>${match[2]}</code>` }),
         );
