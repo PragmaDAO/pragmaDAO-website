@@ -11,7 +11,7 @@ Welcome to Solidity! In this first lesson, you'll write and compile your very fi
 
 ### Instructions
 
-1.  In the SUPER editor on the right, define a contract named `HelloWorld`.
+1.  In the editor on the right, define a contract named `HelloWorld`.
     Hint: `contract MyContract { ... }`
 2.  Inside the contract, create a public state variable of type `string` named `greet`.
     Hint: `string public myString;`
@@ -19,3 +19,4 @@ Welcome to Solidity! In this first lesson, you'll write and compile your very fi
     Hint: `string public myString = "initial value";`
 4.  Click the "Compile" button. If there are no errors, click "Run Tests" to check your work!
     Hint: Once the 'Compile' button shows a success message, you're ready to run the tests!
+5. Join our discord and give your feedback.

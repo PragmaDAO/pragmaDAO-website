@@ -7,7 +7,14 @@ import { CompiledOutput, TestCase, AbiItem } from '../types';
 const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => {
     const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(null);
     const [testResults, setTestResults] = useState<TestCase[]>([]);
-    
+    const [checkedItems, setCheckedItems] = useState<boolean[]>([false, false, false, false, false, false]);
+    const [activeHint, setActiveHint] = useState<number | null>(null);
+
+    const handleCheckboxClick = (index: number) => {
+        const newCheckedItems = [...checkedItems];
+        newCheckedItems[index] = !newCheckedItems[index];
+        setCheckedItems(newCheckedItems);
+    };
 
     const runTests = () => {
         if (!compiledResult || compiledResult.errors) {
@@ -36,7 +43,14 @@ const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
         ]);
     };
 
-    
+    const instructions = [
+        { text: `Define a contract named <code>MyToken</code>.`, hint: `Just like the last lesson, use the <code>contract</code> keyword.`},
+        { text: `Create a public <code>string</code> variable for the token's <code>name</code>.`, hint: `Example: <code>string public name = "My First Token";</code>`},
+        { text: `Create a public <code>string</code> variable for the token's <code>symbol</code>.`, hint: `Symbols are usually short, like "MFT".`},
+        { text: `Create a public <code>uint8</code> variable for <code>decimals</code> and set it to <code>18</code>.`, hint: `18 is the standard for most ERC20 tokens, as it matches Ether.`},
+        { text: `Create a public <code>uint256</code> for the <code>totalSupply</code>.`, hint: `This will represent the total number of tokens in existence.`},
+        { text: `Create a public <code>mapping</code> called <code>balanceOf</code> to track balances.`, hint: `The mapping should go from an <code>address</code> to a <code>uint256</code>.`}
+    ];
 
     return (
         <main className="pt-32 pb-20 flex-grow">
@@ -47,11 +61,7 @@ const LessonERC20: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
                         <MarkdownLesson markdownPath="/lessons/markdown/lesson3.md" />
                     </div>
                     <div className="flex flex-col gap-4">
-                        <div className="h-[400px]"><SolidityEditor onCompile={setCompiledResult} initialCode={`// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
-
-// Your contract will go here
-`} /></div>
+                        <div className="h-[400px]"><SolidityEditor onCompile={setCompiledResult} initialCode={`// SPDX-License-Identifier: MIT\npragma solidity ^0.8.7;\n\n// Your contract will go here\n`} /></div>
                         <div className="bg-gray-800/50 rounded-lg p-4">
                             <h3 className="text-lg font-bold mb-4">Test Cases</h3>
                             <button onClick={runTests} disabled={!compiledResult || !!compiledResult.errors} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors w-full mb-4">Run Tests</button>
