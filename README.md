@@ -5,6 +5,11 @@ PragmaDAO is a community-driven learning hub dedicated to teaching developers th
 
 Whether you are a traditional developer looking to transition into Web3 or a new programmer starting your journey, PragmaDAO provides the foundation you need to build, test, and deploy secure smart contracts on the Ethereum blockchain and other EVM-compatible chains.
 
+Join our Community here: [PragmaDAO Discord](https://discord.gg/KspzcBMysa)
+Join our Solidity study group here: [Solidity Study Group](https://discord.gg/nbNvWY8e)
+
+Test our website here: [PragmaDAO](https://pragmadao.github.io/pragmaDAO-website/)
+
 ## 📚 What You'll Learn
 Our curriculum is designed to be comprehensive, covering the entire lifecycle of smart contract development. Topics include:
 
