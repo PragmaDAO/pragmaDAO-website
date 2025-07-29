@@ -58,3 +58,6 @@ Jul 29, 2025 Updates:
 - Built in Solidity IDE. Still needs work. Debating to use Codemirror 6. 
 - Can take solidity code in a stand alone file. Place code in /public/lessons/solidity. Name it as lessonX.sol, with X being the lesson number or description.
 - Can take markdown in seperate stand alone file. Place in /public/lessons/markdown. Follows the same convention, name lessonsX.md, with X being the lesson number or description.
+
+## Codebase explaination
+For an overview and description of the codebase as of Jul 29, 2025 see [CODEBASE-EXPLAINATION.md](CODEBASE-EXPLAINATION.md)
