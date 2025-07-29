@@ -21,3 +21,4 @@ Welcome to Solidity! In this first lesson, you'll write and compile your very fi
 -   Click the "Compile" button. If there are no errors, click "Run Tests" to check your work!
     Hint: Once the 'Compile' button shows a success message, you're ready to run the tests!
 -   Join our discord and give your feedback.
+    Hint: Join: https://discord.gg/KspzcBMysa
