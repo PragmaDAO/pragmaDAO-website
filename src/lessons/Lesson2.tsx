@@ -39,7 +39,7 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
         passed: !!contract,
       },
       {
-        description: "A public uint variable named 'myUint' exists",
+        description: "A public uint256 variable named 'myUint' exists",
         passed: !!myUint && myUint.outputs[0].type === "uint256",
       },
       {
