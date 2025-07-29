@@ -6,7 +6,6 @@ import LessonsPage from './pages/LessonsPage';
 import CommunityPage from './pages/CommunityPage';
 import Lesson1 from './lessons/Lesson1';
 import Lesson2 from './lessons/Lesson2';
-import Lesson3 from './lessons/Lesson3';
 import './index.css'; // Assuming global styles are here
 
 // --- STYLES COMPONENT ---
@@ -252,7 +251,6 @@ export default function App() {
             const lessonId = currentPage.split('-')[1];
             if (lessonId === '1') return <Lesson1 setCurrentPage={setCurrentPage} />;
             if (lessonId === '2') return <Lesson2 setCurrentPage={setCurrentPage} />;
-            if (lessonId === '3') return <Lesson3 setCurrentPage={setCurrentPage} />;
         }
 
         switch (currentPage) {
