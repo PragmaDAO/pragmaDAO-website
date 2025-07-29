@@ -68,7 +68,7 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
             <div className="h-[400px]">
               <SolidityEditor
                 onCompile={setCompiledResult}
-                solidityFilePath="/pragmaDAO-website/solidity/Lesson2.sol"
+                solidityFilePath="/pragmaDAO-website/lessons/solidity/Lesson2.sol"
               />
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4">
