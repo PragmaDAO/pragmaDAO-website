@@ -68,7 +68,7 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
             <div className="h-[400px]">
               <SolidityEditor
                 onCompile={setCompiledResult}
-                initialCode={`// SPDX-License-Identifier: MIT\npragma solidity ^0.8.7;\n\n// Your contract will go here\n`}
+                solidityFilePath="/pragmaDAO-website/solidity/Lesson2.sol"
               />
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4">

@@ -28,13 +28,34 @@ interface CompiledOutput {
 }
 
 
-const SolidityEditor: React.FC<{ onCompile: (result: CompiledOutput | null) => void, initialCode?: string }> = ({ onCompile, initialCode }) => {
+const SolidityEditor: React.FC<{ onCompile: (result: CompiledOutput | null) => void, initialCode?: string, solidityFilePath?: string }> = ({ onCompile, initialCode, solidityFilePath }) => {
     const [code, setCode] = useState(initialCode || `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
 // Your contract will go here
 
 `);
+    useEffect(() => {
+        if (solidityFilePath) {
+            fetch(solidityFilePath)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    setCode(text);
+                })
+                .catch(error => {
+                    console.error("Could not load solidity file:", error);
+                    setCode(`// Error loading file from ${solidityFilePath}
+// Please check the path and ensure the file exists.
+
+` + initialCode);
+                });
+        }
+    }, [solidityFilePath, initialCode]);
     const [highlightedCode, setHighlightedCode] = useState('');
     const [output, setOutput] = useState<string>('Initializing compiler worker...');
     const [isError, setIsError] = useState<boolean>(false);

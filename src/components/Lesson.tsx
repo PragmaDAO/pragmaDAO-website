@@ -48,7 +48,7 @@ const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
   };
 
   const applySyntaxHighlightingToHint = (text: string) => {
-    return text.replace(/<code>(.*?)<\/code>/gs, (match, codeContent) => {
+    return text.replace(/<code>(.*?)<\/code>/g, (match, codeContent) => {
         const keywords = `\\b(contract|string|public|uint|bool|true|false|uint8|uint256|address|mapping)\\b`;
         // Corrected: Proper escaping for string literal in RegExp constructor
         const comments = "(\\\\/\\\/.*)";
