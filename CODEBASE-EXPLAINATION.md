@@ -1,29 +1,29 @@
 ##  Codebase explanations
 Here's an organizational chart of the codebase with explanations for each folder:
-    1 /pragmaDAO-website/
-    2 ├── .git/                 # Git version control system files (hidden).
-    3 ├── .vscode/              # Visual Studio Code specific settings and configurations.
-    4 ├── build/                # Contains the optimized production build of your React application.
-    5 ├── node_modules/         # Stores all the third-party libraries and dependencies installed via npm.
-    6 ├── public/               # Static assets served directly by the web server (e.g. index.html, images, manifest, markdown files, solidity files).
-    7 │   ├── favicon.ico       # Website favicon.
-    8 │   ├── index.html        # The main HTML file for your React application.
-    9 │   ├── logo192.png       # Application logo (192x192).
-   10 │   ├── logo512.png       # Application logo (512x512).
-   11 │   ├── manifest.json     # Web app manifest file for progressive web app features.
-   12 │   └── lessons/          # Contains lesson-related static assets.
-   13 │       ├── markdown/     #  Markdown files for the lessons.
-   14 │       └── solidity/     # Solidity code files for the lessons.
-   15 └── src/                  # Source code for your React application.
-   16     ├── App.tsx           # Main application component.
-   17     ├── index.css         # Global CSS styles.
-   18     ├── index.tsx         # Entry point for the React application (renders App.tsx).
-   19     ├── types.ts          # TypeScript type definitions used across the application.
-   20     ├── components/       # Reusable React components (e.g., Header, Footer, custom UI elements).
-   21     ├── lessons/          # React components specifically for each lesson.
-   22     │   └── __tests__/    # Test files for the lesson components.
-   23     ├── pages/            # Top-level React components representing different pages of the website.
-   24     └── types/            # (Potentially redundant with top-level types.ts, or for more specific types)
+    1 /pragmaDAO-website/    
+    2 ├── .git/                 # Git version control system files (hidden)     
+    3 ├── .vscode/              # Visual Studio Code specific settings and configurations.  
+    4 ├── build/                # Contains the optimized production build of your React application.  
+    5 ├── node_modules/         # Stores all the third-party libraries and dependencies installed via npm.  
+    6 ├── public/               # Static assets served directly by the web server (e.g. index.html, images, manifest, markdown files, solidity files).  
+    7 │   ├── favicon.ico       # Website favicon.  
+    8 │   ├── index.html        # The main HTML file for your React application.  
+    9 │   ├── logo192.png       # Application logo (192x192).    
+   10 │   ├── logo512.png       # Application logo (512x512).      
+   11 │   ├── manifest.json     # Web app manifest file for progressive web app features.  
+   12 │   └── lessons/          # Contains lesson-related static assets.    
+   13 │       ├── markdown/     #  Markdown files for the lessons.  
+   14 │       └── solidity/     # Solidity code files for the lessons.    
+   15 └── src/                  # Source code for your React application.  
+   16     ├── App.tsx           # Main application component.  
+   17     ├── index.css         # Global CSS styles.  
+   18     ├── index.tsx         # Entry point for the React application   (renders App.tsx).  
+   19     ├── types.ts          # TypeScript type definitions used across the application.  
+   20     ├── components/       # Reusable React components (e.g., Header, Footer, custom UI elements).  
+   21     ├── lessons/          # React components specifically for each lesson.  
+   22     │   └── __tests__/    # Test files for the lesson components.  
+   23     ├── pages/            # Top-level React components representing different pages of the website.  
+   24     └── types/            # (Potentially redundant with top-level types.ts, or for more specific types)  
 
   Explanation of Folders:
    * .git/: This hidden directory is created and managed by Git. It stores all the information necessary for your project's version control, including commit history, branches, and remote repository details.
