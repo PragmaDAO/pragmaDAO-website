@@ -1,5 +1,4 @@
-# pragmaDAO Website
-Landing page for PragmaDAO Website
+# PragmaDAO
 
 ## ✅ PragmaDAO - Your Daily Dose of Web3 Development
 PragmaDAO is a community-driven learning hub dedicated to teaching developers the practical skills needed to build in Web3. Our mission is to provide clear, accessible, and up-to-date educational resources for mastering Solidity and smart contract security.
