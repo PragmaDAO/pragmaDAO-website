@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase, AbiItem } from "../types";
+import { runLesson2Tests } from "./__tests__/lesson2.test";
 import Lesson from "../components/Lesson";
 
 const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
@@ -12,45 +13,8 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   const [testResults, setTestResults] = useState<TestCase[]>([]);
 
   const runTests = () => {
-    if (!compiledResult || compiledResult.errors) {
-      setTestResults([
-        {
-          description: "Compilation must pass before tests can run.",
-          passed: false,
-        },
-      ]);
-      return;
-    }
-    const contract = compiledResult.contracts["contract.sol"]?.VariableTypes;
-    if (!contract) {
-      setTestResults([
-        { description: "Contract 'VariableTypes' not found.", passed: false },
-      ]);
-      return;
-    }
-    const abi = contract.abi;
-    const myUint = abi.find((v: AbiItem) => v.name === "myUint");
-    const myString = abi.find((v: AbiItem) => v.name === "myString");
-    const myBool = abi.find((v: AbiItem) => v.name === "myBool");
-
-    setTestResults([
-      {
-        description: "Contract must be named 'VariableTypes'",
-        passed: !!contract,
-      },
-      {
-        description: "A public uint256 variable named 'myUint' exists",
-        passed: !!myUint && myUint.outputs[0].type === "uint256",
-      },
-      {
-        description: "A public string variable named 'myString' exists",
-        passed: !!myString && myString.outputs[0].type === "string",
-      },
-      {
-        description: "A public bool variable named 'myBool' exists",
-        passed: !!myBool && myBool.outputs[0].type === "bool",
-      },
-    ]);
+    const results = runLesson2Tests(compiledResult);
+    setTestResults(results);
   };
 
   return (
