@@ -17,6 +17,7 @@ const LessonsPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
     const lessons: Omit<LessonRowProps, 'index' | 'onClick'>[] = [
         { title: "Solidity 101: Your First Contract", description: "Learn the absolute basics of Solidity syntax and write a simple 'Hello World' smart contract.", difficulty: "Beginner" },
         { title: "Understanding Variables & Types", description: "Dive into value types, reference types, and data locations like storage, memory, and calldata.", difficulty: "Beginner" },
+        { title: "Understanding Functions", description: "Learn the basics of functions in Solidity.", difficulty: "Beginner" },
         
     ];
 
