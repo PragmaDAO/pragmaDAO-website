@@ -1,8 +1,9 @@
 import React from 'react';
 import { CommunityCardProps } from '../types';
 
-const CommunityCard: React.FC<CommunityCardProps> = ({ title, description, date, imageUrl }) => (
-    <div className="community-card text-center">
+const CommunityCard: React.FC<CommunityCardProps> = ({ title, description, date, imageUrl, linkUrl }) => (
+    <div className={ `community-card text-center${linkUrl && ' cursor-pointer'}` }
+        onClick={ () => linkUrl && window.location.assign(linkUrl)}>
         {imageUrl && <img src={imageUrl} alt={title} className="mx-auto" />}
         <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
         {date && <p className="text-indigo-400 font-semibold mb-2">{date}</p>}
@@ -31,11 +32,14 @@ const CommunityPage: React.FC = () => (
         <section id="featured-members" className="py-20 bg-gray-800/50">
             <div className="container mx-auto px-6">
                 <h3 className="text-3xl font-bold text-center mb-12">Featured Members</h3>
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <CommunityCard title="Alice" imageUrl="https://placehold.co/80x80/6366f1/ffffff?text=A" description="Alice is a core contributor to the PragmaDAO curriculum and an expert in smart contract security." />
-                    <CommunityCard title="Bob" imageUrl="https://placehold.co/80x80/10b981/ffffff?text=B" description="Bob is a community moderator and runs the weekly office hours. He's always happy to help new developers." />
-                    <CommunityCard title="Charlie" imageUrl="https://placehold.co/80x80/f59e0b/ffffff?text=C" description="Charlie is a recent graduate of our program who is now building his own DeFi protocol." />
-                    <CommunityCard title="You" imageUrl="https://placehold.co/80x80/9ca3af/ffffff?text=?" description="Join our community, learn, give feedback and increase your skills." />
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mx-auto">
+                    <CommunityCard linkUrl="https://github.com/FaceyMcFacey" title="FaceyMcFacey" imageUrl="https://avatars.githubusercontent.com/u/223031114?v=4" description="Facey is the project founder and chief content creator. He also coordinates the discord community." />
+                    <CommunityCard linkUrl="https://github.com/lusayo-nyondo" title="Lusayo" imageUrl="https://placehold.co/80x80/10b981/ffffff?text=B" description="Lusayo is a member of the community and a web and cross-platform engineer, currently hacking together our site." />
+                    <a href="https://discord.gg/KspzcBMysa" target="_blank" rel="noopener noreferrer" className="community-card text-center !bg-blue-500 hover:bg-blue-600">
+                        <img src="https://placehold.co/80x80/1e40af/ffffff?text=?" alt="You" className="mx-auto" />
+                        <h3 className="text-xl font-bold text-white mb-2">You</h3>
+                        <p className="text-white-400">Join our community, learn, give feedback and increase your skills.</p>
+                    </a>                        
                 </div>
             </div>
         </section>

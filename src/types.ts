@@ -28,6 +28,7 @@ export interface CommunityCardProps {
     description: string;
     date?: string;
     imageUrl?: string;
+    linkUrl?: string;
 }
 
 export interface TestCase {

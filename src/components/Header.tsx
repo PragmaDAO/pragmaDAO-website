@@ -6,7 +6,7 @@ interface NavLinkProps {
 }
 
 const NavLink: React.FC<NavLinkProps> = ({ onClick, children }) => (
-    <button onClick={onClick} className="hover:text-indigo-400 transition-colors bg-transparent border-none cursor-pointer text-white">
+    <button type="button" onClick={onClick} className="hover:text-indigo-400 transition-colors bg-transparent border-none cursor-pointer text-white">
         {children}
     </button>
 );
