@@ -6,7 +6,7 @@ const Hero: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrent
     <section id="hero" className="container mx-auto px-6 text-center">
         <div className="max-w-4xl mx-auto">
             <h2 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6">Learn Solidity</h2>
-            <p className="text-lg md:text-xl text-gray-400 mb-10">PragmaDAO is dedicating to teaching developers practical web3 skills. Learn about Solidity, security and more.</p>
+            <p className="text-lg md:text-xl text-gray-400 mb-10">PragmaDAO is a community-driven platform dedicated to teaching developers practical web3 skills. Learn about Solidity, security and more.</p>
             <div className="flex justify-center space-x-4">
                 <button onClick={() => setCurrentPage('lessons')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Start Learning</button>
             </div>
