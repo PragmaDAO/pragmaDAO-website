@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/pragmaDAO-website/static/css/main.7eb09118.css",
-    "main.js": "/pragmaDAO-website/static/js/main.85a6c744.js",
+    "main.css": "/pragmaDAO-website/static/css/main.5df7b5ed.css",
+    "main.js": "/pragmaDAO-website/static/js/main.431164f9.js",
     "index.html": "/pragmaDAO-website/index.html",
-    "main.7eb09118.css.map": "/pragmaDAO-website/static/css/main.7eb09118.css.map",
-    "main.85a6c744.js.map": "/pragmaDAO-website/static/js/main.85a6c744.js.map"
+    "main.5df7b5ed.css.map": "/pragmaDAO-website/static/css/main.5df7b5ed.css.map",
+    "main.431164f9.js.map": "/pragmaDAO-website/static/js/main.431164f9.js.map"
   },
   "entrypoints": [
-    "static/css/main.7eb09118.css",
-    "static/js/main.85a6c744.js"
+    "static/css/main.5df7b5ed.css",
+    "static/js/main.431164f9.js"
   ]
 }
