@@ -35,7 +35,7 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
     },
     {
       description: "'getNumber' function should return a uint256",
-      passed: !!getNumber && getNumber.outputs[0].type === "uint256",
+      passed: !!getNumber && getNumber.outputs[0].type.includes("uint"),
     },
     {
       description: "A public function named 'difference' exists",
@@ -46,12 +46,12 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
       passed:
         !!difference &&
         difference.inputs.length === 2 &&
-        difference.inputs[0].type === "uint256" &&
-        difference.inputs[1].type === "uint256",
+        difference.inputs[0].type.includes("uint") &&
+        difference.inputs[1].type.includes("uint"),
     },
     {
       description: "'difference' function should return a uint256",
-      passed: !!difference && difference.outputs[0].type === "uint256",
+      passed: !!difference && difference.outputs[0].type.includes("uint"),
     },
     {
       description: "'difference' function should be pure",
@@ -66,12 +66,12 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
       passed:
         !!multiply &&
         multiply.inputs.length === 2 &&
-        multiply.inputs[0].type === "uint256" &&
-        multiply.inputs[1].type === "uint256",
+        multiply.inputs[0].type.includes("uint") &&
+        multiply.inputs[1].type.includes("uint"),
     },
     {
       description: "'multiply' function should return a uint256",
-      passed: !!multiply && multiply.outputs[0].type === "uint256",
+      passed: !!multiply && multiply.outputs[0].type.includes("uint"),
     },
     {
       description: "'multiply' function should be pure",

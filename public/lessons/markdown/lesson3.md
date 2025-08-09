@@ -8,13 +8,35 @@ Understand the basics of functions in Solidity, including visibility, state muta
 
 A function is a reusable block of code that performs a specific task. Think of it as a recipe: you give it ingredients (parameters), and it gives you back a dish (return value).
 
+Here is an example of a function:
+
+```solidity
+function add(uint256 a, uint256 b) public pure returns (uint256) {
+    return a + b;
+}
+```
+
 #### Function Signature
 
 A function signature is like the title of the recipe. It tells you what the function is called, what ingredients it needs, and what it will give you back. It consists of the function name, the parameters it takes, the visibility (who can call it), the state mutability (what it can do to the contract's data), and the return type.
 
+Here is a generic function signature:
 
--   `public`: This  means that the function can be called from anywhere - from within the contract, from other contracts, or from external accounts.
--   `pure`: This means that the function does not read or modify the state of the contract. It only works with the inputs it is given and returns a value.
+```solidity 
+function function_name(parameter_type parameter_name) visibility_modifier state_mutability_modifier returns (return_type)
+```
+
+For the `add` function above, the signature is:
+
+```solidity
+function add(uint256 a, uint256 b) public pure returns (uint256) {...}
+```
+
+-   `function add`: The name of the function is `add`.
+-   `(uint256 a, uint256 b)`: The parameters are `a` and `b`, both of type `uint256`.
+-   `public`: This modifier means that the function can be called from anywhere - from within the contract, from other contracts, or from external accounts.
+-   `pure`: This modifier means that the function does not read or modify the state of the contract. It only works with the inputs it is given and returns a value.
+-   `returns (uint256)`: The function returns a value of type `uint256`.
 
 #### Operators
 
