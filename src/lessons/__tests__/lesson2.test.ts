@@ -1,4 +1,3 @@
-
 import { CompiledOutput, TestCase, AbiItem } from "../../types";
 
 export const runLesson2Tests = (compiledResult: CompiledOutput | null): TestCase[] => {
@@ -20,6 +19,8 @@ export const runLesson2Tests = (compiledResult: CompiledOutput | null): TestCase
   const myUint = abi.find((v: AbiItem) => v.name === "myUint");
   const myString = abi.find((v: AbiItem) => v.name === "myString");
   const myBool = abi.find((v: AbiItem) => v.name === "myBool");
+  const myAddress = abi.find((v: AbiItem) => v.name === "myAddress");
+  const myBytes32 = abi.find((v: AbiItem) => v.name === "myBytes32");
 
   return [
     {
@@ -37,6 +38,14 @@ export const runLesson2Tests = (compiledResult: CompiledOutput | null): TestCase
     {
       description: "A public bool variable named 'myBool' exists",
       passed: !!myBool && myBool.outputs[0].type === "bool",
+    },
+    {
+      description: "A public address variable named 'myAddress' exists",
+      passed: !!myAddress && myAddress.outputs[0].type === "address",
+    },
+    {
+      description: "A public bytes32 variable named 'myBytes32' exists",
+      passed: !!myBytes32 && myBytes32.outputs[0].type === "bytes32",
     },
   ];
 };

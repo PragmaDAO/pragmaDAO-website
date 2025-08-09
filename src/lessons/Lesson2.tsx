@@ -48,7 +48,7 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
                 {testResults.map((result, i) => (
                   <div
                     key={i}
-                    className={`test-case-row ${result.passed ? "passed" : "failed"}`}
+                    className={`flex items-start test-case-row ${result.passed ? "passed" : "failed"}`}
                   >
                     <span>{result.passed ? "✅" : "❌"}</span>
                     <p className="ml-4 text-gray-300">{result.description}</p>
