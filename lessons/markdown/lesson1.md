@@ -89,11 +89,11 @@ This is a specific instruction for the construction crew: "Go to the room named 
 -   In the editor on the right, define a contract named `HelloWorld`.
     Hint: `contract MyContract { ... }`
 -   Define a function named `greet`, that is `public` and `returns` a `string` of `memory` type. Feel free to check the hint.
-    Hint: `function greet() public returns (string memory) {...}`
+    Hint: function greet() public returns (string memory) {...}
 -   Inside the function, set the value of `greeting` to `Hello, World!`. 
     Hint: greeting = 'Hello, World!';
 -   Return the variable `greeting` from the function.
-    Hint: `return greeting;`
+    Hint: return greeting;
 -   Click the "Compile" button. If there are no errors, click "Run Tests" to check your work!
     Hint: Once the 'Compile' button shows a success message, you're ready to run the tests!
 -   Join our discord and give your feedback.
