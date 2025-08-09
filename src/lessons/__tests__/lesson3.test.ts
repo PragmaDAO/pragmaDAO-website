@@ -17,6 +17,8 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
   }
   const abi = contract.abi;
   const getNumber = abi.find((v: AbiItem) => v.name === "getNumber");
+  const difference = abi.find((v: AbiItem) => v.name === "difference");
+  const multiply = abi.find((v: AbiItem) => v.name === "multiply");
 
   return [
     {
@@ -34,6 +36,46 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
     {
       description: "'getNumber' function should return a uint256",
       passed: !!getNumber && getNumber.outputs[0].type === "uint256",
+    },
+    {
+      description: "A public function named 'difference' exists",
+      passed: !!difference && difference.type === "function",
+    },
+    {
+      description: "'difference' function should take two uint256 parameters",
+      passed:
+        !!difference &&
+        difference.inputs.length === 2 &&
+        difference.inputs[0].type === "uint256" &&
+        difference.inputs[1].type === "uint256",
+    },
+    {
+      description: "'difference' function should return a uint256",
+      passed: !!difference && difference.outputs[0].type === "uint256",
+    },
+    {
+      description: "'difference' function should be pure",
+      passed: !!difference && difference.stateMutability === "pure",
+    },
+    {
+      description: "A public function named 'multiply' exists",
+      passed: !!multiply && multiply.type === "function",
+    },
+    {
+      description: "'multiply' function should take two uint256 parameters",
+      passed:
+        !!multiply &&
+        multiply.inputs.length === 2 &&
+        multiply.inputs[0].type === "uint256" &&
+        multiply.inputs[1].type === "uint256",
+    },
+    {
+      description: "'multiply' function should return a uint256",
+      passed: !!multiply && multiply.outputs[0].type === "uint256",
+    },
+    {
+      description: "'multiply' function should be pure",
+      passed: !!multiply && multiply.stateMutability === "pure",
     },
   ];
 };
