@@ -56,7 +56,7 @@ const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
             const match = /language-(\w+)/.exec(className || '');
             return match ? (
               <SyntaxHighlighter
-                style={vscDarkPlus}
+                style={{ ...vscDarkPlus, 'code[class*="language-"]': { ...vscDarkPlus['code[class*="language-"]'], background: '#161b22' }, 'pre[class*="language-"]': { ...vscDarkPlus['pre[class*="language-"]'], background: '#161b22' } }}
                 language={match[1]}
                 PreTag="div"
               >
@@ -108,7 +108,7 @@ const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
               </div>
               {activeHint === index && (
                 <div className="hint-box">
-                  <SyntaxHighlighter language="solidity" style={vscDarkPlus}>
+                  <SyntaxHighlighter language="solidity" style={{ ...vscDarkPlus, 'code[class*="language-"]': { ...vscDarkPlus['code[class*="language-"]'], background: '#161b22' }, 'pre[class*="language-"]': { ...vscDarkPlus['pre[class*="language-"]'], background: '#161b22' } }}>
                     {item.hint}
                   </SyntaxHighlighter>
                 </div>

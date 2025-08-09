@@ -163,7 +163,7 @@ const GlobalStyles = () => (
         .lesson-instructions h3 { font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; }
         .lesson-instructions p, .lesson-instructions li { color: #9ca3af; margin-bottom: 1rem; line-height: 1.6; }
         .lesson-instructions ul { list-style-position: inside; }
-        .lesson-instructions code { background: #111827; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; }
+        .lesson-instructions code { background: #161b22; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; }
         
         .instruction-list {
             list-style: none;
@@ -214,7 +214,7 @@ const GlobalStyles = () => (
             margin-left: auto; /* Pushes button to the right */
         }
         .hint-box {
-            background-color: #111827;
+            background-color: #161b22;
             border-radius: 0.5rem;
             padding: 0.75rem;
             margin-top: 0.5rem;
@@ -222,7 +222,7 @@ const GlobalStyles = () => (
         }
         .hint-box pre {
             margin: 0;
-            background: transparent !important;
+            background: #161b22 !important;
             padding: 0;
             font-family: inherit;
             font-size: inherit;
