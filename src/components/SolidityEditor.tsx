@@ -197,7 +197,7 @@ pragma solidity ^0.8.7;
                 <pre ref={preRef} className="solidity-editor-pre" aria-hidden="true"><code dangerouslySetInnerHTML={{ __html: highlightedCode }} /></pre>
             </div>
             <div className="flex items-center justify-between mt-2 flex-shrink-0">
-                <span className="text-xs text-gray-400 pl-2">Solidity v0.8.7 (Mock)</span>
+                <span className="text-xs text-gray-400 pl-2">Solidity v0.8.26 (Mock)</span>
                 <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     {isLoading ? 'Compiling...' : 'Compile'}
                 </button>

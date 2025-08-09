@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import SolidityEditor from "../components/SolidityEditor";
-import { CompiledOutput, TestCase, AbiItem } from "../types";
+import { CompiledOutput, TestCase } from "../types";
 import { runLesson1Tests } from "./__tests__/lesson1.test";
 import Lesson from "../components/Lesson";
 
-const LessonSolidity101: React.FC<{
+const Lesson1: React.FC<{
   setCurrentPage: (page: string) => void;
 }> = ({ setCurrentPage }) => {
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
@@ -63,4 +63,4 @@ const LessonSolidity101: React.FC<{
   );
 };
 
-export default LessonSolidity101;
+export default Lesson1;

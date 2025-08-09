@@ -1,4 +1,3 @@
-
 import { CompiledOutput, TestCase, AbiItem } from "../../types";
 
 export const runLesson1Tests = (compiledResult: CompiledOutput | null): TestCase[] => {
@@ -17,25 +16,25 @@ export const runLesson1Tests = (compiledResult: CompiledOutput | null): TestCase
     description: "A contract named 'HelloWorld' is defined",
     passed: !!contract,
   };
-  let greetFunctionExistsTest: TestCase = {
+  let greetingFunctionExistsTest: TestCase = {
     description:
-      "Contract contains a public state variable or function named 'greet'",
+      "Contract contains a public state variable or function named 'greeting'",
     passed: false,
   };
-  let greetFunctionReturnsStringTest: TestCase = {
-    description: "'greet' function should return a string",
+  let greetingFunctionReturnsStringTest: TestCase = {
+    description: "'greeting' function should return a string",
     passed: false,
   };
   if (contract) {
     const abi = contract.abi as AbiItem[];
-    const greetFunction = abi.find((func) => func.name === "greet");
-    greetFunctionExistsTest.passed = !!greetFunction;
-    greetFunctionReturnsStringTest.passed = 
-      !!greetFunction && greetFunction.outputs[0].type === "string";
+    const greetingFunction = abi.find((func) => func.name === "greeting");
+    greetingFunctionExistsTest.passed = !!greetingFunction;
+    greetingFunctionReturnsStringTest.passed = 
+      !!greetingFunction && greetingFunction.outputs[0].type === "string";
   }
   return [
     contractExistsTest,
-    greetFunctionExistsTest,
-    greetFunctionReturnsStringTest,
+    greetingFunctionExistsTest,
+    greetingFunctionReturnsStringTest,
   ];
 };
