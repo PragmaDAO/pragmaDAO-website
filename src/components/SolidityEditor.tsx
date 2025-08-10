@@ -89,35 +89,48 @@ pragma solidity ^0.8.7;
     
     useEffect(() => {
         const workerCode = `
-            importScripts('/soljson.js'); // Load solc-js from public 
-      directory
-     
-                 self.onmessage = function(e) {
-                     const { type, payload } = e.data;
-                     if (type === 'INIT') {
-                        // solc is loaded via importScripts, so it should 
-      be available globally
-                        if (typeof solc !== 'undefined') {
-                            self.postMessage({ type: 'SOLC_LOADED' });
-                        } else {
-                            self.postMessage({ type: 'ERROR', payload:
-      'Critical Error: solc.js failed to load.' });
-                        }
-                    } else if (type === 'COMPILE') {
-                        if (typeof solc === 'undefined') { self.postMessage
-      ({ type: 'ERROR', payload: 'Compiler not ready.' }); return; }
-                        try {
-                            // solc.compile expects a JSON string input
-                            const compiled = solc.compile(JSON.stringify
-      (payload.input));
-                            self.postMessage({ type: 'COMPILED', payload:
-      compiled });
-                        } catch (error) {
-                            self.postMessage({ type: 'ERROR', payload:
-      'Compilation error: ' + error.message });
-                        }
+            // Dynamically fetch and eval soljson.js
+            let solc;
+            fetch('/soljson.js')
+            .then(response => response.text())
+            .then(scriptText => {
+            
+                // Create a function to execute the script in the worker's scope
+            const scriptFunction = new Function(scriptText);
+            scriptFunction(); // Execute soljson.js
+            
+            // solc should now be available globally or via Module
+            if (typeof Module !=='undefined' && typeof Module.cwrap === 'function') {
+                solc = {
+                    compile: function(input) {
+                        return Module.cwrap('solidity_compile', 'string', ['string'])(input);
+                    }
+                };
+                
+                    self.postMessage({ type: 'SOLC_LOADED' });
+                } else {
+                    self.postMessage({ type:'ERROR', payload: 'Critical Error: solc.js failed to initialize.' });
+                    }
+                }).catch(error => {
+                    self.postMessage({ type:'ERROR', payload: 'Error loading soljson.js: ' + error.message });
+                });
+                self.onmessage = function(e) {
+                    const { type, payload } = e.data;
+                    if (type === 'COMPILE') {
+                    if (typeof solc === 'undefined') { 
+                        self.postMessage({ type: 'ERROR',
+                        payload: 'Compiler not ready.' 
+            }); 
+            return; }
+            try {
+                const compiled = solc.compile(JSON.stringify(payload.input));
+                self.postMessage({ type:'COMPILED', payload: compiled });
+            } catch (error) {
+                self.postMessage({ type:'ERROR', payload: 'Compilation error: ' + error.
+            message });
                     }
                 }
+            }
         `;
         const blob = new Blob([workerCode], { type: 'application/javascript' });
         workerRef.current = new Worker(URL.createObjectURL(blob));
