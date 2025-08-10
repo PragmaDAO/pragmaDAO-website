@@ -68,23 +68,20 @@ pragma solidity ^0.8.7;
     const applySyntaxHighlighting = (text: string) => {
         const keywords = `\\b(pragma|solidity|contract|function|constructor|returns|public|private|internal|external|view|pure|payable|if|else|for|while|require|revert|event|emit|mapping|struct|memory|storage|calldata|true|false)\\b`;
         const types = `\\b(string|uint|uint[0-9]*|int|int[0-9]*|address|bool|bytes|bytes[0-9]*)\\b`;
-        // This line is correct as is for JS regex
-        const comments = `(\\/\\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)`; 
-        // No change needed
-        const strings = `(\".*?\")|(\'.*?\')`; 
-        // This line is correct as is for JS regex
-        const numbers = `\\b([0-9]+)\\b`; 
+        const comments = `(\\/\\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)`;
+        const strings = `(\".*?\")|(\'.*?\')`;
+        const numbers = `\\b([0-9]+)\\b`;
         const regex = new RegExp(`(${keywords})|(${types})|${comments}|${strings}|(${numbers})`, 'g');
         
         return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(regex, (match: string, p1: string, p2: string, p3: string, p4: string, p5: string, p6: string, p7: string) => {
-            if (p1) return `<span class="hl-keyword">${p1}</span>`;
-            if (p2) return `<span class="hl-type">${p2}</span>`;
-            if (p3 || p4) return `<span class="hl-comment">${match}</span>`;
-            if (p5 || p6) return `<span class="hl-string">${match}</span>`;
-            if (p7) return `<span class="hl-number">${p7}</span>`;
+            if (p1) return `<span class=\"hl-keyword\">${p1}</span>`;
+            if (p2) return `<span class=\"hl-type\">${p2}</span>`;
+            if (p3 || p4) return `<span class=\"hl-comment\">${match}</span>`;
+            if (p5 || p6) return `<span class=\"hl-string\">${match}</span>`;
+            if (p7) return `<span class=\"hl-number\">${p7}</span>`;
             return match;
         });
-    };
+        };
 
     useEffect(() => {
         setHighlightedCode(applySyntaxHighlighting(code));
@@ -92,35 +89,35 @@ pragma solidity ^0.8.7;
     
     useEffect(() => {
         const workerCode = `
-            importScripts('/soljson.js'); // This line should already be 
-      there from Step 3.1
-    
-            self.onmessage = function(e) {
-                const { type, payload } = e.data;
-                if (type === 'INIT') {
-                    // solc is loaded via importScripts, so it should be 
-      available globally
-                    if (typeof solc !== 'undefined') {
-                        self.postMessage({ type: 'SOLC_LOADED' });
-                    } else {
-                        self.postMessage({ type: 'ERROR', payload:
+            importScripts('/soljson.js'); // Load solc-js from public 
+      directory
+     
+                 self.onmessage = function(e) {
+                     const { type, payload } = e.data;
+                     if (type === 'INIT') {
+                        // solc is loaded via importScripts, so it should 
+      be available globally
+                        if (typeof solc !== 'undefined') {
+                            self.postMessage({ type: 'SOLC_LOADED' });
+                        } else {
+                            self.postMessage({ type: 'ERROR', payload:
       'Critical Error: solc.js failed to load.' });
-                    }
-                } else if (type === 'COMPILE') {
-                    if (typeof solc === 'undefined') { self.postMessage({
-      type: 'ERROR', payload: 'Compiler not ready.' }); return; }
-                    try {
-                        // solc.compile expects a JSON string input
-                        const compiled = solc.compile(JSON.stringify
+                        }
+                    } else if (type === 'COMPILE') {
+                        if (typeof solc === 'undefined') { self.postMessage
+      ({ type: 'ERROR', payload: 'Compiler not ready.' }); return; }
+                        try {
+                            // solc.compile expects a JSON string input
+                            const compiled = solc.compile(JSON.stringify
       (payload.input));
-                        self.postMessage({ type: 'COMPILED', payload:
+                            self.postMessage({ type: 'COMPILED', payload:
       compiled });
-                    } catch (error) {
-                        self.postMessage({ type: 'ERROR', payload:
+                        } catch (error) {
+                            self.postMessage({ type: 'ERROR', payload:
       'Compilation error: ' + error.message });
+                        }
                     }
                 }
-            }
         `;
         const blob = new Blob([workerCode], { type: 'application/javascript' });
         workerRef.current = new Worker(URL.createObjectURL(blob));
