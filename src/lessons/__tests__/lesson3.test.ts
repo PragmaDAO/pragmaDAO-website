@@ -19,6 +19,7 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
   const getNumber = abi.find((v: AbiItem) => v.name === "getNumber");
   const difference = abi.find((v: AbiItem) => v.name === "difference");
   const multiply = abi.find((v: AbiItem) => v.name === "multiply");
+  console.log('abi:', abi);
 
   return [
     {

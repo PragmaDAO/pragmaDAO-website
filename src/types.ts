@@ -34,6 +34,7 @@ export interface CommunityCardProps {
 export interface TestCase {
     description: string;
     passed: boolean;
+    errorMessage?: string;
 }
 
 export interface AbiItem {

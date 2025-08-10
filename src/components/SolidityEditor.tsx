@@ -68,9 +68,12 @@ pragma solidity ^0.8.7;
     const applySyntaxHighlighting = (text: string) => {
         const keywords = `\\b(pragma|solidity|contract|function|constructor|returns|public|private|internal|external|view|pure|payable|if|else|for|while|require|revert|event|emit|mapping|struct|memory|storage|calldata|true|false)\\b`;
         const types = `\\b(string|uint|uint[0-9]*|int|int[0-9]*|address|bool|bytes|bytes[0-9]*)\\b`;
-        const comments = `(\\/\\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)`;
-        const strings = `(".*?")|('.*?')`;
-        const numbers = `\\b([0-9]+)\\b`;
+        // This line is correct as is for JS regex
+        const comments = `(\\/\\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)`; 
+        // No change needed
+        const strings = `(\".*?\")|(\'.*?\')`; 
+        // This line is correct as is for JS regex
+        const numbers = `\\b([0-9]+)\\b`; 
         const regex = new RegExp(`(${keywords})|(${types})|${comments}|${strings}|(${numbers})`, 'g');
         
         return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(regex, (match: string, p1: string, p2: string, p3: string, p4: string, p5: string, p6: string, p7: string) => {
@@ -89,38 +92,33 @@ pragma solidity ^0.8.7;
     
     useEffect(() => {
         const workerCode = `
-            const solc = {
-                compile: function(input) {
-                    const parsedInput = JSON.parse(input);
-                    const contractCode = parsedInput.sources['contract.sol'].content;
-                    if (contractCode.toLowerCase().includes('error')) {
-                         return JSON.stringify({ errors: [{ severity: 'error', formattedMessage: 'Error: Simulated compilation error found in code.' }] });
-                    }
-                    const contractNameMatch = contractCode.match(/contract\\s+([\\w_]+)/);
-                    const contractName = contractNameMatch ? contractNameMatch[1] : "MyContract";
-                    let abi = [];
-                    const publicVars = contractCode.matchAll(/(\\w+)\\s+public\\s+(\\w+)/g);
-                    for (const match of publicVars) {
-                        abi.push({"inputs":[],"name":match[2],"outputs":[{"internalType":match[1],"name":"","type":match[1]}],"stateMutability":"view","type":"function"});
-                    }
-                    const mappings = contractCode.matchAll(/mapping\\(address\\s+=>\\s+(\\w+)\\)\\s+public\\s+(\\w+)/g);
-                    for (const match of mappings) {
-                        abi.push({"inputs":[{"internalType":"address","name":"","type":"address"}],"name":match[2],"outputs":[{"internalType":match[1],"name":"","type":match[1]}],"stateMutability":"view","type":"function"});
-                    }
-                    const contracts = { 'contract.sol': {} };
-                    contracts['contract.sol'][contractName] = { abi, evm: { bytecode: { object: '60806040...' } } };
-                    return JSON.stringify({ contracts });
-                }
-            };
+            importScripts('/soljson.js'); // This line should already be 
+      there from Step 3.1
+    
             self.onmessage = function(e) {
                 const { type, payload } = e.data;
                 if (type === 'INIT') {
-                    if (solc) { self.postMessage({ type: 'SOLC_LOADED' }); } 
-                    else { self.postMessage({ type: 'ERROR', payload: 'Critical Error: Mock compiler failed to initialize.' }); }
+                    // solc is loaded via importScripts, so it should be 
+      available globally
+                    if (typeof solc !== 'undefined') {
+                        self.postMessage({ type: 'SOLC_LOADED' });
+                    } else {
+                        self.postMessage({ type: 'ERROR', payload:
+      'Critical Error: solc.js failed to load.' });
+                    }
                 } else if (type === 'COMPILE') {
-                    if (!solc) { self.postMessage({ type: 'ERROR', payload: 'Compiler not ready.' }); return; }
-                    const compiled = solc.compile(JSON.stringify(payload.input));
-                    self.postMessage({ type: 'COMPILED', payload: compiled });
+                    if (typeof solc === 'undefined') { self.postMessage({
+      type: 'ERROR', payload: 'Compiler not ready.' }); return; }
+                    try {
+                        // solc.compile expects a JSON string input
+                        const compiled = solc.compile(JSON.stringify
+      (payload.input));
+                        self.postMessage({ type: 'COMPILED', payload:
+      compiled });
+                    } catch (error) {
+                        self.postMessage({ type: 'ERROR', payload:
+      'Compilation error: ' + error.message });
+                    }
                 }
             }
         `;
@@ -132,7 +130,19 @@ pragma solidity ^0.8.7;
             switch (type) {
                 case 'SOLC_LOADED': setIsCompilerReady(true); setOutput('Mock compiler ready.'); setIsError(false); break;
                 case 'COMPILED':
-                    const compiled: CompiledOutput = JSON.parse(payload);
+                    console.log('Main Thread: Received COMPILED payload:', payload);
+                    let compiled: CompiledOutput;
+                    try {
+                        compiled = JSON.parse(payload);
+                        console.log('Main Thread: Parsed compiled object:', compiled);
+                    } catch (parseError) {
+                        console.error('Main Thread: Error parsing compiled payload:', parseError, payload);
+                        setOutput('Error: Failed to parse compiler output. Check console for details.');
+                        setIsError(true);
+                        setIsLoading(false);
+                        onCompile(null);
+                        break;
+                    }
                     onCompile(compiled);
                     if (compiled.errors) {
                         const errorMessages = compiled.errors.filter((err) => err.severity === 'error').map((err) => err.formattedMessage).join('\\n');

@@ -38,7 +38,7 @@ Strings are used to store text data. They are a sequence of characters enclosed 
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.26;
 
 contract VariableTypes {
     uint public myUint = 123;
