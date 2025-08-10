@@ -91,7 +91,7 @@ pragma solidity ^0.8.7;
         const workerCode = `
             // Dynamically fetch and eval soljson.js
             let solc;
-            fetch('/soljson.js')
+            fetch(self.location.origin + '/soljson.js')
             .then(response => response.text())
             .then(scriptText => {
             
