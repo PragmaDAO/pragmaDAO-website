@@ -134,7 +134,7 @@ pragma solidity ^0.8.7;
         workerRef.current.onmessage = (e) => {
             const { type, payload } = e.data;
             switch (type) {
-                case 'SOLC_LOADED': setIsCompilerReady(true); setOutput('Mock compiler ready.'); setIsError(false); break;
+                case 'SOLC_LOADED': setIsCompilerReady(true); setOutput('Compiler ready.'); setIsError(false); break;
                 case 'COMPILED':
                     console.log('Main Thread: Received COMPILED payload:', payload);
                     let compiled: CompiledOutput;
