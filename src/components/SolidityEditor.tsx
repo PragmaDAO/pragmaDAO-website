@@ -90,19 +90,12 @@ pragma solidity ^0.8.7;
     useEffect(() => {
         const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
         const workerCode = `
-            // Dynamically fetch and eval soljson.js
-            let solc;
-            fetch('${soljsonUrl}')
-            .then(response => response.text())
-            .then(scriptText => {
-            
-                // Create a function to execute the script in the worker's scope
-            const scriptFunction = new Function(scriptText);
-            scriptFunction(); // Execute soljson.js
+            var solc; // Declare solc globally
+            var Module; // Declare Module globally
+            importScripts('${soljsonUrl}'); // Import soljson.js directly
 
-            // Set the Emscripten module's onRuntimeInitialized callback
-            Module.onRuntimeInitialized = () => {
-                if (typeof Module.cwrap === 'function') {
+            function checkCompilerReady() {
+                if (typeof Module !== 'undefined' && typeof Module.cwrap === 'function') {
                     solc = {
                         compile: function(input) {
                             return Module.cwrap('solidity_compile', 'string', ['string'])(input);
@@ -110,12 +103,13 @@ pragma solidity ^0.8.7;
                     };
                     self.postMessage({ type: 'SOLC_LOADED' });
                 } else {
-                    self.postMessage({ type:'ERROR', payload: 'Critical Error: solc.js failed to initialize (cwrap missing).' });
+                    // If not ready, try again after a short delay
+                    setTimeout(checkCompilerReady, 100);
                 }
-            };
-                }).catch(error => {
-                    self.postMessage({ type:'ERROR', payload: 'Error loading soljson.js: ' + error.message });
-                });
+            }
+
+            // Start checking if the compiler is ready
+            checkCompilerReady();
                 self.onmessage = function(e) {
                     const { type, payload } = e.data;
                     if (type === 'COMPILE') {
