@@ -88,29 +88,31 @@ pragma solidity ^0.8.7;
     }, [code]);
     
     useEffect(() => {
+        const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
         const workerCode = `
             // Dynamically fetch and eval soljson.js
             let solc;
-            fetch(self.location.origin + '/soljson.js')
+            fetch('${soljsonUrl}')
             .then(response => response.text())
             .then(scriptText => {
             
                 // Create a function to execute the script in the worker's scope
             const scriptFunction = new Function(scriptText);
             scriptFunction(); // Execute soljson.js
-            
-            // solc should now be available globally or via Module
-            if (typeof Module !=='undefined' && typeof Module.cwrap === 'function') {
-                solc = {
-                    compile: function(input) {
-                        return Module.cwrap('solidity_compile', 'string', ['string'])(input);
-                    }
-                };
-                
+
+            // Set the Emscripten module's onRuntimeInitialized callback
+            Module.onRuntimeInitialized = () => {
+                if (typeof Module.cwrap === 'function') {
+                    solc = {
+                        compile: function(input) {
+                            return Module.cwrap('solidity_compile', 'string', ['string'])(input);
+                        }
+                    };
                     self.postMessage({ type: 'SOLC_LOADED' });
                 } else {
-                    self.postMessage({ type:'ERROR', payload: 'Critical Error: solc.js failed to initialize.' });
-                    }
+                    self.postMessage({ type:'ERROR', payload: 'Critical Error: solc.js failed to initialize (cwrap missing).' });
+                }
+            };
                 }).catch(error => {
                     self.postMessage({ type:'ERROR', payload: 'Error loading soljson.js: ' + error.message });
                 });
