@@ -50,7 +50,7 @@ function add(uint256 a, uint256 b) public pure returns (uint256) {...}
     Hint: contract SimpleFunctions {...}
 -   Create a public function named `getNumber` that returns the number `1`.
     Hint: function getNumber() public pure returns (uint256)
--   Create a function named `difference` that takes two `uint256` parameters and returns their difference.
+-   3. Implement the `subtract` function to return the difference between two `uint` numbers.
     Hint: The `-` operator means subtract, a - b 
 -   Create a function named `multiply` that takes two `uint256` parameters and returns their product.
     Hint: The `*` operator means multiplication, a * b 

@@ -17,7 +17,7 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
   }
   const abi = contract.abi;
   const getNumber = abi.find((v: AbiItem) => v.name === "getNumber");
-  const difference = abi.find((v: AbiItem) => v.name === "difference");
+  const subtract = abi.find((v: AbiItem) => v.name === "subtract");
   const multiply = abi.find((v: AbiItem) => v.name === "multiply");
   console.log('abi:', abi);
 
@@ -39,24 +39,24 @@ export const runLesson3Tests = (compiledResult: CompiledOutput | null): TestCase
       passed: !!getNumber && getNumber.outputs[0].type.includes("uint"),
     },
     {
-      description: "A public function named 'difference' exists",
-      passed: !!difference && difference.type === "function",
+      description: "A public function named 'subtract' exists",
+      passed: !!subtract && subtract.type === "function",
     },
     {
-      description: "'difference' function should take two uint256 parameters",
+      description: "'subtract' function should take two uint256 parameters",
       passed:
-        !!difference &&
-        difference.inputs.length === 2 &&
-        difference.inputs[0].type.includes("uint") &&
-        difference.inputs[1].type.includes("uint"),
+        !!subtract &&
+        subtract.inputs.length === 2 &&
+        subtract.inputs[0].type.includes("uint") &&
+        subtract.inputs[1].type.includes("uint"),
     },
     {
-      description: "'difference' function should return a uint256",
-      passed: !!difference && difference.outputs[0].type.includes("uint"),
+      description: "'subtract' function should return a uint256",
+      passed: !!subtract && subtract.outputs[0].type.includes("uint"),
     },
     {
-      description: "'difference' function should be pure",
-      passed: !!difference && difference.stateMutability === "pure",
+      description: "'subtract' function should be pure",
+      passed: !!subtract && subtract.stateMutability === "pure",
     },
     {
       description: "A public function named 'multiply' exists",
