@@ -1,6 +1,6 @@
 import { CompiledOutput, TestCase, AbiItem } from "../../types";
 
-export const runLesson2Tests = (compiledResult: CompiledOutput | null): TestCase[] => {
+export const runUnderstandingVariablesAndTypesTests = (compiledResult: CompiledOutput | null): TestCase[] => {
   if (!compiledResult || compiledResult.errors) {
     return [
       {

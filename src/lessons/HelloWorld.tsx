@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase } from "../types";
-import { runLesson1Tests } from "./__tests__/lesson1.test";
+import { runHelloWorldTests } from "./__tests__/hello-world.test";
 import Lesson from "../components/Lesson";
 
-const Lesson1: React.FC<{
+const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
 }> = ({ setCurrentPage }) => {
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
@@ -13,7 +13,7 @@ const Lesson1: React.FC<{
   const [testResults, setTestResults] = useState<TestCase[]>([]);
 
   const runTests = () => {
-    const results = runLesson1Tests(compiledResult);
+    const results = runHelloWorldTests(compiledResult);
     setTestResults(results);
   };
 
@@ -27,12 +27,12 @@ const Lesson1: React.FC<{
           &larr; Back to Lessons
         </button>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/lesson1.md" />
+          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/hello-world.md" />
           <div className="flex flex-col gap-4">
             <div className="h-[400px]">
               <SolidityEditor
                 onCompile={setCompiledResult}
-                solidityFilePath="/pragmaDAO-website/lessons/solidity/Lesson1.sol"
+                solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
               />
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4">
@@ -63,4 +63,4 @@ const Lesson1: React.FC<{
   );
 };
 
-export default Lesson1;
+export default HelloWorld;

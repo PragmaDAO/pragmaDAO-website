@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase, AbiItem } from "../types";
-import { runLesson3Tests } from "./__tests__/lesson3.test";
+import { runUnderstandingFunctionsTests } from "./__tests__/understanding-functions.test";
 import Lesson from "../components/Lesson";
 
-const LessonFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
+const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   setCurrentPage,
 }) => {
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
@@ -13,7 +13,7 @@ const LessonFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   const [testResults, setTestResults] = useState<TestCase[]>([]);
 
   const runTests = () => {
-    const results = runLesson3Tests(compiledResult);
+    const results = runUnderstandingFunctionsTests(compiledResult);
     setTestResults(results);
   };
 
@@ -27,12 +27,12 @@ const LessonFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
           &larr; Back to Lessons
         </button>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/lesson3.md" />
+          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/understanding-functions.md" />
           <div className="flex flex-col gap-4">
             <div className="h-[400px]">
               <SolidityEditor
                 onCompile={setCompiledResult}
-                solidityFilePath="/pragmaDAO-website/lessons/solidity/Lesson3.sol"
+                solidityFilePath="/pragmaDAO-website/lessons/solidity/UnderstandingFunctions.sol"
               />
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4">
@@ -63,4 +63,4 @@ const LessonFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   );
 };
 
-export default LessonFunctions;
+export default UnderstandingFunctions;

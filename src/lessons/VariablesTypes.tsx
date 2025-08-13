@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase, AbiItem } from "../types";
-import { runLesson2Tests } from "./__tests__/lesson2.test";
+import { runUnderstandingVariablesAndTypesTests } from "./__tests__/understanding-variables-and-types.test";
 import Lesson from "../components/Lesson";
 
-const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
+const VariablesTypes: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   setCurrentPage,
 }) => {
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
@@ -13,7 +13,7 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   const [testResults, setTestResults] = useState<TestCase[]>([]);
 
   const runTests = () => {
-    const results = runLesson2Tests(compiledResult);
+    const results = runUnderstandingVariablesAndTypesTests(compiledResult);
     setTestResults(results);
   };
 
@@ -27,12 +27,12 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
           &larr; Back to Lessons
         </button>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/lesson2.md" />
+          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/understanding-variables-and-types.md" />
           <div className="flex flex-col gap-4">
             <div className="h-[400px]">
               <SolidityEditor
                 onCompile={setCompiledResult}
-                solidityFilePath="/pragmaDAO-website/lessons/solidity/Lesson2.sol"
+                solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
               />
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4">
@@ -63,4 +63,4 @@ const LessonVariables: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   );
 };
 
-export default LessonVariables;
+export default VariablesTypes;
