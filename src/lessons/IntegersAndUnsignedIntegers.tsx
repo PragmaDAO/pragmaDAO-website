@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import SolidityEditor from "../components/SolidityEditor";
-import { CompiledOutput, TestCase, AbiItem } from "../types";
-import { runUnderstandingFunctionsTests } from "./__tests__/understanding-functions.test";
+import { CompiledOutput, TestCase } from "../types";
+import { runIntegersAndUnsignedIntegersTests } from "./__tests__/integers-and-unsigned-integers.test";
 import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 
-const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
-  setCurrentPage,
-}) => {
+const IntegersAndUnsignedIntegers: React.FC<{
+  setCurrentPage: (page: string) => void;
+}> = ({ setCurrentPage }) => {
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
   );
@@ -17,7 +17,7 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
 
   const runTests = () => {
-    const results = runUnderstandingFunctionsTests(compiledResult);
+    const results = runIntegersAndUnsignedIntegersTests(compiledResult);
     setTestResults(results);
   };
 
@@ -48,11 +48,11 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
           &larr; Back to Lessons
         </button>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/understanding-functions.md" />
+          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/integers-and-unsigned-integers.md" />
           <div className="flex flex-col gap-4 min-h-[800px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/pragmaDAO-website/lessons/solidity/UnderstandingFunctions.sol"
+              solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
             />
             <div className="bg-gray-800/50 rounded-lg p-4 relative">
               <h3 className="text-lg font-bold mb-4">Test Cases</h3>
@@ -83,4 +83,4 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
   );
 };
 
-export default UnderstandingFunctions;
+export default IntegersAndUnsignedIntegers;

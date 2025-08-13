@@ -1,6 +1,7 @@
 import { Lesson } from './types';
 import HelloWorld from './lessons/HelloWorld';
 import VariablesTypes from './lessons/VariablesTypes';
+import IntegersAndUnsignedIntegers from './lessons/IntegersAndUnsignedIntegers';
 import UnderstandingFunctions from './lessons/UnderstandingFunctions';
 
 export const lessons: Lesson[] = [
@@ -17,6 +18,13 @@ export const lessons: Lesson[] = [
     description: 'Dive into value types, reference types, and data locations like storage, memory, and calldata.',
     difficulty: 'Beginner',
     component: VariablesTypes,
+  },
+  {
+    id: 'integers-and-unsigned-integers',
+    title: 'Integers and Unsigned Integer Values',
+    description: 'Understand the difference between signed and unsigned integers, their sizes, and conversion.',
+    difficulty: 'Beginner',
+    component: IntegersAndUnsignedIntegers,
   },
   {
     id: 'understanding-functions',

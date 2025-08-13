@@ -144,6 +144,7 @@ const GlobalStyles = () => (
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
             gap: 2rem;
+            min-height: 80vh; /* Ensure enough vertical space */
         }
         @media (min-width: 1024px) {
             .lesson-container {

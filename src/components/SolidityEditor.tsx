@@ -200,7 +200,7 @@ pragma solidity ^0.8.7;
     };
 
     return (
-        <div className="solidity-editor-container h-[600px]">
+        <div className="solidity-editor-container h-[800px]">
             <div className="editor-wrapper">
                 <textarea 
                     value={code} 

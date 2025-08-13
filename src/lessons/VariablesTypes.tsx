@@ -49,7 +49,7 @@ const VariablesTypes: React.FC<{ setCurrentPage: (page: string) => void }> = ({
         </button>
         <div className="lesson-container">
           <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/understanding-variables-and-types.md" />
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 min-h-[800px]">
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
