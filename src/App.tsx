@@ -238,6 +238,31 @@ const GlobalStyles = () => (
         .test-case-row.passed { background-color: rgba(16, 185, 129, 0.1); }
         .test-case-row.failed { background-color: rgba(239, 68, 68, 0.1); }
 
+        .test-results-container {
+            height: 150px;
+            overflow-y: auto;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translate(-50%, 0);
+            }
+            40% {
+                transform: translate(-50%, -10px);
+            }
+            60% {
+                transform: translate(-50%, -5px);
+            }
+        }
+
     `}</style>
 );
 

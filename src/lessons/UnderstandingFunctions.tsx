@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase, AbiItem } from "../types";
 import { runUnderstandingFunctionsTests } from "./__tests__/understanding-functions.test";
 import Lesson from "../components/Lesson";
+import ScrollIndicator from "../components/ScrollIndicator";
 
 const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   setCurrentPage,
@@ -11,10 +12,30 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
     null,
   );
   const [testResults, setTestResults] = useState<TestCase[]>([]);
+  const [isScrollable, setIsScrollable] = useState(false);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const testResultsContainerRef = useRef<HTMLDivElement>(null);
 
   const runTests = () => {
     const results = runUnderstandingFunctionsTests(compiledResult);
     setTestResults(results);
+  };
+
+  useEffect(() => {
+    const container = testResultsContainerRef.current;
+    if (container) {
+      const isNowScrollable = container.scrollHeight > container.clientHeight;
+      setIsScrollable(isNowScrollable);
+      setShowScrollIndicator(isNowScrollable);
+    }
+  }, [testResults]);
+
+  const handleScroll = () => {
+    const container = testResultsContainerRef.current;
+    if (container) {
+      const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 5; // 5px buffer
+      setShowScrollIndicator(!isAtBottom);
+    }
   };
 
   return (
@@ -33,7 +54,7 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/UnderstandingFunctions.sol"
             />
-            <div className="bg-gray-800/50 rounded-lg p-4">
+            <div className="bg-gray-800/50 rounded-lg p-4 relative">
               <h3 className="text-lg font-bold mb-4">Test Cases</h3>
               <button
                 onClick={runTests}
@@ -42,7 +63,7 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
               >
                 Run Tests
               </button>
-              <div>
+              <div className="test-results-container" ref={testResultsContainerRef} onScroll={handleScroll}>
                 {testResults.map((result, i) => (
                   <div
                     key={i}
@@ -53,6 +74,7 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
                   </div>
                 ))}
               </div>
+              {isScrollable && showScrollIndicator && <ScrollIndicator />}
             </div>
           </div>
         </div>
