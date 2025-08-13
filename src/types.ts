@@ -1,3 +1,5 @@
+import { FC } from 'react';
+
 // --- TYPE DEFINITIONS ---
 export interface FeatureCardProps {
     title: string;
@@ -15,11 +17,21 @@ export interface NavLinkProps {
     onClick: () => void;
 }
 
+export type Difficulty = 'Beginner' | 'Intermediate' | 'Advanced';
+
+export interface Lesson {
+    id: string;
+    title: string;
+    description: string;
+    difficulty: Difficulty;
+    component: FC<{ setCurrentPage: (page: string) => void; }>;
+}
+
 export interface LessonRowProps {
     index: number;
     title: string;
     description: string;
-    difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+    difficulty: Difficulty;
     onClick: () => void;
 }
 
@@ -61,4 +73,9 @@ export interface CompiledOutput {
         };
     };
     errors?: { severity: string; formattedMessage: string }[];
+}
+
+export interface Instruction {
+    text: string;
+    hint?: string;
 }
