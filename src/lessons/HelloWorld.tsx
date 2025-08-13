@@ -29,12 +29,10 @@ const HelloWorld: React.FC<{
         <div className="lesson-container">
           <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/hello-world.md" />
           <div className="flex flex-col gap-4">
-            <div className="h-[400px]">
-              <SolidityEditor
-                onCompile={setCompiledResult}
-                solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
-              />
-            </div>
+            <SolidityEditor
+              onCompile={setCompiledResult}
+              solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
+            />
             <div className="bg-gray-800/50 rounded-lg p-4">
               <h3 className="text-lg font-bold mb-4">Test Cases</h3>
               <button
