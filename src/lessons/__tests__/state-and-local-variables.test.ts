@@ -32,6 +32,11 @@ export const runStateAndLocalVariablesTests = (compiledResult: CompiledOutput | 
     passed: false,
   };
 
+  let localVariableExistsTest: TestCase = {
+    description: "Function 'localVariableFunc' should contain a local variable named 'localVariable'",
+    passed: false,
+  };
+
   if (contract) {
     const abi = contract.abi as AbiItem[];
     const myStateVariable = abi.find((item) => item.name === "myStateVariable" && item.type === "function"); // state variables have a getter function
@@ -42,6 +47,12 @@ export const runStateAndLocalVariablesTests = (compiledResult: CompiledOutput | 
 
     const localVariableFunc = abi.find((item) => item.name === "localVariableFunc" && item.type === "function");
     localVariableFuncExistsTest.passed = !!localVariableFunc && localVariableFunc.stateMutability === 'view';
+
+    // Check for the local variable in the bytecode
+    const bytecode = contract.evm.bytecode.object;
+    // This is a simplified check. A more robust check would involve parsing the bytecode.
+    // We are checking for the opcode PUSH1 0x01, which is 6001 in hex.
+    localVariableExistsTest.passed = bytecode.includes("6001");
   }
 
   return [
@@ -49,5 +60,6 @@ export const runStateAndLocalVariablesTests = (compiledResult: CompiledOutput | 
     myStateVariableExistsTest,
     setToTenMoreExistsTest,
     localVariableFuncExistsTest,
+    localVariableExistsTest,
   ];
 };

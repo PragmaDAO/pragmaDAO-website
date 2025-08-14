@@ -1,4 +1,4 @@
-## Lesson 1: Your First Smart Contract
+## Your First Smart Contract
 
 Welcome to Solidity! In this first lesson, you'll write and compile your very first smart contract. This is the "Hello, World!" of the Ethereum Blockchain world.
 
