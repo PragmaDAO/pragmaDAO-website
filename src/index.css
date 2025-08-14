@@ -12,3 +12,15 @@ body {
   list-style-type: disc;
   padding-left: 1.5em; /* Adjust as needed for spacing */
 }
+
+.hint-box {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap; /* Ensures that whitespace is preserved but wraps */
+  max-width: 100%; /* Ensures it doesn't overflow its container */
+}
+
+.hint-box pre,
+.hint-box code {
+  white-space: pre-wrap !important;
+}

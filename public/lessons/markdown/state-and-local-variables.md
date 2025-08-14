@@ -32,6 +32,9 @@ In this example, `myLocalVariable` can only be used inside `myFunction`.
 
 ### Instructions
 
-1.  Create a public state variable named `myStateVariable` of type `uint256`.
-2.  Create an `external` function called `setToTenMore` that takes no arguments and does not return anything. This function should set `myStateVariable` to its current value plus 10.
-3.  Create an `external view` function called `localVariableFunc` that takes no arguments and does not return anything. Inside this function, create a `uint` local variable named `localVariable` and set it to `1`.
+-   Create a public state variable named `myStateVariable` of type `uint256`.
+    Hint: State variables are declared directly inside a contract, but outside of any function. Example: `uint256 myStateVariable;`
+-   Create an `external` function called `setToTenMore` that takes no arguments and does not return anything. This function should set `myStateVariable` to its current value plus 10.
+    Hint: Use the `+=` operator to add 10 to `myStateVariable`. Example: `myStateVariable += 10;`
+-   Create an `external view` function called `localVariableFunc` that takes no arguments and does not return anything. Inside this function, create a `uint` local variable named `localVariable` and set it to `1`.
+    Hint: Local variables are declared inside a function. Example: `uint localVariable = 1;`
