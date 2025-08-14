@@ -3,6 +3,7 @@ import HelloWorld from './lessons/HelloWorld';
 import VariablesTypes from './lessons/VariablesTypes';
 import IntegersAndUnsignedIntegers from './lessons/IntegersAndUnsignedIntegers';
 import UnderstandingFunctions from './lessons/UnderstandingFunctions';
+import StateAndLocalVariables from './lessons/StateAndLocalVariables';
 
 export const lessons: Lesson[] = [
   {
@@ -32,5 +33,12 @@ export const lessons: Lesson[] = [
     description: 'Learn the basics of functions in Solidity.',
     difficulty: 'Beginner',
     component: UnderstandingFunctions,
+  },
+  {
+    id: 'state-and-local-variables',
+    title: 'State and Local Variables',
+    description: 'Understand the difference between state and local variables.',
+    difficulty: 'Beginner',
+    component: StateAndLocalVariables,
   },
 ];
