@@ -1,4 +1,4 @@
-## Lesson 2: Understanding Variables & Types
+## Understanding Variables & Types
 
 Smart contracts are all about managing state. In this lesson, you'll learn about the fundamental data types in Solidity.
 

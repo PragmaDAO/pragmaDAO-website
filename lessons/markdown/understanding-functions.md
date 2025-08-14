@@ -1,4 +1,4 @@
-## Lesson 3: Understanding Functions
+## Understanding Functions
 
 ### Objective
 
