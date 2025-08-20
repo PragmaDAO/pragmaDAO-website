@@ -4,6 +4,7 @@ import VariablesTypes from './lessons/VariablesTypes';
 import IntegersAndUnsignedIntegers from './lessons/IntegersAndUnsignedIntegers';
 import UnderstandingFunctions from './lessons/UnderstandingFunctions';
 import StateAndLocalVariables from './lessons/StateAndLocalVariables';
+import GlobalVariables from './lessons/GlobalVariables';
 
 export const lessons: Lesson[] = [
   {
@@ -40,5 +41,12 @@ export const lessons: Lesson[] = [
     description: 'Understand the difference between state and local variables.',
     difficulty: 'Beginner',
     component: StateAndLocalVariables,
+  },
+  {
+    id: 'global-variables',
+    title: 'Global Variables',
+    description: 'Explore built-in global variables like msg.sender, msg.value, and block.timestamp.',
+    difficulty: 'Beginner',
+    component: GlobalVariables,
   },
 ];
