@@ -19,76 +19,58 @@ const execCommand = (command: string, cwd: string): Promise<string> => {
 };
 
 router.post('/test-solidity', async (req: Request, res: Response) => {
-    const { code } = req.body;
+    const { code, lessonId } = req.body;
 
-    if (!code) {
-        return res.status(400).json({ error: 'Solidity code is required.' });
+    if (!code || !lessonId) {
+        return res.status(400).json({ error: 'Solidity code and lessonId are required.' });
     }
 
-    // Create a temporary directory for the test
     const tempDir = path.join(__dirname, '..', '..', 'temp', `test-${Date.now()}`);
-    const baseProjectPath = path.join(__dirname, '..', '..', 'forge_base_project');
-    const projectInTempDir = path.join(tempDir, 'forge_project'); // New path for the copied project
+    const projectInTempDir = path.join(tempDir, 'forge_project');
 
     try {
-        // Create the temporary directory
-        fs.mkdirSync(tempDir, { recursive: true });
+        fs.mkdirSync(projectInTempDir, { recursive: true });
 
-        // Copy the base Foundry project into the temporary directory
-        // This copies the entire forge_base_project folder into tempDir
-        await execCommand(`cp -r ${baseProjectPath} ${projectInTempDir}`, tempDir);
+        const baseProjectPath = path.join(__dirname, '..', '..', 'forge_base_project');
+        await execCommand(`cp -r ${baseProjectPath}/* ${projectInTempDir}/`, tempDir);
 
-        // Adjust srcDir and testDir to point inside the copied project
         const srcDir = path.join(projectInTempDir, 'src');
         const testDir = path.join(projectInTempDir, 'test');
 
-        // Write the user's Solidity code to a temporary file
-        const contractFileName = 'UserContract.sol';
-        const contractFilePath = path.join(srcDir, contractFileName);
-        fs.writeFileSync(contractFilePath, code);
+        // Define file paths
+        const userCodeFilePath = path.join(srcDir, 'HelloWorld.sol');
+        const testFilePath = path.join(testDir, 'test.t.sol');
 
-        // Create a basic test file for the user's contract
-        const testFileName = 'UserContract.t.sol';
-        const testFilePath = path.join(testDir, testFileName);
-        const testContent = `
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26; // Changed pragma to match user's code
+        // Write user's code
+        fs.writeFileSync(userCodeFilePath, code);
 
-import "forge-std/Test.sol";
-import "../src/${contractFileName}";
+        // Construct the path to the lesson's test file
+        const lessonTestFilePath = path.join(__dirname, '..', '..', 'tests', lessonId, 'test.t.sol');
 
-contract UserContractTest is Test {
-    // You can add a constructor or setUp function here if needed
+        // Check if the test file exists
+        if (!fs.existsSync(lessonTestFilePath)) {
+            return res.status(400).json({ error: `No test file found for lesson: ${lessonId}` });
+        }
 
-    function test_Example() public {
-        // This is a placeholder test. Users will need to provide their own tests.
-        // For now, we just ensure the contract compiles and a basic test runs.
-        assertTrue(true, "Example test passed");
-    }
-}
-`;
+        // Read the lesson's test file and write it to the temp directory
+        const testContent = fs.readFileSync(lessonTestFilePath, 'utf-8');
         fs.writeFileSync(testFilePath, testContent);
 
-        // Run forge test in the copied project directory
-        console.log(`Running: forge test --root ${projectInTempDir} -vvvv in ${projectInTempDir}`);
-        const testOutput = await execCommand(`forge test --root ${projectInTempDir} -vvvv`, projectInTempDir);
-        console.log('forge test output:', testOutput);
-
+        // Run forge test
+        const testOutput = await execCommand(`forge test -vvv`, projectInTempDir);
 
         res.json({
             success: true,
-            output: testOutput
+            output: testOutput,
         });
-
     } catch (err: any) {
         console.error('Error processing Solidity test:', err);
         res.status(500).json({
             success: false,
-            output: err.message, // Send the detailed error message
-            error: err.message
+            output: err.message,
+            error: err.message,
         });
     } finally {
-        // Clean up temporary directory
         fs.rmSync(tempDir, { recursive: true, force: true });
     }
 });
