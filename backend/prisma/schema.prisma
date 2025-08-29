@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -14,26 +13,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/*
- Explanation of the fields:
-   * id: A unique identifier for each user. @id marks
-     it as the primary key. @default(auto()) 
-     @map("_id") @db.ObjectId configures it for
-     MongoDB's ObjectId, which is a common default for
-     Prisma.
-   * username: The user's unique username. @unique
-     ensures no two users can have the same username.
-   * password: The user's password (which we will hash
-     before storing).
-   * createdAt: Automatically set to the current time
-     when a user is created.
-   * updatedAt: Automatically updated to the current
-     time whenever the user's record is modified.
-*/
-  model User {
-    id String @id @default(uuid())
-    username  String @unique
-    password  String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-   }
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  progress  UserLessonProgress[]
+}
+
+model UserLessonProgress {
+  id        String   @id @default(uuid())
+  userId    String
+  lessonId  String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, lessonId])
+}
