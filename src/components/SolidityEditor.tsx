@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { EditorView, basicSetup } from 'codemirror';
+import { EditorView, keymap } from '@codemirror/view';
+import { basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { solidity } from '@replit/codemirror-lang-solidity';
+import { indentWithTab } from '@codemirror/commands';
+import { indentUnit } from '@codemirror/language';
 
 // --- TYPE DEFINITIONS (Moved from types.ts to fix import error) ---
 interface AbiItem {
@@ -57,6 +60,8 @@ pragma solidity ^0.8.7;
             extensions: [
                 basicSetup,
                 solidity,
+                keymap.of([indentWithTab]),
+                indentUnit.of("    "), // Set tab size to 4 spaces
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
                         setCode(update.state.doc.toString());
