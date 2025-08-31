@@ -68,3 +68,11 @@ body {
 .cm-activeLine {
   background-color: #2a303c !important; /* Slightly lighter background for active line */
 }
+
+.cm-activeLine .cm-gutterElement {
+  background-color: #1a202c !important; /* Ensure active line gutter background matches overall gutter */
+}
+
+.cm-selectionBackground {
+  background-color: #2a303c !important; /* Match active line background for selection */
+}

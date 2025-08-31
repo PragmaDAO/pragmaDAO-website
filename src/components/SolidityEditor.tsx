@@ -237,12 +237,14 @@ pragma solidity ^0.8.7;
             </div>
             <div className="flex items-center justify-between mt-2 flex-shrink-0">
                 <span className="text-xs text-gray-400 pl-2">Solidity v0.8.26 (Mock)</span>
-                <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {isLoading ? 'Compiling...' : 'Compile'}
-                </button>
-                <button onClick={handleRunTests} disabled={isLoading} className="ml-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {isLoading ? 'Running Tests...' : 'Run Tests'}
-                </button>
+                <div className="flex space-x-2">
+                    <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        {isLoading ? 'Compiling...' : 'Compile'}
+                    </button>
+                    <button onClick={handleRunTests} disabled={isLoading} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        {isLoading ? 'Running Tests...' : 'Run Tests'}
+                    </button>
+                </div>
             </div>
             {output && (
                 <div className="mt-2 flex-shrink-0 output-container">
