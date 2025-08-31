@@ -5,9 +5,15 @@ contract HelloWorld {
     // Declare a public state variable of type string named greeting
     string public greeting;
 
-    function greet() public returns (string memory) {
-        // Initialize the greeting variable with a value
+    constructor() {
         greeting = "Hello, World!";
+    }
+
+    function greet() public view returns (string memory) {
         return greeting;
+    }
+
+    function setGreeting(string memory _greeting) public {
+        greeting = _greeting;
     }
 }

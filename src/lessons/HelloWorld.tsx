@@ -53,6 +53,7 @@ const HelloWorld: React.FC<{
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
+              lessonId="HelloWorld"
             />
             <div className="bg-gray-800/50 rounded-lg p-4 relative">
               <h3 className="text-lg font-bold mb-4">Test Cases</h3>

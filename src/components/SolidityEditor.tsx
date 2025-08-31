@@ -97,13 +97,24 @@ pragma solidity ^0.8.7;
                 })
                 .then(text => {
                     setCode(text);
+                    if (viewRef.current) {
+                        viewRef.current.dispatch({
+                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error("Could not load solidity file:", error);
-                    setCode(`// Error loading file from ${solidityFilePath}
+                    const errorText = `// Error loading file from ${solidityFilePath}
 // Please check the path and ensure the file exists.
 
-` + initialCode);
+` + (initialCode || '');
+                    setCode(errorText);
+                    if (viewRef.current) {
+                        viewRef.current.dispatch({
+                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: errorText }
+                        });
+                    }
                 });
         }
     }, [solidityFilePath, initialCode]);

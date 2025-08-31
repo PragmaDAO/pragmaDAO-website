@@ -19,45 +19,36 @@ const execCommand = (command: string, cwd: string): Promise<string> => {
 };
 
 router.post('/test-solidity', async (req: Request, res: Response) => {
-    const { code, lessonId } = req.body;
+    const { code, lessonId } = req.body; // 'code' is the user's contract code, 'lessonId' identifies the lesson
 
     if (!code || !lessonId) {
         return res.status(400).json({ error: 'Solidity code and lessonId are required.' });
     }
 
-    const tempDir = path.join(__dirname, '..', '..', 'temp', `test-${Date.now()}`);
-    const projectInTempDir = path.join(tempDir, 'forge_project');
+    const forgeProjectPath = path.join(__dirname, '..', '..', 'forge_base_project');
+    const srcDir = path.join(forgeProjectPath, 'src');
+    const testDir = path.join(forgeProjectPath, 'test');
+
+    // Define paths for the user's contract file and the lesson's test file
+    const userContractFileName = `${lessonId}.sol`; // e.g., HelloWorld.sol
+    const userContractFilePath = path.join(srcDir, userContractFileName);
+    const lessonTestFilePath = path.join(testDir, lessonId, `${lessonId}.t.sol`); // e.g., test/HelloWorld/HelloWorld.t.sol
 
     try {
-        fs.mkdirSync(projectInTempDir, { recursive: true });
+        // 1. Write the user's contract code to the designated file in forge_base_project/src
+        fs.writeFileSync(userContractFilePath, code);
 
-        const baseProjectPath = path.join(__dirname, '..', '..', 'forge_base_project');
-        await execCommand(`cp -r ${baseProjectPath}/* ${projectInTempDir}/`, tempDir);
-
-        const srcDir = path.join(projectInTempDir, 'src');
-        const testDir = path.join(projectInTempDir, 'test');
-
-        // Define file paths
-        const userCodeFilePath = path.join(srcDir, 'HelloWorld.sol');
-        const testFilePath = path.join(testDir, 'test.t.sol');
-
-        // Write user's code
-        fs.writeFileSync(userCodeFilePath, code);
-
-        // Construct the path to the lesson's test file
-        const lessonTestFilePath = path.join(__dirname, '..', '..', 'tests', lessonId, 'test.t.sol');
-
-        // Check if the test file exists
+        // 2. Check if the lesson's test file exists
         if (!fs.existsSync(lessonTestFilePath)) {
-            return res.status(400).json({ error: `No test file found for lesson: ${lessonId}` });
+            return res.status(400).json({ error: `No test file found for lesson: ${lessonId} at ${lessonTestFilePath}` });
         }
 
-        // Read the lesson's test file and write it to the temp directory
-        const testContent = fs.readFileSync(lessonTestFilePath, 'utf-8');
-        fs.writeFileSync(testFilePath, testContent);
-
-        // Run forge test
-        const testOutput = await execCommand(`forge test -vvv`, projectInTempDir);
+        // 3. Run forge test, targeting the specific lesson's test file
+        // The test file itself will need to import the user's contract (e.g., import "../../src/HelloWorld.sol";)
+        const testOutput = await execCommand(
+            `forge test -vvv --match-path ${path.join('test', lessonId, `${lessonId}.t.sol`)}`,
+            forgeProjectPath
+        );
 
         res.json({
             success: true,
@@ -71,7 +62,10 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
             error: err.message,
         });
     } finally {
-        fs.rmSync(tempDir, { recursive: true, force: true });
+        // Clean up the user's contract file
+        if (fs.existsSync(userContractFilePath)) {
+            fs.unlinkSync(userContractFilePath);
+        }
     }
 });
 

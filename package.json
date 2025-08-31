@@ -58,5 +58,6 @@
       "last 1 safari version"
     ]
   },
+  "proxy": "http://localhost:3003",
   "homepage": "https://PragmaDAO.github.io/pragmaDAO-website"
 }
