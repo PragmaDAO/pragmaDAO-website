@@ -2,69 +2,85 @@ import { Router, Request, Response } from 'express';
 import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { promisify } from 'util';
 
 const router = Router();
 
-// Helper function to execute shell commands with Promise
-const execCommand = (command: string, cwd: string): Promise<string> => {
+// Promisify fs functions for async/await usage
+const mkdtempAsync = promisify(fs.mkdtemp);
+const writeFileAsync = promisify(fs.writeFile);
+const readFileAsync = promisify(fs.readFile);
+const rmAsync = promisify(fs.rm);
+
+// Custom Promise wrapper for exec to correctly capture stdout/stderr on error
+const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise((resolve, reject) => {
         exec(command, { cwd }, (error, stdout, stderr) => {
             if (error) {
-                reject(new Error(`Command failed: ${command}\n${stderr || stdout}`));
+                // On error, reject with an object containing all details
+                reject({ message: error.message, stdout, stderr });
             } else {
-                resolve(stdout);
+                // On success, resolve with stdout and stderr
+                resolve({ stdout, stderr });
             }
         });
     });
 };
 
 router.post('/test-solidity', async (req: Request, res: Response) => {
-    const { code, lessonId } = req.body; // 'code' is the user's contract code, 'lessonId' identifies the lesson
+    const { code, lessonId } = req.body;
 
     if (!code || !lessonId) {
         return res.status(400).json({ error: 'Solidity code and lessonId are required.' });
     }
 
-    const forgeProjectPath = path.join(__dirname, '..', '..', 'forge_base_project');
-    const srcDir = path.join(forgeProjectPath, 'src');
-    const testDir = path.join(forgeProjectPath, 'test');
+    const originalTestFilePath = path.join(__dirname, '..', '..', 'forge_base_project', 'test', lessonId, `${lessonId}.t.sol`);
 
-    // Define paths for the user's contract file and the lesson's test file
-    const userContractFileName = `${lessonId}.sol`; // e.g., HelloWorld.sol
-    const userContractFilePath = path.join(srcDir, userContractFileName);
-    const lessonTestFilePath = path.join(testDir, lessonId, `${lessonId}.t.sol`); // e.g., test/HelloWorld/HelloWorld.t.sol
+    if (!fs.existsSync(originalTestFilePath)) {
+        return res.status(400).json({ error: `No test file found for lesson: ${lessonId} at ${originalTestFilePath}` });
+    }
 
+    let tempDir: string | undefined;
     try {
-        // 1. Write the user's contract code to the designated file in forge_base_project/src
-        fs.writeFileSync(userContractFilePath, code);
+        const tempDirPrefix = path.join(require('os').tmpdir(), 'pragma-forge-');
+        tempDir = await mkdtempAsync(tempDirPrefix);
 
-        // 2. Check if the lesson's test file exists
-        if (!fs.existsSync(lessonTestFilePath)) {
-            return res.status(400).json({ error: `No test file found for lesson: ${lessonId} at ${lessonTestFilePath}` });
-        }
+        await execCommand('forge init --no-git', tempDir);
 
-        // 3. Run forge test, targeting the specific lesson's test file
-        // The test file itself will need to import the user's contract (e.g., import "../../src/HelloWorld.sol";)
-        const testOutput = await execCommand(
-            `forge test -vvv --match-path ${path.join('test', lessonId, `${lessonId}.t.sol`)}`,
-            forgeProjectPath
-        );
+        const tempSrcDir = path.join(tempDir, 'src');
+        const tempTestDir = path.join(tempDir, 'test');
+
+        const tempContractPath = path.join(tempSrcDir, `${lessonId}.sol`);
+        await writeFileAsync(tempContractPath, code);
+
+        const originalTestCode = await readFileAsync(originalTestFilePath, 'utf8');
+        const updatedTestCode = originalTestCode.replace('../../src/', '../src/');
+        const tempTestPath = path.join(tempTestDir, `${lessonId}.t.sol`);
+        await writeFileAsync(tempTestPath, updatedTestCode);
+
+        const { stdout: testOutput } = await execCommand('forge test -vvv', tempDir);
 
         res.json({
             success: true,
             output: testOutput,
         });
+
     } catch (err: any) {
         console.error('Error processing Solidity test:', err);
+        // Combine all parts of the error into one comprehensive message.
+        const fullError = `Message: ${err.message}\n\nSTDOUT:\n${err.stdout}\n\nSTDERR:\n${err.stderr}`;
         res.status(500).json({
             success: false,
-            output: err.message,
-            error: err.message,
+            output: fullError,
+            error: fullError,
         });
     } finally {
-        // Clean up the user's contract file
-        if (fs.existsSync(userContractFilePath)) {
-            fs.unlinkSync(userContractFilePath);
+        if (tempDir) {
+            try {
+                await rmAsync(tempDir, { recursive: true, force: true });
+            } catch (cleanupError) {
+                console.error(`Failed to clean up temporary directory ${tempDir}:`, cleanupError);
+            }
         }
     }
 });

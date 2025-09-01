@@ -172,5 +172,3 @@ backend/.env
 backend/dist/
 db_data/
 
-# Added by Gemini
-GEMINI.md

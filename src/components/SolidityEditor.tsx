@@ -235,11 +235,15 @@ pragma solidity ^0.8.7;
                 setOutput(data.output);
                 setIsError(!data.success);
             } else {
-                setOutput(`Error: ${data.error || 'Unknown error'}`);
+                const errorMessage = data.output || data.error || 'An unknown error occurred.';
+                // The backend sends a string with '\n' for newlines, so we replace them with actual newlines
+                // for correct rendering in a <pre> tag.
+                const formattedError = String(errorMessage).replace(/\\n/g, '\n');
+                setOutput(formattedError);
                 setIsError(true);
             }
         } catch (error: any) {
-            setOutput(`Network error: ${error.message}`);
+            setOutput(`Network or JSON parsing error: ${error.message}`);
             setIsError(true);
         } finally {
             setIsLoading(false);
