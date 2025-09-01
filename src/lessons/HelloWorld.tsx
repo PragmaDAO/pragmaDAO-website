@@ -52,8 +52,8 @@ const HelloWorld: React.FC<{
           <div className="flex flex-col gap-4 min-h-[800px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
-              lessonId="HelloWorld"
+              solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol" // Changed to HelloWorld.sol
+              lessonId="HelloWorld" // Changed to HelloWorld
             />
             <div className="bg-gray-800/50 rounded-lg p-4 relative">
               <h3 className="text-lg font-bold mb-4">Test Cases</h3>
