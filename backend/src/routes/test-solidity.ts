@@ -53,7 +53,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         // Ensure 'test = "test"' is present in the [profile.default] section
         if (!foundryTomlContent.includes('test = "test"')) {
             foundryTomlContent = foundryTomlContent.replace(
-                /(\[profile\.default\]\n)/,
+                /(\[profile.default\]\n)/,
                 '$1test = "test"\n'
             );
         }
@@ -86,7 +86,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         console.log('\n--- Running Forge Test... ---');
         // --- END DEEPER DEBUGGING LOGS ---
 
-        const { stdout: testOutput } = await execCommand('forge test -vvv', tempDir);
+        const { stdout: testOutput } = await execCommand(`forge test --match-path "*${lessonId}.t.sol" -vvv`, tempDir);
 
         res.json({
             success: true,

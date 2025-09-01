@@ -47,7 +47,31 @@ This is like the title on a house blueprint. The name is "HelloWorld House," and
 
 ### The State Variable
 ```solidity 
-string public greeting;
+### Instructions
+
+1.  **Define the Contract**: Create a contract named `HelloWorld`.
+2.  **Create a State Variable**: Add a `public` state variable of type `string` called `greeting`.
+3.  **Initialize the Greeting**: Use the `constructor` to set the initial value of the `greeting` variable to `"Hello, World!"`.
+4.  **Create a `greet` function**: Create a `public` function named `greet` that returns a `string memory`.
+5.  **Return the Greeting**: Inside the `greet` function, return the value of the `greeting` state variable.
+6.  **Compile and Test**: Click the "Compile" button. If it succeeds, click "Run Tests" to verify your work against the test cases below.
+
+### Test Cases
+
+```json
+[
+  {
+    "name": "greet() returns 'Hello, World!'",
+    "test": "test_greetReturnsHelloWorld",
+    "status": "pending"
+  },
+  {
+    "name": "'greeting' state variable is public and initialized",
+    "test": "test_greetingStateVariableIsPublic",
+    "status": "pending"
+  }
+]
+```
 ```
 
 This is a "state variable" declaration. It's a piece of data that will be permanently stored on the blockchain.
@@ -84,10 +108,10 @@ This is a specific instruction for the construction crew: "Go to the room named 
 
 ### Instructions
 
--   Delete the contract to rewrite it.
-    Hint: use the instructions to rewrite the contract from scratch
+-   Study the contract and try to understand it.
+    Hint:try to use the instructions to rewrite the contract from scratch
 -   In the editor on the right, define a contract named `HelloWorld`.
-    Hint: `contract MyContract { ... }`
+    Hint: contract MyContract { ... }
 -   Define a function named `greet`, that is `public` and `returns` a `string` of `memory` type. Feel free to check the hint.
     Hint: function greet() public returns (string memory) {...}
 -   Inside the function, set the value of `greeting` to `Hello, World!`. 
