@@ -251,32 +251,45 @@ pragma solidity ^0.8.7;
     };
 
     return (
-        <div className="solidity-editor-container h-[800px]">
-            <div className="editor-wrapper" ref={editorRef}> 
+        <div className="solidity-editor-container flex flex-col h-screen">
+            <div className="editor-wrapper h-1/2" ref={editorRef} style={{ overflowY: 'auto' }}>
                 {/* CodeMirror editor will be mounted here */}
             </div>
-            <div className="flex items-center justify-between mt-2 flex-shrink-0">
-                <span className="text-xs text-gray-400 pl-2">Solidity v0.8.26 (Mock)</span>
-                <div className="flex space-x-2">
-                    <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                        {isLoading ? 'Compiling...' : 'Compile'}
-                    </button>
-                    <button onClick={handleRunTests} disabled={isLoading} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                        {isLoading ? 'Running Tests...' : 'Run Tests'}
-                    </button>
-                </div>
-            </div>
-            {output && (
-                <div className="mt-2 flex-shrink-0 output-container">
-                    <div className="output-header flex justify-between items-center">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">Output</span>
-                        <button onClick={() => setIsOutputExpanded(!isOutputExpanded)} className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">
-                            {isOutputExpanded ? 'COLLAPSE' : 'EXPAND'}
+
+            {/* Replace just your output-wrapper section with this: */}
+            <div className="output-wrapper h-1/2 flex flex-col">
+                <div className="flex items-center justify-between mt-2 mb-2 flex-shrink-0">
+                    <span className="text-xs text-gray-400 pl-2">Solidity v0.8.26 (Mock)</span>
+                    <div className="flex space-x-2">
+                        <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            {isLoading ? 'Compiling...' : 'Compile'}
+                        </button>
+                        <button onClick={handleRunTests} disabled={isLoading} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            {isLoading ? 'Running Tests...' : 'Run Tests'}
                         </button>
                     </div>
-                    <pre className={`solidity-output ${isError ? 'output-error' : 'output-success'} ${isOutputExpanded ? 'expanded' : ''}`}>{output}</pre>
                 </div>
-            )}
+                
+                {output && (
+                    <div className="output-container flex-1 flex flex-col" style={{ minHeight: 0 }}>
+                        <div className="output-header flex justify-between items-center">
+                            <span className="text-xs font-semibold text-gray-400 uppercase">Output</span>
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            <pre 
+                                className={`solidity-output ${isError ? 'output-error' : 'output-success'} h-full w-full overflow-auto p-3 m-0 whitespace-pre-wrap`}
+                                style={{ 
+                                    minHeight: '100%',
+                                    maxHeight: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                {output}
+                            </pre>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
