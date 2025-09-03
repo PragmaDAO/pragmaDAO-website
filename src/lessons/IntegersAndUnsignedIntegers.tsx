@@ -47,6 +47,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
+              lessonId="IntegersAndUnsignedIntegers"
             />
             
           </div>
