@@ -115,9 +115,9 @@ Here, `functionSelector` stores a 4-byte value, and `myHash` stores a 32-byte ha
 ### Instructions
 
 -   Define a contract named `VariableTypes`.
-    Hint: `contract VariableTypes {
+    Hint: contract VariableTypes {
     // add your code here
-}`
+}
 -   Create a public `uint` variable named `myUint` and set it to `123`.
     Hint: uint public myUint = 123;
 -   Create a public `string` variable named `myString` and set it to "Pragma".
