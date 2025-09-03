@@ -43,7 +43,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
         </button>
         <div className="lesson-container">
           <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/integers-and-unsigned-integers.md" />
-          <div className="flex flex-col gap-4 min-h-[800px]">
+          <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
