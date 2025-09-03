@@ -119,12 +119,12 @@ Here, `functionSelector` stores a 4-byte value, and `myHash` stores a 32-byte ha
     // add your code here
 }`
 -   Create a public `uint` variable named `myUint` and set it to `123`.
-    Hint: `uint public myUint = 123;`
--   Create a public `string` variable named `myString` and set it to `"Pragma"`.
-    Hint: `string public myString = "Pragma";`
+    Hint: uint public myUint = 123;
+-   Create a public `string` variable named `myString` and set it to "Pragma".
+    Hint: string public myString = "Pragma";
 -   Create a public `bool` variable named `myBool` and set it to `true`.
-    Hint: `bool public myBool = true;`
+    Hint: bool public myBool = true;
 -   Create a public `address` variable named `myAddress` and set it to `0xAb84835CE4BDe5b14ab989F061559c79Ea4921Bf`.
-    Hint: `address public myAddress = 0xAb84835CE4BDe5b14ab989F061559c79Ea4921Bf;`
--   Create a public `bytes32` variable named `myBytes32` and set it to `0x0123456789012345678901234567890123456789012345678901234567890123`.
-    Hint: `bytes32 public myBytes32 = 0x0123456789012345678901234567890123456789012345678901234567890123;`
+    Hint: address public myAddress = 0xAb84835CE4BDe5b14ab989F061559c79Ea4921Bf;
+-   Create a public `bytes32` variable named `myBytes32` and set it to 0x0123456789012345678901234567890123456789012345678901234567890123.
+    Hint: bytes32 public myBytes32 = 0x0123456789012345678901234567890123456789012345678901234567890123;
