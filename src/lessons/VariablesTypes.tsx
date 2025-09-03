@@ -53,6 +53,7 @@ const VariablesTypes: React.FC<{ setCurrentPage: (page: string) => void }> = ({
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
+              lessonId="UnderstandingVariablesAndTypes"
             />
             
           </div>

@@ -25,11 +25,14 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
 };
 
 router.post('/test-solidity', async (req: Request, res: Response) => {
-    const { code, lessonId } = req.body;
+    let { code, lessonId } = req.body;
 
     if (!code || !lessonId) {
         return res.status(400).json({ error: 'Solidity code and lessonId are required.' });
     }
+
+    // Force pragma to be ^0.8.26 to match the test files
+    code = code.replace(/pragma solidity .*/, 'pragma solidity ^0.8.26;');
 
     const originalTestFilePath = path.join(__dirname, '..', '..', 'forge_base_project', 'test', lessonId, `${lessonId}.t.sol`);
 
@@ -53,7 +56,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         // Ensure 'test = "test"' is present in the [profile.default] section
         if (!foundryTomlContent.includes('test = "test"')) {
             foundryTomlContent = foundryTomlContent.replace(
-                /(\[profile.default\]\n)/,
+                /(\n\[profile.default\]\n)/,
                 '$1test = "test"\n'
             );
         }
@@ -66,7 +69,18 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         await writeFileAsync(tempContractPath, code);
 
         const originalTestCode = await readFileAsync(originalTestFilePath, 'utf8');
-        const updatedTestCode = originalTestCode;
+        let updatedTestCode = originalTestCode;
+
+        if (lessonId === "UnderstandingVariablesAndTypes") {
+            const lines = originalTestCode.split('\n');
+            const newLines = lines.map(line => {
+                if (line.includes('import "../../../public/lessons/solidity/VariableTypes.sol";')) {
+                    return `import "../../src/${lessonId}.sol";`;
+                }
+                return line;
+            });
+            updatedTestCode = newLines.join('\n');
+        }
 
         const tempTestLessonDir = path.join(tempTestDir, lessonId);
         await mkdirAsync(tempTestLessonDir, { recursive: true });

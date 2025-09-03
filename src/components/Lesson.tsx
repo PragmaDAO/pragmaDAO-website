@@ -49,11 +49,11 @@ const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
   };
 
   return (
-    <div className="lesson-instructions markdown-body">
+    <div className="lesson-instructions markdown-body flex-1">
       <ReactMarkdown
         components={{
           code({ className, children }) {
-            const match = /language-(\w+)/.exec(className || '');
+            const match = /language-(\\w+)/.exec(className || '');
             return match ? (
               <SyntaxHighlighter
                 style={{ ...vscDarkPlus, 'code[class*="language-"]': { ...vscDarkPlus['code[class*="language-"]'], background: '#161b22' }, 'pre[class*="language-"]': { ...vscDarkPlus['pre[class*="language-"]'], background: '#161b22' } }}
