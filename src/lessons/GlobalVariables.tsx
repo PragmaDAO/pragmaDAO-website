@@ -11,32 +11,6 @@ const GlobalVariables: React.FC<{
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
   );
-  const [testResults, setTestResults] = useState<TestCase[]>([]);
-  const [isScrollable, setIsScrollable] = useState(false);
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-  const testResultsContainerRef = useRef<HTMLDivElement>(null);
-
-  const runTests = () => {
-    const results = runGlobalVariablesTests(compiledResult);
-    setTestResults(results);
-  };
-
-  useEffect(() => {
-    const container = testResultsContainerRef.current;
-    if (container) {
-      const isNowScrollable = container.scrollHeight > container.clientHeight;
-      setIsScrollable(isNowScrollable);
-      setShowScrollIndicator(isNowScrollable);
-    }
-  }, [testResults]);
-
-  const handleScroll = () => {
-    const container = testResultsContainerRef.current;
-    if (container) {
-      const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 5; // 5px buffer
-      setShowScrollIndicator(!isAtBottom);
-    }
-  };
 
   return (
     <main className="pt-32 pb-20 flex-grow">
@@ -49,33 +23,13 @@ const GlobalVariables: React.FC<{
         </button>
         <div className="lesson-container">
           <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/global-variables.md" />
-          <div className="flex flex-col gap-4 min-h-[800px]">
+          <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/GlobalVariables.sol"
+              lessonId="GlobalVariables"
             />
-            <div className="bg-gray-800/50 rounded-lg p-4 relative">
-              <h3 className="text-lg font-bold mb-4">Test Cases</h3>
-              <button
-                onClick={runTests}
-                disabled={!compiledResult || !!compiledResult.errors}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition-colors w-full mb-4"
-              >
-                Run Tests
-              </button>
-              <div className="test-results-container" ref={testResultsContainerRef} onScroll={handleScroll}>
-                {testResults.map((result, i) => (
-                  <div
-                    key={i}
-                    className={`test-case-row ${result.passed ? "passed" : "failed"}`}
-                  >
-                    <span>{result.passed ? "✅" : "❌"}</span>
-                    <p className="ml-4 text-gray-300">{result.description}</p>
-                  </div>
-                ))}
-              </div>
-              {isScrollable && showScrollIndicator && <ScrollIndicator />}
-            </div>
+            
           </div>
         </div>
       </section>

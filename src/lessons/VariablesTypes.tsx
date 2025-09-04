@@ -11,32 +11,6 @@ const VariablesTypes: React.FC<{ setCurrentPage: (page: string) => void }> = ({
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
   );
-  const [testResults, setTestResults] = useState<TestCase[]>([]);
-  const [isScrollable, setIsScrollable] = useState(false);
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-  const testResultsContainerRef = useRef<HTMLDivElement>(null);
-
-  const runTests = () => {
-    const results = runUnderstandingVariablesAndTypesTests(compiledResult);
-    setTestResults(results);
-  };
-
-  useEffect(() => {
-    const container = testResultsContainerRef.current;
-    if (container) {
-      const isNowScrollable = container.scrollHeight > container.clientHeight;
-      setIsScrollable(isNowScrollable);
-      setShowScrollIndicator(isNowScrollable);
-    }
-  }, [testResults]);
-
-  const handleScroll = () => {
-    const container = testResultsContainerRef.current;
-    if (container) {
-      const isAtBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 5; // 5px buffer
-      setShowScrollIndicator(!isAtBottom);
-    }
-  };
 
   return (
     <main className="pt-32 pb-20 flex-grow">
