@@ -53,6 +53,7 @@ const UnderstandingFunctions: React.FC<{ setCurrentPage: (page: string) => void 
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/UnderstandingFunctions.sol"
+              lessonId="UnderstandingFunctions"
             />
             
           </div>
