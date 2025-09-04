@@ -2,10 +2,17 @@
   "name": "pragmadao-website",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "backend"
+  ],
   "dependencies": {
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.1",
+    "@replit/codemirror-lang-solidity": "^6.0.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "codemirror": "^6.0.2",
     "marked": "^12.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -51,5 +58,6 @@
       "last 1 safari version"
     ]
   },
+  "proxy": "http://localhost:3003",
   "homepage": "https://PragmaDAO.github.io/pragmaDAO-website"
 }

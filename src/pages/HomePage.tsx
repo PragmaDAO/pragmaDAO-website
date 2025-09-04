@@ -11,18 +11,9 @@ const Hero: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrent
                 <button onClick={() => setCurrentPage('lessons')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Start Learning</button>
             </div>
         </div>
-        <div className="mt-20 relative hero-glow w-full max-w-5xl mx-auto h-[600px] md:h-[550px] rounded-2xl overflow-hidden p-4">
+        <div className="mt-20 relative hero-glow w-full max-w-5xl mx-auto h-[750px] md:h-[690px] rounded-2xl overflow-hidden p-4">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 opacity-50"></div>
-             <div className="relative z-10 h-full"><SolidityEditor onCompile={() => {}} initialCode={`// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
-
-contract HelloWorld {
-    string public greet = "Hello World!";
-
-    function updateGreet(string memory _newGreet) public {
-        greet = _newGreet;
-    }
-}`} /></div>
+             <div className="relative z-10 h-full"><SolidityEditor onCompile={() => {}} solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol" lessonId="HelloWorld" /></div>
         </div>
     </section>
 );

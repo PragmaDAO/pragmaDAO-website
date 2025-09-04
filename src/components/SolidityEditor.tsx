@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { EditorView, keymap } from '@codemirror/view';
+import { basicSetup } from 'codemirror';
+import { EditorState } from '@codemirror/state';
+import { solidity } from '@replit/codemirror-lang-solidity';
+import { indentWithTab } from '@codemirror/commands';
+import { indentUnit } from '@codemirror/language';
 
 // --- TYPE DEFINITIONS (Moved from types.ts to fix import error) ---
 interface AbiItem {
@@ -28,13 +34,63 @@ interface CompiledOutput {
 }
 
 
-const SolidityEditor: React.FC<{ onCompile: (result: CompiledOutput | null) => void, initialCode?: string, solidityFilePath?: string }> = ({ onCompile, initialCode, solidityFilePath }) => {
+const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
+     initialCode?: string, solidityFilePath?: string, lessonId?: string }> = ({ onCompile,
+     initialCode, solidityFilePath, lessonId }) => {
     const [code, setCode] = useState(initialCode || `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
 // Your contract will go here
 
 `);
+    const [output, setOutput] = useState<string>('Initializing compiler worker...');
+    const [isError, setIsError] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isCompilerReady, setIsCompilerReady] = useState<boolean>(false);
+    const [isOutputExpanded, setIsOutputExpanded] = useState<boolean>(false);
+    const workerRef = useRef<Worker | null>(null);
+    const editorRef = useRef<HTMLDivElement>(null); // Ref for CodeMirror editor container
+    const viewRef = useRef<EditorView | null>(null); // Ref for EditorView instance
+
+    useEffect(() => {
+        if (!editorRef.current) return;
+
+        const startState = EditorState.create({
+            doc: code,
+            extensions: [
+                basicSetup,
+                solidity,
+                keymap.of([indentWithTab]),
+                indentUnit.of("    "), // Set tab size to 4 spaces
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        setCode(update.state.doc.toString());
+                    }
+                })
+            ]
+        });
+
+        const view = new EditorView({
+            state: startState,
+            parent: editorRef.current
+        });
+
+        viewRef.current = view;
+
+        return () => {
+            view.destroy();
+        };
+    }, []); // Empty dependency array to run only once on mount
+
+    // Update CodeMirror doc when initialCode changes (e.g., loading a new lesson)
+    useEffect(() => {
+        if (viewRef.current && initialCode !== undefined && viewRef.current.state.doc.toString() !== initialCode) {
+            viewRef.current.dispatch({
+                changes: { from: 0, to: viewRef.current.state.doc.length, insert: initialCode }
+            });
+        }
+    }, [initialCode]);
+
     useEffect(() => {
         if (solidityFilePath) {
             fetch(solidityFilePath)
@@ -46,46 +102,27 @@ pragma solidity ^0.8.7;
                 })
                 .then(text => {
                     setCode(text);
+                    if (viewRef.current) {
+                        viewRef.current.dispatch({
+                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error("Could not load solidity file:", error);
-                    setCode(`// Error loading file from ${solidityFilePath}
+                    const errorText = `// Error loading file from ${solidityFilePath}
 // Please check the path and ensure the file exists.
 
-` + initialCode);
+` + (initialCode || '');
+                    setCode(errorText);
+                    if (viewRef.current) {
+                        viewRef.current.dispatch({
+                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: errorText }
+                        });
+                    }
                 });
         }
     }, [solidityFilePath, initialCode]);
-    const [highlightedCode, setHighlightedCode] = useState('');
-    const [output, setOutput] = useState<string>('Initializing compiler worker...');
-    const [isError, setIsError] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [isCompilerReady, setIsCompilerReady] = useState<boolean>(false);
-    const [isOutputExpanded, setIsOutputExpanded] = useState<boolean>(false);
-    const workerRef = useRef<Worker | null>(null);
-    const preRef = useRef<HTMLPreElement>(null);
-
-    const applySyntaxHighlighting = (text: string) => {
-        const keywords = `\\b(pragma|solidity|contract|function|constructor|returns|public|private|internal|external|view|pure|payable|if|else|for|while|require|revert|event|emit|mapping|struct|memory|storage|calldata|true|false)\\b`;
-        const types = `\\b(string|uint|uint[0-9]*|int|int[0-9]*|address|bool|bytes|bytes[0-9]*)\\b`;
-        const comments = `(\\/\\/.*)|(\\/\\*[\\s\\S]*?\\*\\/)`;
-        const strings = `(\".*?\")|(\'.*?\')`;
-        const numbers = `\\b([0-9]+)\\b`;
-        const regex = new RegExp(`(${keywords})|(${types})|${comments}|${strings}|(${numbers})`, 'g');
-        
-        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(regex, (match: string, p1: string, p2: string, p3: string, p4: string, p5: string, p6: string, p7: string) => {
-            if (p1) return `<span class=\"hl-keyword\">${p1}</span>`;
-            if (p2) return `<span class=\"hl-type\">${p2}</span>`;
-            if (p3 || p4) return `<span class=\"hl-comment\">${match}</span>`;
-            if (p5 || p6) return `<span class=\"hl-string\">${match}</span>`;
-            if (p7) return `<span class=\"hl-number\">${p7}</span>`;
-            return match;
-        });
-        };
-
-    useEffect(() => {
-        setHighlightedCode(applySyntaxHighlighting(code));
-    }, [code]);
     
     useEffect(() => {
         const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
@@ -117,7 +154,7 @@ pragma solidity ^0.8.7;
                         self.postMessage({ type: 'ERROR',
                         payload: 'Compiler not ready.' 
             }); 
-            return; }
+            return; } 
             try {
                 const compiled = solc.compile(JSON.stringify(payload.input));
                 self.postMessage({ type:'COMPILED', payload: compiled });
@@ -141,26 +178,27 @@ pragma solidity ^0.8.7;
                     try {
                         compiled = JSON.parse(payload);
                         console.log('Main Thread: Parsed compiled object:', compiled);
+                        onCompile?.(compiled);
                     } catch (parseError) {
                         console.error('Main Thread: Error parsing compiled payload:', parseError, payload);
                         setOutput('Error: Failed to parse compiler output. Check console for details.');
                         setIsError(true);
                         setIsLoading(false);
-                        onCompile(null);
+                        onCompile?.(null);
                         break;
                     }
-                    onCompile(compiled);
                     if (compiled.errors) {
-                        const errorMessages = compiled.errors.filter((err) => err.severity === 'error').map((err) => err.formattedMessage).join('\\n');
+                        const errorMessages = compiled.errors.filter((err) => err.severity === 'error').map((err) => err.formattedMessage).join ('\n');
                         setOutput(errorMessages.length > 0 ? errorMessages : "Compiled with warnings.");
                         setIsError(errorMessages.length > 0);
                     } else {
-                        setOutput("Compilation successful!\\n\\n" + JSON.stringify(compiled.contracts['contract.sol'], null, 2));
+                        setOutput("Compilation successful!\n\n" + JSON.stringify(compiled.contracts['contract.sol'], null, 2));
                         setIsError(false);
                     }
                     setIsLoading(false);
                     break;
-                case 'ERROR': setOutput(payload); setIsError(true); setIsLoading(false); onCompile(null); break;
+                case 'ERROR': setOutput(payload); setIsError(true); setIsLoading(false); 
+                onCompile?.(null); break;
                 default: break;
             }
         };
@@ -177,58 +215,78 @@ pragma solidity ^0.8.7;
         workerRef.current.postMessage({ type: 'COMPILE', payload: { input } });
     };
 
-    const handleTab = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            const target = e.currentTarget;
-            const start = target.selectionStart;
-            const end = target.selectionEnd;
-            const newCode = code.substring(0, start) + "    " + code.substring(end);
-            setCode(newCode);
-            setTimeout(() => {
-                target.selectionStart = target.selectionEnd = start + 4;
-            }, 0);
-        }
-    };
+    const handleRunTests = async () => {
+        setIsLoading(true);
+        setIsError(false);
+        setOutput('Running Solidity tests...');
 
-    const syncScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
-        const target = e.currentTarget;
-        if (preRef.current) {
-            preRef.current.scrollTop = target.scrollTop;
-            preRef.current.scrollLeft = target.scrollLeft;
+        try {
+            const response = await fetch('/api/test-solidity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code, lessonId: lessonId || 'default-lesson' }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setOutput(data.output);
+                setIsError(!data.success);
+            } else {
+                const errorMessage = data.output || data.error || 'An unknown error occurred.';
+                // The backend sends a string with '\n' for newlines, so we replace them with actual newlines
+                // for correct rendering in a <pre> tag.
+                const formattedError = String(errorMessage).replace(/\\n/g, '\n');
+                setOutput(formattedError);
+                setIsError(true);
+            }
+        } catch (error: any) {
+            setOutput(`Network or JSON parsing error: ${error.message}`);
+            setIsError(true);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="solidity-editor-container h-[800px]">
-            <div className="editor-wrapper">
-                <textarea 
-                    value={code} 
-                    onChange={(e) => setCode(e.target.value)} 
-                    onScroll={syncScroll} 
-                    onKeyDown={handleTab}
-                    className="solidity-editor-textarea" 
-                    spellCheck="false" 
-                />
-                <pre ref={preRef} className="solidity-editor-pre" aria-hidden="true"><code dangerouslySetInnerHTML={{ __html: highlightedCode }} /></pre>
+        <div className="solidity-editor-container flex flex-col h-screen overflow-hidden">
+            <div className="editor-wrapper h-1/2 flex-shrink-0 overflow-hidden" ref={editorRef} style={{ overflowY: 'auto' }}>
+                {/* CodeMirror editor will be mounted here */}
             </div>
-            <div className="flex items-center justify-between mt-2 flex-shrink-0">
-                <span className="text-xs text-gray-400 pl-2">Solidity v0.8.26 (Mock)</span>
-                <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    {isLoading ? 'Compiling...' : 'Compile'}
-                </button>
-            </div>
-            {output && (
-                <div className="mt-2 flex-shrink-0 output-container">
-                    <div className="output-header flex justify-between items-center">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">Output</span>
-                        <button onClick={() => setIsOutputExpanded(!isOutputExpanded)} className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">
-                            {isOutputExpanded ? 'COLLAPSE' : 'EXPAND'}
+
+            <div className="output-wrapper h-1/2 flex-shrink-0 flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between mt-2 mb-2 flex-shrink-0 px-2">
+                    <span className="text-xs text-gray-400">Solidity v0.8.26 (Mock)</span>
+                    <div className="flex space-x-2">
+                        <button onClick={handleCompile} disabled={isLoading || !isCompilerReady} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            {isLoading ? 'Compiling...' : 'Compile'}
+                        </button>
+                        <button onClick={handleRunTests} disabled={isLoading} className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            {isLoading ? 'Running Tests...' : 'Run Tests'}
                         </button>
                     </div>
-                    <pre className={`solidity-output ${isError ? 'output-error' : 'output-success'} ${isOutputExpanded ? 'expanded' : ''}`}>{output}</pre>
                 </div>
-            )}
+                
+                {output && (
+                    <div className="output-container flex-1 flex flex-col min-h-0 overflow-hidden">
+                        <div className="output-header flex justify-between items-center py-1 flex-shrink-0 px-2 border-b border-gray-200">
+                            <span className="text-xs font-semibold text-gray-400 uppercase">Output</span>
+                        </div>
+                        <pre 
+                            className={`solidity-output ${isError ? 'output-error' : 'output-success'} flex-1 overflow-auto w-full p-3 m-0 whitespace-pre-wrap`}
+                            style={{ 
+                                minHeight: 0,
+                                maxHeight: '100%',
+                                height: '100%'
+                            }}
+                        >
+                            {output}
+                        </pre>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

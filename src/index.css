@@ -24,3 +24,55 @@ body {
 .hint-box code {
   white-space: pre-wrap !important;
 }
+
+/* CodeMirror adjustments */
+.cm-editor {
+  height: 100%; /* Ensure editor takes full height of its container */
+  text-align: left; /* Ensure text is left-aligned */
+  caret-color: white !important; /* Fallback for cursor color */
+}
+
+.cm-editor .cm-scroller {
+  background-color: #1a202c; /* Dark background color, similar to gray-900 */
+}
+
+.cm-editor .cm-content {
+  color: #f0f0f0; /* Brighter than previous, but not pure white */
+  caret-color: white !important; /* Make the cursor white, with high priority */
+  font-size: 1rem; /* Make the text the same size as lesson description */
+}
+
+.cm-editor .cm-line {
+  background-color: transparent; /* Ensure line background is transparent */
+}
+
+.cm-gutters {
+  background-color: #1a202c !important; /* Match IDE background */
+  color: #e2e8f0; /* Light color for line numbers */
+  border-right: none !important; /* Remove the white line */
+}
+
+.cm-cursor {
+  border-left-color: white !important;
+}
+
+.cm-keyword {
+  color: #a78bfa !important; /* Brighter purple for keywords */
+}
+
+.cm-activeLineGutter {
+  color: #e2e8f0 !important; /* Ensure active line number stays the same color */
+  background-color: transparent !important; /* Ensure background is transparent */
+}
+
+.cm-activeLine {
+  background-color: #2a303c !important; /* Slightly lighter background for active line */
+}
+
+.cm-activeLine .cm-gutterElement {
+  background-color: #1a202c !important; /* Ensure active line gutter background matches overall gutter */
+}
+
+.cm-selectionBackground {
+  background-color: #2a303c !important; /* Match active line background for selection */
+}

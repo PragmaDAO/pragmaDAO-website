@@ -51,7 +51,7 @@ coverage
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+# Grunt intermediate storage (https://gruntjs.com/creating-task-files)
 .grunt
 
 # Bower dependency directory (https://bower.io/)
@@ -166,3 +166,9 @@ vite.config.ts.timestamp-*
 
 .vscode/
 .wake/
+
+# Added by Gemini
+backend/.env
+backend/dist/
+db_data/
+

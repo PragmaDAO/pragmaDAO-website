@@ -1,0 +1,3 @@
+[submodule "backend/forge_base_project"]
+	path = backend/forge_base_project
+	url = https://github.com/PragmaDAO/pragmaDAO-forge-base.git
