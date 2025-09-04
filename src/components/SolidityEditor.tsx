@@ -251,7 +251,7 @@ pragma solidity ^0.8.7;
     };
 
     return (
-        <div className="solidity-editor-container flex flex-col h-screen overflow-hidden">
+        <div className="solidity-editor-container flex flex-col overflow-hidden">
             <div className="editor-wrapper h-1/2 flex-shrink-0 overflow-hidden" ref={editorRef} style={{ overflowY: 'auto' }}>
                 {/* CodeMirror editor will be mounted here */}
             </div>

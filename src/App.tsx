@@ -155,7 +155,7 @@ const GlobalStyles = () => (
             background: #1f2937;
             border-radius: 0.75rem;
             padding: 2rem;
-            max-height: 80vh;
+            height: 700px; /* Fixed height to match editor */
             overflow-y: auto;
         }
         .lesson-instructions h2 { font-size: 1.875rem; font-weight: 800; margin-bottom: 1rem; }
