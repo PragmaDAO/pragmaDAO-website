@@ -53,6 +53,7 @@ const StateAndLocalVariables: React.FC<{
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/StateAndLocalVariables.sol"
+              lessonId="StateAndLocalVariables"
             />
             
           </div>
