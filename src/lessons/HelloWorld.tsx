@@ -3,10 +3,12 @@ import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase } from "../types";
 import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
+import { useAuth } from "../context/AuthContext"; // Import useAuth
 
 const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
 }> = ({ setCurrentPage }) => {
+  const { user } = useAuth(); // Get user from AuthContext
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
   );
@@ -32,6 +34,36 @@ const HelloWorld: React.FC<{
     }
   };
 
+  const handleMarkComplete = async () => {
+    if (!user) {
+      setCurrentPage('login');
+      return;
+    }
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await fetch(`${backendUrl}/api/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ lessonId: "HelloWorld", completed: true }),
+      });
+
+      if (response.ok) {
+        alert("Lesson marked as complete!");
+        // Optionally, re-fetch progress for LessonsPage or update local state
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to mark lesson complete: ${errorData.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error marking lesson complete:", error);
+      alert("An error occurred while marking the lesson complete.");
+    }
+  };
+
   return (
     <main className="pt-32 pb-20 flex-grow">
       <section className="container mx-auto px-6">
@@ -49,7 +81,12 @@ const HelloWorld: React.FC<{
               solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol" // Changed to HelloWorld.sol
               lessonId="HelloWorld" // Changed to HelloWorld
             />
-            
+            <button
+              onClick={handleMarkComplete}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-4"
+            >
+              Mark as Complete
+            </button>
           </div>
         </div>
       </section>

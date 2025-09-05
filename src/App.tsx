@@ -4,6 +4,8 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import LessonsPage from './pages/LessonsPage';
 import CommunityPage from './pages/CommunityPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import { lessons } from './lessons';
 import './index.css'; // Assuming global styles are here
 
@@ -285,6 +287,10 @@ export default function App() {
                 return <LessonsPage setCurrentPage={setCurrentPage} />;
             case 'community':
                 return <CommunityPage />;
+            case 'login':
+                return <LoginPage setCurrentPage={setCurrentPage} />;
+            case 'register':
+                return <RegisterPage setCurrentPage={setCurrentPage} />;
             default:
                 return <HomePage setCurrentPage={setCurrentPage} />;
         }
