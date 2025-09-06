@@ -16,10 +16,14 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   username  String   @unique
-  password  String
+  email     String   @unique // Add email field
+  password  String?  // Make password optional for social logins
+  googleId  String?  @unique // Add googleId
+  githubId  String?  @unique // Add githubId
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   progress  UserLessonProgress[]
+  submittedCode UserSubmittedCode[] @relation("UserSubmissions") // Explicitly name the relation
 }
 
 model UserLessonProgress {
@@ -32,4 +36,17 @@ model UserLessonProgress {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, lessonId])
+}
+
+model UserSubmittedCode {
+  id             String   @id @default(uuid())
+  userId         String
+  lessonId       String
+  code           String   @db.Text // Use @db.Text for potentially large code strings
+  submissionTime DateTime @default(now())
+  testResults    Json?    // Store JSON output of test results
+  passed         Boolean? // Whether the submission passed all tests
+
+  user           User     @relation("UserSubmissions", fields: [userId], references: [id]) // Link to the named relation
+  @@index([userId, lessonId]) // Add an index for faster lookups
 }

@@ -11,10 +11,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Register Route
 router.post('/register', async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+  const { username, password, email } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required' });
+  if (!username || !password || !email) {
+    return res.status(400).json({ message: 'Username, password, and email are required' });
   }
 
   try {
@@ -31,6 +31,7 @@ router.post('/register', async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: {
         username,
+        email,
         password: hashedPassword,
       },
     });
@@ -58,13 +59,16 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Compare password
+    if (!user.password) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Generate JWT
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
 
     res.status(200).json({ message: 'Logged in successfully', token });
   } catch (error) {

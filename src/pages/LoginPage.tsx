@@ -68,7 +68,7 @@ const LoginPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCu
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className="absolute inset-y-0 right-2 flex items-center px-3"> {/* Reverted to inset-y-0 */}
+            <div className="absolute inset-y-0 right-2 flex items-center px-3">
               <ShowHidePassword showPassword={showPassword} setShowPassword={setShowPassword} />
             </div>
           </div>
@@ -86,6 +86,30 @@ const LoginPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCu
             >
               Don't have an account?
             </a>
+          </div>
+          <div className="mt-6 text-center">
+            <p className="text-gray-400 text-sm mb-4">Or sign in with:</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('Google button clicked');
+                  window.open('http://localhost:3003/api/auth/google', '_self');
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5 mr-2" />
+                Google
+              </button>
+              <button
+                type="button"
+                onClick={() => window.open('http://localhost:3003/api/auth/github', '_self')}
+                className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
+              >
+                <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" className="w-5 h-5 mr-2" />
+                GitHub
+              </button>
+            </div>
           </div>
         </form>
       </div>

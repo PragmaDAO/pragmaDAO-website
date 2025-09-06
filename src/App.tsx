@@ -273,6 +273,19 @@ const GlobalStyles = () => (
 export default function App() {
     const [currentPage, setCurrentPage] = useState('home');
 
+    useEffect(() => {
+        const path = window.location.pathname;
+        const page = path.substring(1) || 'home';
+        const lesson = lessons.find(l => l.id === page);
+        if (lesson) {
+            setCurrentPage(page);
+        } else if (['home', 'lessons', 'community', 'login', 'register'].includes(page)) {
+            setCurrentPage(page);
+        } else {
+            setCurrentPage('home');
+        }
+    }, []);
+
     const renderPage = () => {
         const lesson = lessons.find(l => l.id === currentPage);
         if (lesson) {

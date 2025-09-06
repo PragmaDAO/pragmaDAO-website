@@ -118,10 +118,33 @@ Gemini, let's begin Phase 4: tracking user progress. Please guide me by:
 
 #### Phase 4: Lesson Progress Tracking
 
-1.  **Create Progress API:** Build two authenticated endpoints: `GET /api/progress` (to fetch progress) and `POST /api/progress` (to save progress).
-2.  **Integrate with Frontend State:** On user login, call the `GET` endpoint and store the user's progress in a global state.
-3.  **Update UI:** Use the global state to visually indicate which lessons are completed.
-4.  **"Complete" Button:** Add a button to each lesson page that calls the `POST` endpoint to mark the lesson as complete.
+1.  **Explain RESTful API Principles:** (Already done)
+2.  **Create Backend API Endpoints:** (Already done)
+3.  **Frontend Integration for Progress Tracking:**
+    *   **3.1 Authentication Context and User ID:**
+        *   **Goal:** Ensure the `userId` is accessible throughout the frontend for authenticated API calls.
+        *   **Action:** Review `src/App.tsx` and related authentication components (e.g., login forms, user state management) to identify where the user's logged-in status and `userId` are stored. If not already present, consider implementing a React Context or similar global state management for user authentication.
+    *   **3.2 Fetching User Progress on Lessons Page Load:**
+        *   **Goal:** Display which lessons a logged-in user has completed on the `LessonsPage`.
+        *   **Action:**
+            *   Modify `src/pages/LessonsPage.tsx`.
+            *   Inside a `useEffect` hook, if a user is logged in, make an authenticated `GET` request to `/api/progress`.
+            *   Store the fetched progress data (e.g., an array of `lessonId`s that are completed) in the component's state.
+            *   Pass this `completedLessons` data down to the individual lesson display components (e.g., `LessonRow` if you have one, or directly to the `lessons` array in `lessons.ts` if it's mutable and shared).
+            *   Update the UI to visually indicate completed lessons (e.g., a checkmark, different styling).
+    *   **3.3 Updating User Progress from Lesson Pages:**
+        *   **Goal:** Allow users to mark a lesson as completed from within the lesson page.
+        *   **Action:**
+            *   Modify individual lesson components (e.g., `src/lessons/HelloWorld.tsx`, `src/lessons/VariablesTypes.tsx`, etc.).
+            *   Add a "Mark as Complete" button or integrate the completion logic with passing all tests.
+            *   When triggered, make an authenticated `POST` request to `/api/progress` with the `lessonId` and `completed: true`.
+            *   Handle the response: if successful, update the local state and potentially trigger a re-fetch of progress data to ensure consistency across the app.
+    *   **3.4 Displaying Progress in Lesson Components:**
+        *   **Goal:** Visually show the completion status within each lesson component.
+        *   **Action:**
+            *   Modify `src/components/Lesson.tsx` (or the component that renders individual lesson details).
+            *   Accept a prop (e.g., `isCompleted: boolean`) that indicates whether the current lesson is completed for the logged-in user.
+            *   Use this prop to conditionally render a checkmark, change styling, or disable certain actions.
 
 ### Technology Reasoning
 

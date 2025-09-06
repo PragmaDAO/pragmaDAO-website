@@ -3,6 +3,9 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
+import { PrismaClient } from '@prisma/client'; // Import PrismaClient
+
+const prisma = new PrismaClient(); // Instantiate PrismaClient
 
 const router = Router();
 
@@ -102,9 +105,30 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
 
         const { stdout: testOutput } = await execCommand(`forge test --match-path "*${lessonId}.t.sol" -vvv`, tempDir);
 
+        // Determine if tests passed based on output (simple check for now)
+        const passed = testOutput.includes('1 passed') && !testOutput.includes('0 failed');
+
+        // Assuming userId is available from authentication middleware
+        const userId = (req as any).user?.id; // Cast req to any to access req.user
+
+        if (userId) {
+            await prisma.userSubmittedCode.create({
+                data: {
+                    userId: userId,
+                    lessonId: lessonId,
+                    code: code,
+                    testResults: testOutput, // Store the full output
+                    passed: passed,
+                },
+            });
+        } else {
+            console.warn('User ID not found in request. Code submission not saved.');
+        }
+
         res.json({
             success: true,
             output: testOutput,
+            passed: passed, // Include passed status in response
         });
 
     } catch (err: any) {
