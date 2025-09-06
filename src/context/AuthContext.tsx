@@ -6,6 +6,7 @@ interface AuthContextType {
   token: string | null; // Add token property
   login: (token: string) => void;
   logout: () => void;
+  updateUser: (userData: Partial<{ id: string; username: string }>) => void; // New function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -69,10 +70,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    window.location.href = '/'; // Redirect to homepage
+  };
+
+  const updateUser = (userData: Partial<{ id: string; username: string }>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return { ...prevUser, ...userData };
+    });
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
