@@ -24,6 +24,7 @@ const Header: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurre
                     <NavLink onClick={() => setCurrentPage('community')}>Community</NavLink>
                     {user ? (
                         <>
+                            <NavLink onClick={() => setCurrentPage('profile')}>Profile</NavLink>
                             <span className="text-white">Welcome, {user.username}!</span>
                             <NavLink onClick={logout}>Logout</NavLink>
                         </>

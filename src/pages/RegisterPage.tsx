@@ -5,6 +5,7 @@ import ShowHidePassword from '../components/ShowHidePassword';
 const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -20,23 +21,13 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
       return;
     }
 
-    if (password.length <= 8) {
-      setError('Password must be longer than 8 characters');
-      return;
-    }
-
-    if (!/\d/.test(password)) {
-      setError('Password must contain a number');
-      return;
-    }
-
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, email, password }),
       });
 
       if (!response.ok) {
@@ -44,9 +35,25 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
         throw new Error(data.message || 'Failed to register');
       }
 
-      const { token } = await response.json();
+      // Log in the user automatically after registration
+      const loginResponse = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!loginResponse.ok) {
+        const data = await loginResponse.json();
+        throw new Error(data.message || 'Failed to login after registration');
+      }
+
+      const { token } = await loginResponse.json();
       login(token);
-      setCurrentPage('lessons'); // Redirect to lessons page after registration
+      setTimeout(() => {
+        setCurrentPage('profile');
+      }, 0);
     } catch (err: any) {
       setError(err.message);
     }
@@ -69,6 +76,20 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
               placeholder="Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="email"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -146,14 +167,6 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
             </div>
           </div>
         </form>
-        <div className="bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-4 text-gray-400 text-sm">
-          <h3 className="text-lg font-bold mb-2 text-white">Registration Rules:</h3>
-          <ul className="list-disc list-inside">
-            <li>Passwords must match.</li>
-            <li>Password must be longer than 8 characters.</li>
-            <li>Password must contain at least one number.</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

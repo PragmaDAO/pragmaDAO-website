@@ -6,8 +6,10 @@ import LessonsPage from './pages/LessonsPage';
 import CommunityPage from './pages/CommunityPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage'; // Import ProfilePage
 import { lessons } from './lessons';
 import './index.css'; // Assuming global styles are here
+import { useAuth } from './context/AuthContext';
 
 // --- STYLES COMPONENT ---
 const GlobalStyles = () => (
@@ -272,6 +274,7 @@ const GlobalStyles = () => (
 // --- MAIN APP COMPONENT ---
 export default function App() {
     const [currentPage, setCurrentPage] = useState('home');
+    const { user } = useAuth();
 
     useEffect(() => {
         const path = window.location.pathname;
@@ -279,12 +282,18 @@ export default function App() {
         const lesson = lessons.find(l => l.id === page);
         if (lesson) {
             setCurrentPage(page);
-        } else if (['home', 'lessons', 'community', 'login', 'register'].includes(page)) {
+        } else if (['home', 'lessons', 'community', 'login', 'register', 'profile'].includes(page)) {
             setCurrentPage(page);
         } else {
             setCurrentPage('home');
         }
     }, []);
+
+    useEffect(() => {
+        if (user && (currentPage === 'login' || currentPage === 'register')) {
+            setCurrentPage('profile');
+        }
+    }, [user, currentPage]);
 
     const renderPage = () => {
         const lesson = lessons.find(l => l.id === currentPage);
@@ -304,6 +313,8 @@ export default function App() {
                 return <LoginPage setCurrentPage={setCurrentPage} />;
             case 'register':
                 return <RegisterPage setCurrentPage={setCurrentPage} />;
+            case 'profile':
+                return <ProfilePage />;
             default:
                 return <HomePage setCurrentPage={setCurrentPage} />;
         }
