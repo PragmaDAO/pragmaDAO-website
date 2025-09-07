@@ -1,6 +1,7 @@
 import express, { Request, Response, Router, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs'; // Import bcryptjs
 
 const prisma = new PrismaClient();
 const router: Router = express.Router();
@@ -27,14 +28,19 @@ router.get('/profile', authenticateToken, async (req: Request, res: Response) =>
     const userId = (req as any).user.id;
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, username: true, email: true, createdAt: true }, // Select specific fields
+      select: { id: true, username: true, email: true, createdAt: true, password: true }, // Select password to check if it exists
     });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);
+    // Determine if the user has a password set (manual registration)
+    const hasPassword = user.password !== null;
+    console.log(`User ${user.username} hasPassword: ${hasPassword}, password value: ${user.password}`);
+
+    // Return user data along with the hasPassword flag
+    res.json({ ...user, hasPassword, password: undefined }); // Exclude password from response
   } catch (error) {
     console.error('Error fetching user profile:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -69,6 +75,50 @@ router.put('/profile', authenticateToken, async (req: Request, res: Response) =>
     res.json(updatedUser);
   } catch (error) {
     console.error('Error updating user profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// PUT update user password
+router.put('/profile/password', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      return res.status(400).json({ message: 'All password fields are required' });
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ message: 'New password and confirmation do not match' });
+    }
+
+    // Fetch user to compare current password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.password) {
+      return res.status(404).json({ message: 'User not found or no password set' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid current password' });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password in database
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error updating password:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

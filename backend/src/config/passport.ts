@@ -18,11 +18,11 @@ passport.use(new GitHubStrategy({
   }
 }));
 
-passport.serializeUser((user: any, done) => {
+passport.serializeUser((user: any, done: (err: any, id?: any) => void) => {
   done(null, user.id || user);
 });
 
-passport.deserializeUser(async (id: any, done) => {
+passport.deserializeUser(async (id: any, done: (err: any, user?: any) => void) => {
   try {
     if (typeof id === 'string' && id.match(/^\d+$/)) {
       const user = await prisma.user.findUnique({ where: { id } });

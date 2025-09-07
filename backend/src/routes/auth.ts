@@ -18,10 +18,16 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 
   try {
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({ where: { username } });
-    if (existingUser) {
+    // Check if username already exists
+    const existingUserByUsername = await prisma.user.findUnique({ where: { username } });
+    if (existingUserByUsername) {
       return res.status(409).json({ message: 'Username already taken' });
+    }
+
+    // Check if email already exists
+    const existingUserByEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingUserByEmail) {
+      return res.status(409).json({ message: 'Email already registered' });
     }
 
     // Hash password
@@ -47,15 +53,21 @@ router.post('/register', async (req: Request, res: Response) => {
 router.post('/login', async (req: Request, res: Response) => {
   console.log('Login route hit');
   console.log('Request body:', req.body);
-  const { username, password } = req.body;
+  const { identifier, password } = req.body; // Use 'identifier' for username or email
 
-  if (!username || !password) {
-    return res.status(400).json({ message: 'Username and password are required' });
+  if (!identifier || !password) {
+    return res.status(400).json({ message: 'Identifier and password are required' });
   }
 
   try {
-    // Find user
-    const user = await prisma.user.findUnique({ where: { username } });
+    let user;
+    // Check if the identifier looks like an email
+    if (identifier.includes('@')) {
+      user = await prisma.user.findUnique({ where: { email: identifier } });
+    } else {
+      user = await prisma.user.findUnique({ where: { username: identifier } });
+    }
+
     if (!user) {
       console.log('User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -67,7 +79,7 @@ router.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(`Password validation result for user ${username}: ${isPasswordValid}`);
+    console.log(`Password validation result for user ${user.username}: ${isPasswordValid}`);
     if (!isPasswordValid) {
       console.log('Password invalid');
       return res.status(401).json({ message: 'Invalid credentials' });

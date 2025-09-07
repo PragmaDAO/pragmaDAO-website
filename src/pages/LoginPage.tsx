@@ -19,7 +19,7 @@ const LoginPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCu
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ identifier: username, password }),
       });
 
       const data = await response.json();
@@ -45,13 +45,13 @@ const LoginPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCu
           {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
           <div className="mb-4">
             <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="username">
-              Username
+              Username or Email
             </label>
             <input
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="username"
               type="text"
-              placeholder="Username"
+              placeholder="Enter your username or email"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -70,7 +70,7 @@ const LoginPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCu
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className="absolute inset-y-0 right-2 flex items-center px-3">
+            <div className="absolute top-[55%] right-2 flex items-center px-3">
               <ShowHidePassword showPassword={showPassword} setShowPassword={setShowPassword} />
             </div>
           </div>

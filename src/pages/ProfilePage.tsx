@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import ShowHidePassword from '../components/ShowHidePassword';
 
 interface UserProfile {
   id: string;
   username: string;
   email: string;
   createdAt: string;
+  hasPassword?: boolean; // Add hasPassword property
 }
 
 const ProfilePage: React.FC = () => {
@@ -16,6 +18,16 @@ const ProfilePage: React.FC = () => {
   const [editableUsername, setEditableUsername] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+
+  // Password change states
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordChangeMessage, setPasswordChangeMessage] = useState<string | null>(null);
+  const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,7 +49,7 @@ const ProfilePage: React.FC = () => {
           throw new Error(errorData.message || 'Failed to fetch profile');
         }
 
-        const data: UserProfile = await response.json();
+        const data: UserProfile & { hasPassword: boolean } = await response.json();
         setUserProfile(data);
         setEditableUsername(data.username); // Initialize editable username
       } catch (err: any) {
@@ -82,6 +94,55 @@ const ProfilePage: React.FC = () => {
     } catch (err: any) {
       setError(err.message);
       setUpdateMessage(null);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordChangeMessage(null);
+    setPasswordChangeError(null);
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      setPasswordChangeError('All password fields are required');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordChangeError('New password and confirmation do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordChangeError('New password must be at least 8 characters long');
+      return;
+    }
+
+    // Add more password complexity rules if needed
+    // if (!/\d/.test(newPassword)) {
+    //   setPasswordChangeError('New password must contain a number');
+    //   return;
+    // }
+
+    try {
+      const response = await fetch('http://localhost:3003/api/profile/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to change password');
+      }
+
+      setPasswordChangeMessage('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err: any) {
+      setPasswordChangeError(err.message);
     }
   };
 
@@ -155,6 +216,78 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Password Change Section */}
+        {userProfile.hasPassword && (
+          <div className="bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8">
+            <h2 className="text-2xl font-bold text-center text-white mb-6">Change Password</h2>
+            {passwordChangeMessage && <p className="text-green-500 text-center mb-4">{passwordChangeMessage}</p>}
+            {passwordChangeError && <p className="text-red-500 text-center mb-4">{passwordChangeError}</p>}
+
+            <div className="mb-4 relative">
+              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="current-password">
+                Current Password
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 pr-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="current-password"
+                type={showCurrentPassword ? 'text' : 'password'}
+                placeholder="******************"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+              <div className="absolute top-[68%] -translate-y-1/2 right-2 flex items-center px-3">
+                <ShowHidePassword showPassword={showCurrentPassword} setShowPassword={setShowCurrentPassword} />
+              </div>
+            </div>
+
+            <div className="mb-4 relative">
+              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="new-password">
+                New Password
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 pr-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="new-password"
+                type={showNewPassword ? 'text' : 'password'}
+                placeholder="******************"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+              <div className="absolute top-[68%] -translate-y-1/2 right-2 flex items-center px-3">
+                <ShowHidePassword showPassword={showNewPassword} setShowPassword={setShowNewPassword} />
+              </div>
+            </div>
+
+            <div className="mb-6 relative">
+              <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="confirm-new-password">
+                Confirm New Password
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 pr-10 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="confirm-new-password"
+                type={showConfirmNewPassword ? 'text' : 'password'}
+                placeholder="******************"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                required
+              />
+              <div className="absolute  top-[67%] -translate-y-1/2 right-2 flex items-center px-3">
+                <ShowHidePassword showPassword={showConfirmNewPassword} setShowPassword={setShowConfirmNewPassword} />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                onClick={handleChangePassword}
+              >
+                Change Password
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

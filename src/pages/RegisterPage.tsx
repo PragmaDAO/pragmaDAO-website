@@ -106,7 +106,7 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <div className="absolute inset-y-0 right-2 flex items-center px-3">
+            <div className="absolute top-[55%] right-2 flex items-center px-3">
               <ShowHidePassword showPassword={showPassword} setShowPassword={setShowPassword} />
             </div>
           </div>
