@@ -5,6 +5,7 @@ import lessonContentRouter from './routes/lesson-content';
 import progressRouter from './routes/progress';
 import oauthRouter from './routes/oauth'; // Import the new oauth router
 import profileRouter from './routes/profile'; // Import the new profile router
+import codeRouter from './routes/code'; // Import the new code router
 import cors from 'cors';
 import passport from 'passport'; // Import passport
 import session from 'express-session'; // Import express-session
@@ -36,6 +37,7 @@ app.use('/api', lessonContentRouter);
 app.use('/api', progressRouter);
 app.use('/api/auth', oauthRouter); // Use the new oauth router
 app.use('/api', profileRouter); // Use the new profile router
+app.use('/api/code', codeRouter); // Use the new code router
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World from the backend!');

@@ -146,6 +146,43 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleDownloadAllCode = async () => {
+    if (!token) {
+      alert('You must be logged in to download code.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3003/api/code/download', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download code.');
+      }
+
+      // Get the blob from the response
+      const blob = await response.blob();
+      // Create a URL for the blob
+      const url = window.URL.createObjectURL(blob);
+      // Create a temporary link element
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'all_user_code.zip'; // Suggested filename
+      document.body.appendChild(a);
+      a.click(); // Programmatically click the link to trigger the download
+      a.remove(); // Clean up the temporary link
+      window.URL.revokeObjectURL(url); // Revoke the object URL
+
+    } catch (err: any) {
+      alert(`Error downloading code: ${err.message}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-6 pt-24 pb-12 text-center">
@@ -214,6 +251,12 @@ const ProfilePage: React.FC = () => {
                 Edit
               </button>
             )}
+            <button
+              className="ml-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              onClick={handleDownloadAllCode}
+            >
+              Download All Code
+            </button>
           </div>
         </div>
 
