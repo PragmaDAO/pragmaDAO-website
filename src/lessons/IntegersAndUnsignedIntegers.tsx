@@ -4,6 +4,7 @@ import { CompiledOutput, TestCase } from "../types";
 import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { lessons } from "../lessons"; // Import lessons array
 
 const IntegersAndUnsignedIntegers: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -48,7 +49,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ lessonId: "IntegersAndUnsignedIntegers", completed: true }),
+        body: JSON.stringify({ lessonId: "integers-and-unsigned-integers", completed: true }),
       });
 
       if (response.ok) {
@@ -64,22 +65,63 @@ const IntegersAndUnsignedIntegers: React.FC<{
     }
   };
 
+  const handleGoToPreviousLesson = () => {
+    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === "integers-and-unsigned-integers");
+    const previousLessonIndex = currentLessonIndex - 1;
+
+    if (previousLessonIndex >= 0) {
+      const previousLesson = lessons[previousLessonIndex];
+      setCurrentPage(previousLesson.id);
+    } else {
+      alert("This is the first lesson!");
+    }
+  };
+
+  const handleGoToNextLesson = () => {
+    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === "integers-and-unsigned-integers");
+    const nextLessonIndex = currentLessonIndex + 1;
+
+    if (nextLessonIndex < lessons.length) {
+      const nextLesson = lessons[nextLessonIndex];
+      setCurrentPage(nextLesson.id);
+    } else {
+      alert("You have completed all lessons!");
+      setCurrentPage("lessons"); // Go back to lessons list
+    }
+  };
+
   return (
     <main className="pt-32 pb-20 flex-grow">
       <section className="container mx-auto px-6">
-        <button
-          onClick={() => setCurrentPage("lessons")}
-          className="text-indigo-400 hover:text-indigo-300 font-semibold mb-8"
-        >
-          &larr; Back to Lessons
-        </button>
+        <div className="flex justify-between items-center mb-8">
+          <button
+            onClick={() => setCurrentPage("lessons")}
+            className="text-indigo-400 hover:text-indigo-300 font-semibold"
+          >
+            &larr; Back to Lessons
+          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleGoToPreviousLesson}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
+            >
+              &lt;
+            </button>
+            <button
+              onClick={handleGoToNextLesson}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
         <div className="lesson-container">
           <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/integers-and-unsigned-integers.md" />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
-              lessonId="IntegersAndUnsignedIntegers"
+              lessonId="integers-and-unsigned-integers"
             />
             <button
               onClick={handleMarkComplete}
