@@ -1,7 +1,24 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import archiver from 'archiver';
-import authenticateToken from '../middleware/auth';
+import { Request, Response, NextFunction } from 'express'; // Added
+import jwt from 'jsonwebtoken'; // Added
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key'; // Added
+
+// Middleware to verify JWT token (Copied from profile.ts)
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401); // No token
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403); // Invalid token
+    (req as any).user = user; // Attach user payload to request
+    next();
+  });
+};
 
 const router = Router();
 const prisma = new PrismaClient();
