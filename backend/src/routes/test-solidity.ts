@@ -27,6 +27,12 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
     });
 };
 
+// Function to extract contract name from Solidity code
+const extractContractName = (solidityCode: string): string | null => {
+    const match = solidityCode.match(/contract\s+(\w+)\s*{/);
+    return match ? match[1] : null;
+};
+
 router.post('/test-solidity', async (req: Request, res: Response) => {
     let { code, lessonId } = req.body;
 
@@ -50,6 +56,9 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
 
         await execCommand('forge init --no-git', tempDir);
 
+        const tempSrcDir = path.join(tempDir, 'src');
+        const tempTestDir = path.join(tempDir, 'test');
+
         // Explicitly set src and test paths in foundry.toml
         const foundryTomlPath = path.join(tempDir, 'foundry.toml');
         let foundryTomlContent = await readFileAsync(foundryTomlPath, 'utf8');
@@ -63,37 +72,62 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
                 '$1test = "test"\n'
             );
         }
+        // Add remapping for user contract with trailing slash
+        foundryTomlContent += `\nremappings = ["user_contract/=${tempSrcDir}/"]`;
         await writeFileAsync(foundryTomlPath, foundryTomlContent);
 
-        const tempSrcDir = path.join(tempDir, 'src');
-        const tempTestDir = path.join(tempDir, 'test');
+        // Ensure src and test directories exist
+        await mkdirAsync(tempSrcDir, { recursive: true });
+        await mkdirAsync(tempTestDir, { recursive: true });
 
-        const tempContractPath = path.join(tempSrcDir, `${lessonId}.sol`);
+        console.log('tempSrcDir exists: ' + fs.existsSync(tempSrcDir));
+        console.log('tempTestDir exists: ' + fs.existsSync(tempTestDir));
+
+        // Extract contract name from user's code
+        const contractName = extractContractName(code);
+        if (!contractName) {
+            return res.status(400).json({ error: 'Could not extract contract name from provided Solidity code.' });
+        }
+        console.log('Extracted contract name:', contractName);
+
+        const tempContractPath = path.join(tempSrcDir, `${contractName}.sol`);
         await writeFileAsync(tempContractPath, code);
 
-        const originalTestCode = await readFileAsync(originalTestFilePath, 'utf8');
-        let updatedTestCode = originalTestCode;
-
-        if (lessonId === "UnderstandingVariablesAndTypes") {
-            const lines = originalTestCode.split('\n');
-            const newLines = lines.map(line => {
-                if (line.includes('import "../../../public/lessons/solidity/VariableTypes.sol";')) {
-                    return `import "../../src/${lessonId}.sol";`;
-                }
-                return line;
-            });
-            updatedTestCode = newLines.join('\n');
+        // Log forge config to debug src path
+        console.log('\n--- Forge Config Output ---');
+        try {
+            const { stdout: forgeConfigOutput } = await execCommand('forge config', tempDir);
+            console.log(forgeConfigOutput);
+        } catch (configErr: any) {
+            console.error('Error running forge config:', configErr.message);
         }
+        console.log('--- End Forge Config Output ---\n');
 
-        const tempTestLessonDir = path.join(tempTestDir, lessonId);
-        await mkdirAsync(tempTestLessonDir, { recursive: true });
+        const originalTestCode = await readFileAsync(originalTestFilePath, 'utf8');
+        // Normalize line endings to Unix style to ensure consistent regex matching
+        const normalizedOriginalTestCode = originalTestCode.replace(/\r\n/g, '\n');
 
-        const tempTestPath = path.join(tempTestLessonDir, `${lessonId}.t.sol`);
+        console.log('\n--- Original Test Code Content ---');
+        console.log(normalizedOriginalTestCode);
+        console.log('--- End Original Test Code Content ---\n');
+
+        // This regex finds the import statement for the contract under test
+        // and replaces it with the path to the user's temporary contract file.
+        const importRegex = /import\s+"[^ vital]*src\/([^ vital]+)\.sol"/g;
+        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol"`);
+
+        console.log('\n--- Updated Test Code Content (after replace) ---');
+        console.log(updatedTestCode);
+        console.log(`--- End Updated Test Code Content (after replace) ---
+`);
+
+        const tempTestPath = path.join(tempTestDir, `${lessonId}.t.sol`);
+        console.log('Updated Test Code (before writing to file): ' + updatedTestCode);
         await writeFileAsync(tempTestPath, updatedTestCode);
 
         // --- DEEPER DEBUGGING LOGS ---
-        console.log(`--- Debugging Test Run for lessonId: ${lessonId} ---`);
-        console.log(`Temporary directory: ${tempDir}`);
+        console.log('--- Debugging Test Run for lessonId: ' + lessonId + ' ---');
+        console.log('Temporary directory: ' + tempDir);
         console.log('\n--- Temporary Contract File Content ---');
         console.log(fs.readFileSync(tempContractPath, 'utf8'));
         console.log('\n--- Temporary Test File Content ---');

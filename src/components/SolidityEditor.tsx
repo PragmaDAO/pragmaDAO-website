@@ -5,6 +5,7 @@ import { EditorState } from '@codemirror/state';
 import { solidity } from '@replit/codemirror-lang-solidity';
 import { indentWithTab } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 
 // --- TYPE DEFINITIONS (Moved from types.ts to fix import error) ---
 interface AbiItem {
