@@ -21,6 +21,11 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
       return;
     }
 
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
