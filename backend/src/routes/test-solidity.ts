@@ -113,7 +113,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
 
         // This regex finds the import statement for the contract under test
         // and replaces it with the path to the user's temporary contract file.
-        const importRegex = /import\s+"[^ vital]*src\/([^ vital]+)\.sol"/g;
+        const importRegex = new RegExp(`import \"user_contract/${lessonId}.sol\";`, 'g');
         const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol"`);
 
         console.log('\n--- Updated Test Code Content (after replace) ---');

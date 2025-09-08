@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-contract IntegerBasics {
+contract IntegersAndUnsignedIntegers {
     // Declare some integer variables here
     uint8 public myUint8;
     int8 public myInt8;
