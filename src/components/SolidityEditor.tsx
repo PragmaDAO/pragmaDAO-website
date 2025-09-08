@@ -6,38 +6,13 @@ import { solidity } from '@replit/codemirror-lang-solidity';
 import { indentWithTab } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { CompiledOutput, TestCase } from '../types';
 
-// --- TYPE DEFINITIONS (Moved from types.ts to fix import error) ---
-interface AbiItem {
-    inputs: { internalType: string; name: string; type: string }[];
-    name: string;
-    outputs: { internalType: string; name: string; type: string }[];
-    stateMutability: string;
-    type: string;
-}
-
-interface CompiledContract {
-    abi: AbiItem[];
-    evm: {
-        bytecode: {
-            object: string;
-        };
-    };
-}
-
-interface CompiledOutput {
-    contracts: {
-        'contract.sol': {
-            [contractName: string]: CompiledContract;
-        };
-    };
-    errors?: { severity: string; formattedMessage: string }[];
-}
 
 
 const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
-     initialCode?: string, solidityFilePath?: string, lessonId?: string }> = ({ onCompile,
-     initialCode, solidityFilePath, lessonId }) => {
+     initialCode?: string, solidityFilePath?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void }> = ({ onCompile,
+     initialCode, solidityFilePath, lessonId, onTestResults }) => {
     const [code, setCode] = useState(initialCode || `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
@@ -189,7 +164,7 @@ pragma solidity ^0.8.7;
                         break;
                     }
                     if (compiled.errors) {
-                        const errorMessages = compiled.errors.filter((err) => err.severity === 'error').map((err) => err.formattedMessage).join ('\n');
+                        const errorMessages = compiled.errors.filter((err: { severity: string; formattedMessage: string; }) => err.severity === 'error').map((err: { severity: string; formattedMessage: string; }) => err.formattedMessage).join ('\n');
                         setOutput(errorMessages.length > 0 ? errorMessages : "Compiled with warnings.");
                         setIsError(errorMessages.length > 0);
                     } else {
@@ -235,6 +210,9 @@ pragma solidity ^0.8.7;
             if (response.ok) {
                 setOutput(data.output);
                 setIsError(!data.success);
+                // Parse the raw output to extract test cases
+                const parsedTestCases: TestCase[] = parseForgeTestOutput(data.output);
+                onTestResults(parsedTestCases); // Pass parsed test cases to parent
             } else {
                 const errorMessage = data.output || data.error || 'An unknown error occurred.';
                 // The backend sends a string with '\n' for newlines, so we replace them with actual newlines
@@ -242,13 +220,45 @@ pragma solidity ^0.8.7;
                 const formattedError = String(errorMessage).replace(/\\n/g, '\n');
                 setOutput(formattedError);
                 setIsError(true);
+                onTestResults([]); // Clear test results on error
             }
         } catch (error: any) {
             setOutput(`Network or JSON parsing error: ${error.message}`);
             setIsError(true);
+            onTestResults([]); // Clear test results on error
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // Helper function to parse forge test output
+    const parseForgeTestOutput = (rawOutput: string): TestCase[] => {
+        const testCaseRegex = /..[(]PASS[|]FAIL[)] (.*?) \(gas: \d+\)/g;
+        const testCases: TestCase[] = [];
+        let match;
+
+        while ((match = testCaseRegex.exec(rawOutput)) !== null) {
+            const status = match[1];
+            const description = match[2].trim();
+            // const gas = parseInt(match[3]); // Not currently used in TestCase interface
+
+            testCases.push({
+                description: description,
+                passed: status === "PASS",
+            });
+        }
+
+        // Handle skipped tests if forge output includes them
+        const skippedRegex = /..[(]SKIP[)] (.*)/g;
+        while ((match = skippedRegex.exec(rawOutput)) !== null) {
+            const description = match[1].trim();
+            testCases.push({
+                description: description,
+                passed: false, // Skipped tests are considered not passed for completion
+            });
+        }
+
+        return testCases;
     };
 
     return (

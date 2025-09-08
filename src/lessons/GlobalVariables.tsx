@@ -122,6 +122,7 @@ const GlobalVariables: React.FC<{
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/GlobalVariables.sol"
               lessonId="global-variables"
+              onTestResults={setTestResults}
             />
             <button
               onClick={handleMarkComplete}

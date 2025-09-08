@@ -122,6 +122,7 @@ const VariablesTypes: React.FC<{
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
               lessonId="understanding-variables-and-types"
+              onTestResults={setTestResults}
             />
             <button
               onClick={handleMarkComplete}

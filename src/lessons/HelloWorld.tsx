@@ -8,7 +8,8 @@ import { lessons } from "../lessons"; // Import lessons array
 
 const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
-}> = ({ setCurrentPage }) => {
+  lessonId: string; // Add lessonId as a prop
+}> = ({ setCurrentPage, lessonId }) => { // Destructure lessonId
   const { user } = useAuth(); // Get user from AuthContext
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
@@ -17,6 +18,8 @@ const HelloWorld: React.FC<{
   const [isScrollable, setIsScrollable] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
+  const [isLessonCompleted, setIsLessonCompleted] = useState(false); // New state for completion
+  const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
 
   useEffect(() => {
     const container = testResultsContainerRef.current;
@@ -27,6 +30,18 @@ const HelloWorld: React.FC<{
     }
   }, [testResults]);
 
+  useEffect(() => {
+    console.log("testResults updated:", testResults); // Log testResults
+    if (testResults.length > 0) {
+      const allTestsPassed = testResults.every(test => test.passed);
+      console.log("allTestsPassed:", allTestsPassed); // Log allTestsPassed
+      setCanMarkComplete(allTestsPassed);
+    } else {
+      setCanMarkComplete(false); // No tests run yet or no tests defined
+    }
+    console.log("canMarkComplete (after update):", canMarkComplete); // Log canMarkComplete
+  }, [testResults]);
+
   const handleScroll = () => {
     const container = testResultsContainerRef.current;
     if (container) {
@@ -35,7 +50,35 @@ const HelloWorld: React.FC<{
     }
   };
 
-  const handleMarkComplete = async () => {
+  useEffect(() => {
+    const fetchLessonStatus = async () => {
+      if (user) {
+        try {
+          const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+          const response = await fetch(`${backendUrl}/api/progress`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          if (response.ok) {
+            const progressData = await response.json();
+            const completed = progressData.some((p: any) => p.lessonId === lessonId && p.completed);
+            setIsLessonCompleted(completed);
+          } else {
+            console.error('Failed to fetch progress:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error fetching progress:', error);
+        }
+      } else {
+        setIsLessonCompleted(false); // Not completed if no user
+      }
+    };
+
+    fetchLessonStatus();
+  }, [user, lessonId]); // Re-fetch when user or lessonId changes
+
+  const handleToggleLessonCompletion = async (completed: boolean) => {
     if (!user) {
       setCurrentPage('login');
       return;
@@ -49,24 +92,24 @@ const HelloWorld: React.FC<{
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ lessonId: "solidity-101", completed: true }),
+        body: JSON.stringify({ lessonId: lessonId, completed: completed }), // Use lessonId prop
       });
 
       if (response.ok) {
-        alert("Lesson marked as complete!");
-        // Optionally, re-fetch progress for LessonsPage or update local state
+        setIsLessonCompleted(completed); // Update local state on success
+        alert(`Lesson marked as ${completed ? 'complete' : 'incomplete'}!`);
       } else {
         const errorData = await response.json();
-        alert(`Failed to mark lesson complete: ${errorData.message || response.statusText}`);
+        alert(`Failed to update lesson status: ${errorData.message || response.statusText}`);
       }
     } catch (error) {
-      console.error("Error marking lesson complete:", error);
-      alert("An error occurred while marking the lesson complete.");
+      console.error("Error updating lesson status:", error);
+      alert("An error occurred while updating the lesson status.");
     }
   };
 
   const handleGoToPreviousLesson = () => {
-    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === "solidity-101");
+    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === lessonId); // Use lessonId prop
     const previousLessonIndex = currentLessonIndex - 1;
 
     if (previousLessonIndex >= 0) {
@@ -78,7 +121,7 @@ const HelloWorld: React.FC<{
   };
 
   const handleGoToNextLesson = () => {
-    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === "solidity-101");
+    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === lessonId); // Use lessonId prop
     const nextLessonIndex = currentLessonIndex + 1;
 
     if (nextLessonIndex < lessons.length) {
@@ -107,6 +150,21 @@ const HelloWorld: React.FC<{
             >
               &lt;
             </button>
+            {/* Checkbox for completion */}
+            <input
+              type="checkbox"
+              checked={isLessonCompleted}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                if (checked && !canMarkComplete) {
+                  alert("All tests must pass before marking the lesson as complete.");
+                } else {
+                  handleToggleLessonCompletion(checked);
+                }
+              }}
+              disabled={!canMarkComplete && !isLessonCompleted} // Disable if not all tests passed AND not already completed
+              className={`form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out ${isLessonCompleted ? 'lesson-completed-checkbox' : ''}`}
+            />
             <button
               onClick={handleGoToNextLesson}
               className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
@@ -121,14 +179,10 @@ const HelloWorld: React.FC<{
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
-              lessonId="solidity-101"
+              lessonId={lessonId} // Use lessonId prop
+              onTestResults={setTestResults}
             />
-            <button
-              onClick={handleMarkComplete}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-4"
-            >
-              Mark as Complete
-            </button>
+            {/* Removed Mark as Complete button */}
           </div>
         </div>
       </section>

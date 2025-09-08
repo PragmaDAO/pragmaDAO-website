@@ -268,6 +268,14 @@ const GlobalStyles = () => (
             }
         }
 
+        .lesson-completed-checkbox {
+            background-color: #10b981; /* A shade of green */
+            border-color: #10b981;
+        }
+        .lesson-completed-checkbox svg {
+            stroke: white;
+        }
+
     `}</style>
 );
 
@@ -299,7 +307,7 @@ export default function App() {
         const lesson = lessons.find(l => l.id === currentPage);
         if (lesson) {
             const LessonComponent = lesson.component;
-            return <LessonComponent setCurrentPage={setCurrentPage} />;
+            return <LessonComponent setCurrentPage={setCurrentPage} lessonId={lesson.id} />;
         }
 
         switch (currentPage) {

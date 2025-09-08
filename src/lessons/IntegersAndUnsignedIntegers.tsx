@@ -122,6 +122,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
               lessonId="integers-and-unsigned-integers"
+              onTestResults={setTestResults}
             />
             <button
               onClick={handleMarkComplete}

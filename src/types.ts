@@ -24,7 +24,7 @@ export interface Lesson {
     title: string;
     description: string;
     difficulty: Difficulty;
-    component: FC<{ setCurrentPage: (page: string) => void; }>;
+    component: FC<{ setCurrentPage: (page: string) => void; lessonId: string; }>;
 }
 
 export interface LessonRowProps {
@@ -73,6 +73,7 @@ export interface CompiledOutput {
         };
     };
     errors?: { severity: string; formattedMessage: string }[];
+    testCases?: TestCase[]; // Added testCases
 }
 
 export interface Instruction {

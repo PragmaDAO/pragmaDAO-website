@@ -122,6 +122,7 @@ const UnderstandingFunctions: React.FC<{
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/UnderstandingFunctions.sol"
               lessonId="understanding-functions"
+              onTestResults={setTestResults}
             />
             <button
               onClick={handleMarkComplete}

@@ -122,6 +122,7 @@ const StateAndLocalVariables: React.FC<{
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/StateAndLocalVariables.sol"
               lessonId="state-and-local-variables"
+              onTestResults={setTestResults}
             />
             <button
               onClick={handleMarkComplete}
