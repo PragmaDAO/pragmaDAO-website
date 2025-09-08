@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.29;
 
 contract SimpleFunctions {
     // Here is a basic function that will return a number.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.29;
 
 contract HelloWorld {
     // Declare a public state variable of type string named greeting

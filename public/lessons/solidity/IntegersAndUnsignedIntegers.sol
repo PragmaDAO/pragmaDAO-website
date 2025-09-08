@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.26;
+pragma solidity ^0.8.29;
 
 contract IntegersAndUnsignedIntegers {
     // Declare some integer variables here
