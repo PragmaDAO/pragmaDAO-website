@@ -11,12 +11,11 @@ const LessonRow: React.FC<LessonRowPropsWithCompletion> = ({ index, title, descr
     <div className="lesson-row grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
         <div className="md:col-span-1 text-2xl font-bold text-gray-500">{String(index + 1).padStart(2, '0')}</div>
         <div className="md:col-span-8">
-            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+            <h3 className={`text-xl font-bold text-white mb-2 ${isCompleted ? 'line-through' : ''}`}>{title}</h3>
             <p className="text-gray-400">{description}</p>
         </div>
         <div className="md:col-span-1 flex justify-start md:justify-center">
             <span className={`difficulty-badge difficulty-${difficulty}`}>{difficulty}</span>
-            {isCompleted && <span className="ml-2 text-green-500">✅</span>} {/* Display checkmark if completed */}
         </div>
         <div className="md:col-span-2 flex justify-end">
             <button onClick={onClick} className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Start</button>
