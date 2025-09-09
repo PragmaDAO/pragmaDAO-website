@@ -206,16 +206,19 @@ pragma solidity ^0.8.7;
             });
 
             const data = await response.json();
+            console.log('SolidityEditor: Data received from backend:', data); // Add this line
 
             if (response.ok) {
                 setOutput(data.output);
                 setIsError(!data.success);
                 // Parse the raw output to extract test cases
                 const parsedTestCases: TestCase[] = parseForgeTestOutput(data.output);
+                console.log('SolidityEditor: parsedTestCases', parsedTestCases); // Add this line
                 onTestResults(parsedTestCases); // Pass parsed test cases to parent
 
                 // Determine if all tests passed
                 const allTestsPassed = parsedTestCases.length > 0 && parsedTestCases.every(test => test.passed);
+                console.log('SolidityEditor: allTestsPassed', allTestsPassed); // Add this line
                 onAllTestsPassed(allTestsPassed); // Notify parent about overall test status
             } else {
                 const errorMessage = data.output || data.error || 'An unknown error occurred.';
@@ -237,7 +240,7 @@ pragma solidity ^0.8.7;
 
     // Helper function to parse forge test output
     const parseForgeTestOutput = (rawOutput: string): TestCase[] => {
-        const testCaseRegex = /..[(]PASS[|]FAIL[)] (.*?) \(gas: \d+\)/g;
+        const testCaseRegex = /^\s*\[(PASS|FAIL)\]\s*(.*?)\s*\(gas: \d+\)/gm;
         const testCases: TestCase[] = [];
         let match;
 
@@ -291,7 +294,7 @@ pragma solidity ^0.8.7;
                         </div>
                         <pre 
                             className={`solidity-output ${isError ? 'output-error' : 'output-success'} flex-1 overflow-auto w-full p-3 m-0 whitespace-pre-wrap`}
-                            style={{ 
+                            style={{
                                 minHeight: 0,
                                 maxHeight: '100%',
                                 height: '100%'

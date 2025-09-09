@@ -159,6 +159,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
             console.warn('User ID not found in request. Code submission not saved.');
         }
 
+        console.log('Forge Test Output (backend):', testOutput);
         res.json({
             success: true,
             output: testOutput,
