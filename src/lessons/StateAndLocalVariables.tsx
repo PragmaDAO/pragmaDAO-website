@@ -119,8 +119,6 @@ const StateAndLocalVariables: React.FC<{
     if (previousLessonIndex >= 0) {
       const previousLesson = lessons[previousLessonIndex];
       setCurrentPage(previousLesson.id);
-    } else {
-      alert("This is the first lesson!");
     }
   };
 
@@ -131,9 +129,6 @@ const StateAndLocalVariables: React.FC<{
     if (nextLessonIndex < lessons.length) {
       const nextLesson = lessons[nextLessonIndex];
       setCurrentPage(nextLesson.id);
-    } else {
-      alert("You have completed all lessons!");
-      setCurrentPage("lessons"); // Go back to lessons list
     }
   };
 
@@ -148,12 +143,6 @@ const StateAndLocalVariables: React.FC<{
             &larr; Back to Lessons
           </button>
           <div className="flex items-center space-x-4">
-            <button
-              onClick={handleGoToPreviousLesson}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
-            >
-              &lt;
-            </button>
             {/* Checkbox for completion */}
             <input
               type="checkbox"
@@ -169,6 +158,12 @@ const StateAndLocalVariables: React.FC<{
               disabled={!canMarkComplete && !isLessonCompleted} // Disable if not all tests passed AND not already completed
               className={`form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out ${isLessonCompleted ? 'lesson-completed-checkbox' : ''}`}
             />
+            <button
+              onClick={handleGoToPreviousLesson}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
+            >
+              &lt;
+            </button>
             <button
               onClick={handleGoToNextLesson}
               className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"

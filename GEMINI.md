@@ -259,9 +259,11 @@ d
 2.  **Update `SolidityEditor.tsx`:** Modify the `SolidityEditor.tsx` component to use CodeMirror 6 for code editing.
 3.  **Configure Solidity Highlighting:** Implement Solidity syntax highlighting using `@replit/codemirror-lang-solidity`.
 
-#### Phase 5:
-- Make sure all the back end tests work for all the lessons
-- Make sure there are no errors in any of the tests or back end.
+#### Phase 5: Lesson Progress Tracking
+
+*   **RESTful API principles explained:** Completed.
+*   **Backend API endpoints (`GET /api/progress`, `POST /api/progress`) created:** Completed.
+*   **Frontend lesson pages modified to interact with new endpoints:** Completed (including JWT authentication, fetching/updating progress, and UI integration with checkboxes).
 
 ### Technology Reasoning
 

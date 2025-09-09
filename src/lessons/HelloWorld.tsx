@@ -152,12 +152,6 @@ const HelloWorld: React.FC<{
             &larr; Back to Lessons
           </button>
           <div className="flex items-center space-x-4">
-            <button
-              onClick={handleGoToPreviousLesson}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
-            >
-              &lt;
-            </button>
             {/* Checkbox for completion */}
             <input
               type="checkbox"
@@ -173,6 +167,12 @@ const HelloWorld: React.FC<{
               disabled={!canMarkComplete && !isLessonCompleted} // Disable if not all tests passed AND not already completed
               className={`form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out ${isLessonCompleted ? 'lesson-completed-checkbox' : ''}`}
             />
+            <button
+              onClick={handleGoToPreviousLesson}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
+            >
+              &lt;
+            </button>
             <button
               onClick={handleGoToNextLesson}
               className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
