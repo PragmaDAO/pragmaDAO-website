@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase } from "../types";
 import Lesson from "../components/Lesson";
@@ -8,8 +8,9 @@ import { lessons } from "../lessons"; // Import lessons array
 
 const VariablesTypes: React.FC<{
   setCurrentPage: (page: string) => void;
-}> = ({ setCurrentPage }) => {
-  const { user } = useAuth(); // Get user from AuthContext
+  lessonId: string; // Add lessonId as a prop
+}> = ({ setCurrentPage, lessonId }) => {
+  const { user, token } = useAuth(); // Get user and token from AuthContext
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
   );
@@ -17,7 +18,38 @@ const VariablesTypes: React.FC<{
   const [isScrollable, setIsScrollable] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
+  const [isLessonCompleted, setIsLessonCompleted] = useState(false); // New state for completion
   const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
+
+  const handleToggleLessonCompletion = useCallback(async (completed: boolean) => {
+    if (!user || !token) {
+      setCurrentPage('login');
+      return;
+    }
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await fetch(`${backendUrl}/api/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ lessonId: lessonId, completed: completed }),
+      });
+
+      if (response.ok) {
+        setIsLessonCompleted(completed); // Update local state on success
+      } else {
+        const errorData = await response.json();
+        console.error(`Failed to update lesson status: ${errorData.message || response.statusText}`);
+        alert(`Failed to update lesson status: ${errorData.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating lesson status:", error);
+      alert("An error occurred while updating the lesson status.");
+    }
+  }, [user, token, lessonId, setCurrentPage]);
 
   useEffect(() => {
     const container = testResultsContainerRef.current;
@@ -37,6 +69,13 @@ const VariablesTypes: React.FC<{
     }
   }, [testResults]);
 
+  useEffect(() => {
+    // Automatically mark lesson complete if all tests pass and it's not already completed
+    if (canMarkComplete && !isLessonCompleted) {
+      handleToggleLessonCompletion(true);
+    }
+  }, [canMarkComplete, isLessonCompleted, handleToggleLessonCompletion]);
+
   const handleScroll = () => {
     const container = testResultsContainerRef.current;
     if (container) {
@@ -45,38 +84,36 @@ const VariablesTypes: React.FC<{
     }
   };
 
-  const handleMarkComplete = async () => {
-    if (!user) {
-      setCurrentPage('login');
-      return;
-    }
-
-    try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
-      const response = await fetch(`${backendUrl}/api/progress`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ lessonId: "understanding-variables-and-types", completed: true }),
-      });
-
-      if (response.ok) {
-        alert("Lesson marked as complete!");
-        // Optionally, re-fetch progress for LessonsPage or update local state
+  useEffect(() => {
+    const fetchLessonStatus = async () => {
+      if (user && token) {
+        try {
+          const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+          const response = await fetch(`${backendUrl}/api/progress`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const progressData = await response.json();
+            const completed = progressData.some((p: any) => p.lessonId === lessonId && p.completed);
+            setIsLessonCompleted(completed);
+          } else {
+            console.error('Failed to fetch progress:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error fetching progress:', error);
+        }
       } else {
-        const errorData = await response.json();
-        alert(`Failed to mark lesson complete: ${errorData.message || response.statusText}`);
+        setIsLessonCompleted(false); // Not completed if no user
       }
-    } catch (error) {
-      console.error("Error marking lesson complete:", error);
-      alert("An error occurred while marking the lesson complete.");
-    }
-  };
+    };
+
+    fetchLessonStatus();
+  }, [user, token, lessonId]); // Re-fetch when user or lessonId changes
 
   const handleGoToPreviousLesson = () => {
-    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === "understanding-variables-and-types");
+    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === lessonId);
     const previousLessonIndex = currentLessonIndex - 1;
 
     if (previousLessonIndex >= 0) {
@@ -88,7 +125,7 @@ const VariablesTypes: React.FC<{
   };
 
   const handleGoToNextLesson = () => {
-    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === "understanding-variables-and-types");
+    const currentLessonIndex = lessons.findIndex(lesson => lesson.id === lessonId);
     const nextLessonIndex = currentLessonIndex + 1;
 
     if (nextLessonIndex < lessons.length) {
@@ -117,6 +154,21 @@ const VariablesTypes: React.FC<{
             >
               &lt;
             </button>
+            {/* Checkbox for completion */}
+            <input
+              type="checkbox"
+              checked={isLessonCompleted}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                if (checked && !canMarkComplete) {
+                  alert("All tests must pass before marking the lesson as complete.");
+                } else {
+                  handleToggleLessonCompletion(checked);
+                }
+              }}
+              disabled={!canMarkComplete && !isLessonCompleted} // Disable if not all tests passed AND not already completed
+              className={`form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out ${isLessonCompleted ? 'lesson-completed-checkbox' : ''}`}
+            />
             <button
               onClick={handleGoToNextLesson}
               className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
@@ -131,17 +183,11 @@ const VariablesTypes: React.FC<{
             <SolidityEditor
               onCompile={setCompiledResult}
               solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
-              lessonId="understanding-variables-and-types"
+              lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop
             />
-            <button
-              onClick={handleMarkComplete}
-              disabled={!canMarkComplete} // Disable if not all tests passed
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-4"
-            >
-              Mark as Complete
-            </button>
+            {/* Removed Mark as Complete button */}
           </div>
         </div>
       </section>

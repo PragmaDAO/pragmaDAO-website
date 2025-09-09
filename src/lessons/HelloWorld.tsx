@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase } from "../types";
 import Lesson from "../components/Lesson";
@@ -10,7 +10,7 @@ const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
   lessonId: string; // Add lessonId as a prop
 }> = ({ setCurrentPage, lessonId }) => { // Destructure lessonId
-  const { user } = useAuth(); // Get user from AuthContext
+  const { user, token } = useAuth(); // Get user and token from AuthContext
   const [compiledResult, setCompiledResult] = useState<CompiledOutput | null>(
     null,
   );
@@ -20,6 +20,37 @@ const HelloWorld: React.FC<{
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
   const [isLessonCompleted, setIsLessonCompleted] = useState(false); // New state for completion
   const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
+
+  const handleToggleLessonCompletion = useCallback(async (completed: boolean) => {
+    if (!user || !token) {
+      setCurrentPage('login');
+      return;
+    }
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await fetch(`${backendUrl}/api/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ lessonId: lessonId, completed: completed }), // Use lessonId prop
+      });
+
+      if (response.ok) {
+        setIsLessonCompleted(completed); // Update local state on success
+        
+      } else {
+        const errorData = await response.json();
+        console.error(`Failed to update lesson status: ${errorData.message || response.statusText}`);
+        alert(`Failed to update lesson status: ${errorData.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error updating lesson status:", error);
+      alert("An error occurred while updating the lesson status.");
+    }
+  }, [user, token, lessonId, setCurrentPage]);
 
   useEffect(() => {
     const container = testResultsContainerRef.current;
@@ -42,6 +73,13 @@ const HelloWorld: React.FC<{
     console.log("canMarkComplete (after update):", canMarkComplete); // Log canMarkComplete
   }, [testResults, canMarkComplete]);
 
+  useEffect(() => {
+    // Automatically mark lesson complete if all tests pass and it's not already completed
+    if (canMarkComplete && !isLessonCompleted) {
+      handleToggleLessonCompletion(true);
+    }
+  }, [canMarkComplete, isLessonCompleted, handleToggleLessonCompletion]);
+
   const handleScroll = () => {
     const container = testResultsContainerRef.current;
     if (container) {
@@ -52,12 +90,12 @@ const HelloWorld: React.FC<{
 
   useEffect(() => {
     const fetchLessonStatus = async () => {
-      if (user) {
+      if (user && token) {
         try {
           const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
           const response = await fetch(`${backendUrl}/api/progress`, {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
+              'Authorization': `Bearer ${token}`
             }
           });
           if (response.ok) {
@@ -76,37 +114,7 @@ const HelloWorld: React.FC<{
     };
 
     fetchLessonStatus();
-  }, [user, lessonId]); // Re-fetch when user or lessonId changes
-
-  const handleToggleLessonCompletion = async (completed: boolean) => {
-    if (!user) {
-      setCurrentPage('login');
-      return;
-    }
-
-    try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
-      const response = await fetch(`${backendUrl}/api/progress`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ lessonId: lessonId, completed: completed }), // Use lessonId prop
-      });
-
-      if (response.ok) {
-        setIsLessonCompleted(completed); // Update local state on success
-        alert(`Lesson marked as ${completed ? 'complete' : 'incomplete'}!`);
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to update lesson status: ${errorData.message || response.statusText}`);
-      }
-    } catch (error) {
-      console.error("Error updating lesson status:", error);
-      alert("An error occurred while updating the lesson status.");
-    }
-  };
+  }, [user, token, lessonId]); // Re-fetch when user or lessonId changes
 
   const handleGoToPreviousLesson = () => {
     const currentLessonIndex = lessons.findIndex(lesson => lesson.id === lessonId); // Use lessonId prop

@@ -1,16 +1,39 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 const router = Router();
 
-// Middleware to protect routes (assuming you have one)
-// This is a placeholder. You'll need to implement actual JWT verification.
-const authenticateToken = (req: Request, res: Response, next: Function) => {
-    // In a real app, you'd verify the JWT here and attach the user to req.user
-    // For now, we'll mock a user ID for testing purposes.
-    (req as any).user = { id: 'mock-user-id-123' }; // Replace with actual user ID from JWT
-    next();
+// Secret for JWT - In a real app, this should be in an environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+
+// Extend the Request type to include a user property
+declare global {
+    namespace Express {
+        interface Request {
+            user?: { id: string };
+        }
+    }
+}
+
+// Middleware to protect routes and verify JWT
+const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token == null) {
+        return res.status(401).json({ message: 'Authentication token required' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+        if (err) {
+            console.error('JWT verification error:', err);
+            return res.status(403).json({ message: 'Invalid or expired token' });
+        }
+        req.user = user as { id: string };
+        next();
+    });
 };
 
 // GET /api/progress - Fetch user's lesson progress
