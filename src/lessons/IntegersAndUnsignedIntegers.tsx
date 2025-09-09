@@ -165,6 +165,12 @@ const IntegersAndUnsignedIntegers: React.FC<{
             />
             
             <button
+              onClick={handleGoToPreviousLesson}
+              className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
+            >
+              &lt;
+            </button>
+            <button
               onClick={handleGoToNextLesson}
               className="text-indigo-400 hover:text-indigo-300 font-semibold text-2xl"
             >

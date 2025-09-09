@@ -40,6 +40,11 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Solidity code and lessonId are required.' });
     }
 
+    // Handle the HelloWorld lesson ID mismatch
+    if (lessonId === 'HelloWorld') {
+        lessonId = 'solidity-101';
+    }
+
     // Force pragma to be ^0.8.26 to match the test files
     code = code.replace(/pragma solidity .*/, 'pragma solidity ^0.8.26;');
 
@@ -113,13 +118,17 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
 
         // This regex finds the import statement for the contract under test
         // and replaces it with the path to the user's temporary contract file.
-        const importRegex = new RegExp(`import \"user_contract/${lessonId}.sol\";`, 'g');
-        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol"`);
+        let importRegex;
+        if (lessonId === 'solidity-101') {
+            importRegex = new RegExp(`import \"user_contract/HelloWorld.sol\";`, 'g');
+        } else {
+            importRegex = new RegExp(`import \"user_contract/${lessonId}.sol\";`, 'g');
+        }
+        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol";`);
 
         console.log('\n--- Updated Test Code Content (after replace) ---');
         console.log(updatedTestCode);
-        console.log(`--- End Updated Test Code Content (after replace) ---
-`);
+        console.log(`--- End Updated Test Code Content (after replace)---\n`);
 
         const tempTestPath = path.join(tempTestDir, `${lessonId}.t.sol`);
         console.log('Updated Test Code (before writing to file): ' + updatedTestCode);
