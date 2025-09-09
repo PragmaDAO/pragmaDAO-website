@@ -17,6 +17,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
   const [isScrollable, setIsScrollable] = useState(false);
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
+  const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
 
   useEffect(() => {
     const container = testResultsContainerRef.current;
@@ -24,6 +25,15 @@ const IntegersAndUnsignedIntegers: React.FC<{
       const isNowScrollable = container.scrollHeight > container.clientHeight;
       setIsScrollable(isNowScrollable);
       setShowScrollIndicator(isNowScrollable);
+    }
+  }, [testResults]);
+
+  useEffect(() => {
+    if (testResults.length > 0) {
+      const allTestsPassed = testResults.every(test => test.passed);
+      setCanMarkComplete(allTestsPassed);
+    } else {
+      setCanMarkComplete(false); // No tests run yet or no tests defined
     }
   }, [testResults]);
 
@@ -123,9 +133,11 @@ const IntegersAndUnsignedIntegers: React.FC<{
               solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
               lessonId="integers-and-unsigned-integers"
               onTestResults={setTestResults}
+              onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop
             />
             <button
               onClick={handleMarkComplete}
+              disabled={!canMarkComplete} // Disable if not all tests passed
               className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-4"
             >
               Mark as Complete

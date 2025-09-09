@@ -13,7 +13,7 @@ const Hero: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrent
         </div>
         <div className="mt-20 relative hero-glow w-full max-w-5xl mx-auto h-[750px] md:h-[690px] rounded-2xl overflow-hidden p-4">
              <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 opacity-50"></div>
-             <div className="relative z-10 h-full"><SolidityEditor onCompile={() => {}} solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol" lessonId="HelloWorld" onTestResults={() => {}} /></div>
+             <div className="relative z-10 h-full"><SolidityEditor onCompile={() => {}} solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol" lessonId="HelloWorld" onTestResults={() => {}} onAllTestsPassed={() => {}} /></div>
         </div>
     </section>
 );

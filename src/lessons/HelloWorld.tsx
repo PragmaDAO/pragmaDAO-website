@@ -40,7 +40,7 @@ const HelloWorld: React.FC<{
       setCanMarkComplete(false); // No tests run yet or no tests defined
     }
     console.log("canMarkComplete (after update):", canMarkComplete); // Log canMarkComplete
-  }, [testResults]);
+  }, [testResults, canMarkComplete]);
 
   const handleScroll = () => {
     const container = testResultsContainerRef.current;
@@ -181,6 +181,7 @@ const HelloWorld: React.FC<{
               solidityFilePath="/pragmaDAO-website/lessons/solidity/HelloWorld.sol"
               lessonId={lessonId} // Use lessonId prop
               onTestResults={setTestResults}
+              onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop
             />
             {/* Removed Mark as Complete button */}
           </div>

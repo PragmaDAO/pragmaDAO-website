@@ -11,8 +11,8 @@ import { CompiledOutput, TestCase } from '../types';
 
 
 const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
-     initialCode?: string, solidityFilePath?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void }> = ({ onCompile,
-     initialCode, solidityFilePath, lessonId, onTestResults }) => {
+     initialCode?: string, solidityFilePath?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void }> = ({ onCompile,
+     initialCode, solidityFilePath, lessonId, onTestResults, onAllTestsPassed }) => {
     const [code, setCode] = useState(initialCode || `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
@@ -213,6 +213,10 @@ pragma solidity ^0.8.7;
                 // Parse the raw output to extract test cases
                 const parsedTestCases: TestCase[] = parseForgeTestOutput(data.output);
                 onTestResults(parsedTestCases); // Pass parsed test cases to parent
+
+                // Determine if all tests passed
+                const allTestsPassed = parsedTestCases.length > 0 && parsedTestCases.every(test => test.passed);
+                onAllTestsPassed(allTestsPassed); // Notify parent about overall test status
             } else {
                 const errorMessage = data.output || data.error || 'An unknown error occurred.';
                 // The backend sends a string with '\n' for newlines, so we replace them with actual newlines
