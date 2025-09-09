@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'; // Import useEffect and useS
 import { LessonRowProps } from '../types';
 import { lessons } from '../lessons';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
+import ProgressBar from '../components/ProgressBar'; // Import the new component
 
 interface LessonRowPropsWithCompletion extends LessonRowProps {
     isCompleted: boolean;
@@ -61,6 +62,15 @@ const LessonsPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
             <section id="lessons" className="container mx-auto px-6">
                 <h2 className="text-4xl md:text-5xl font-extrabold text-center mb-4">PragmaDAO Lessons</h2>
                 <p className="text-lg md:text-xl text-gray-400 text-center mb-12 max-w-3xl mx-auto">Browse our collection of hands-on lessons to build practical Web3 development skills.</p>
+                
+                {/* Add the progress bar here */}
+                {user && (
+                    <ProgressBar
+                        completed={completedLessons.length}
+                        total={lessons.length}
+                    />
+                )}
+
                 <div className="bg-gray-800/50 rounded-lg border border-gray-700">
                     {lessons.map((lesson, index) => (
                         <LessonRow
