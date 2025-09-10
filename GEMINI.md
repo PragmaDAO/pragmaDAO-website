@@ -51,27 +51,6 @@ Gemini, time for Phase 3. Let's integrate Solidity code testing using Foundry Fo
 4.  Guiding me through modifying the `SolidityEditor.tsx` component in the frontend to send the user's code to this new API endpoint and display the returned test results.
 ```
 
-**Testing Flow Explanation (Isolated Architecture):**
-
-To ensure that a user's code in one lesson cannot affect another, the backend uses an isolated testing architecture. Each time a user runs a test, the following happens:
-
-1.  **User clicks "Run Tests"**: In the `SolidityEditor.tsx` component, this triggers the `handleRunTests` function.
-2.  **Frontend sends request**: `handleRunTests` makes a `POST` request to the `/api/test-solidity` endpoint, containing the user's Solidity code and the `lessonId`.
-3.  **Backend receives request**: The Express server receives the request.
-4.  **Backend Creates Temporary Environment**:
-    a.  The backend creates a new, unique temporary directory on the server (e.g., `/tmp/pragma-forge-xyz`).
-    b.  It initializes a clean, empty Forge project in this directory.
-5.  **Backend Prepares Files**:
-    a.  The backend saves the user's submitted code as a contract file (e.g., `HelloWorld.sol`) in the temporary project's `src` directory.
-    b.  It reads the official test file for the lesson from the main project's `forge_base_project/test` directory.
-    c.  It automatically updates the test file's import path to point to the user's contract in the temporary `src` directory.
-    d.  It saves this updated test file in the temporary project's `test` directory.
-6.  **Backend Runs Isolated Test**: The backend executes the `forge test` command *inside the temporary project*. Since this project only contains the single contract and its test, it is completely isolated from all other lessons.
-7.  **Backend Captures Output**: The backend captures the complete output (stdout and stderr) from the `forge test` command.
-8.  **Backend Sends JSON Response**: The backend sends a JSON response to the frontend, containing the full test output and a `success` flag.
-9.  **Backend Cleans Up**: The backend deletes the entire temporary directory and its contents.
-10. **Frontend Displays Output**: The frontend receives the JSON response and displays the test output in the IDE's output panel.
-
 ---
 
 ### Phase 4: Lesson Progress Tracking
@@ -86,143 +65,33 @@ Gemini, let's begin Phase 4: tracking user progress. Please guide me by:
 3.  Showing me how to modify the frontend lesson pages to interact with these new endpoints, so that a logged-in user's progress is saved and loaded automatically.
 ```
 ---
----
 
-## Project Documentation
-
-### In-Depth Action Plan
-
-#### Phase 1: Backend Scaffolding & Foundry Installation
-
-1.  **Install Foundry:** Run the official installation script via a shell command to install `forge`, `anvil`, and `chisel`.
-2.  **Create Backend Structure:** Create a `backend` directory in the project root.
-3.  **Initialize Node.js Project:** Inside `backend`, initialize a new Node.js project, configure it for TypeScript, and create a `tsconfig.json` file.
-4.  **Install Dependencies:** Install Express.js as the web server framework.
-5.  **Create Basic Server:** Write the initial server code in `backend/src/index.ts` with a simple "/" endpoint.
-6.  **Add Run Script:** Add a `dev` script to the backend's `package.json` to easily start the server.
-
-#### Phase 2: Database and User Authentication
-
-1.  **Launch Database:** Create a `docker-compose.yml` file to define and launch a PostgreSQL database service in a Docker container.
-2.  **Integrate Prisma:** Add the Prisma ORM to the backend, connect it to the database, and initialize it.
-3.  **Define Data Schema:** Edit `prisma/schema.prisma` to define the `User` and `UserLessonProgress` models.
-4.  **Create Database Tables:** Run `prisma migrate` to automatically create the database tables from the schema.
-5.  **Build Authentication API:** Create the `/api/register` and `/api/login` endpoints, implementing password hashing and JWTs for security.
-
-#### Phase 3: Solidity Code Testing with Forge
-
-1.  **Create Test Endpoint:** Create a new `/api/test-solidity` endpoint in the backend to receive Solidity code.
-2.  **Execute Code with Forge:** Use Node.js's `child_process` module to execute Foundry's `forge test` command on the user's code and capture the output. This will involve writing the user's code to a temporary file, creating a test file for it, and then running `forge test`.
-3.  **Frontend `SolidityEditor` Update:** Modify the `SolidityEditor.tsx` component, adding a "Run Tests" button to send code to the new API endpoint.
-4.  **Display Results:** Display the test results from the backend below the code editor.
-
-#### Phase 4: Lesson Progress Tracking
-
-1.  **Explain RESTful API Principles:** (Already done)
-2.  **Create Backend API Endpoints:** (Already done)
-3.  **Frontend Integration for Progress Tracking:**
-    *   **3.1 Authentication Context and User ID:**
-        *   **Goal:** Ensure the `userId` is accessible throughout the frontend for authenticated API calls.
-        *   **Action:** Review `src/App.tsx` and related authentication components (e.g., login forms, user state management) to identify where the user's logged-in status and `userId` are stored. If not already present, consider implementing a React Context or similar global state management for user authentication.
-    *   **3.2 Fetching User Progress on Lessons Page Load:**
-        *   **Goal:** Display which lessons a logged-in user has completed on the `LessonsPage`.
-        *   **Action:**
-            *   Modify `src/pages/LessonsPage.tsx`.
-            *   Inside a `useEffect` hook, if a user is logged in, make an authenticated `GET` request to `/api/progress`.
-            *   Store the fetched progress data (e.g., an array of `lessonId`s that are completed) in the component's state.
-            *   Pass this `completedLessons` data down to the individual lesson display components (e.g., `LessonRow` if you have one, or directly to the `lessons` array in `lessons.ts` if it's mutable and shared).
-            *   Update the UI to visually indicate completed lessons (e.g., a checkmark, different styling).
-    *   **3.3 Updating User Progress from Lesson Pages:**
-        *   **Goal:** Allow users to mark a lesson as completed from within the lesson page.
-        *   **Action:**
-            *   Modify individual lesson components (e.g., `src/lessons/HelloWorld.tsx`, `src/lessons/VariablesTypes.tsx`, etc.).
-            *   Add a "Mark as Complete" button or integrate the completion logic with passing all tests.
-            *   When triggered, make an authenticated `POST` request to `/api/progress` with the `lessonId` and `completed: true`.
-            *   Handle the response: if successful, update the local state and potentially trigger a re-fetch of progress data to ensure consistency across the app.
-    *   **3.4 Displaying Progress in Lesson Components:**
-        *   **Goal:** Visually show the completion status within each lesson component.
-        *   **Action:**
-            *   Modify `src/components/Lesson.tsx` (or the component that renders individual lesson details).
-            *   Accept a prop (e.g., `isCompleted: boolean`) that indicates whether the current lesson is completed for the logged-in user.
-            *   Use this prop to conditionally render a checkmark, change styling, or disable certain actions.
-
-### Technology Reasoning
-
-#### Why use the Foundry Toolchain?
-
-You are using the Foundry toolchain because it's a fast, modern, and integrated toolkit that provides everything we need for the new interactive features, specifically:
-
-*   **Anvil:** This will run a local, high-speed Ethereum blockchain on your machine. It's for deploying and testing your smart contracts in a development environment without needing to connect to a public testnet.
-*   **Forge:** This is a powerful testing framework. We'll use it to write tests for our Solidity smart contracts *in Solidity*, which is a huge advantage for ensuring they work correctly.
-*   **Chisel:** This is an interactive Solidity Read-Eval-Print Loop (REPL). While not directly used for the testing endpoint, it's part of the Foundry suite and could be used for other interactive Solidity features in the future.
-
-#### Why use a Database?
-
-We are using a database to permanently store information that changes over time and is specific to each user. For this project, the database is essential for two core features:
-
-1.  **User Accounts:** To enable users to register and log in, we need a database to securely store their credentials (like a username and a hashed password).
-2.  **Lesson Progress Tracking:** To save a user's progress, we need to record which lessons they have completed. The database will store this information, allowing users to sign in and pick up where they left off.
-
----
-
-## Progress Summary
-
-This section summarizes the work completed so far, referencing the plan outlined in this `GEMINI.md` file.
-
-### Phase 1: Backend Scaffolding & Foundry Installation
-
-*   **Foundry Explained:** Completed.
-*   **Foundry Installation:** Confirmed existing installation.
-*   **Node.js/Express.js Backend Explained:** Completed.
-*   **Step 4a: Create `backend` directory:** Completed.
-*   **Step 4b: Initialize TypeScript Node.js project:** Completed (including `package.json` and `tsconfig.json`).
-*   **Step 4c: Add Express.js as a dependency:** Completed.
-*   **Step 4d: Create simple "Hello World" API endpoint:** Completed and verified.
-
-### Phase 2: Database and User Authentication
-
-*   **Step 1: Explain Database, ORM, Prisma:** Completed.
-*   **Step 2: Create `docker-compose.yml` for PostgreSQL:** Completed.
-*   **Step 2: Start PostgreSQL Container:** Completed and verified.
-*   **Step 3: Install Prisma CLI and Client:** Completed.
-*   **Step 4: Initialize Prisma:** Completed (manual execution required).
-*   **Step 5: Configure `.env` for Database Connection:** Completed.
-*   **Step 6: Define initial schema in `schema.prisma`:** Completed (including correction for PostgreSQL ID type).
-*   **Step 7: Run Prisma Migrate:** Completed and verified.
-*   **Step 4 (from prompt): Create secure registration/login API endpoints:**
-    *   Concepts (hashing, JWTs) explained: Completed.
-    *   `bcryptjs` and `jsonwebtoken` installed: Completed.
-    *   Authentication routes (`backend/src/routes/auth.ts`) created: Completed.
-    *   `backend/src/index.ts` updated to use auth routes: Completed.
-    *   Endpoints (`/api/auth/register`, `/api/auth/login`) are ready for testing.
-
-### Phase 3: Solidity Code Testing with Forge
-
-*   **Explanation of Forge testing:** Completed.
-*   **Step 1 (from prompt): Create `/api/test-solidity` endpoint:** Completed (`backend/src/routes/test-solidity.ts` created).
-*   **Step 2 (from prompt): Execute code with Forge:** Completed (backend uses `child_process` to run `forge test` on temporary files).
-*   **Step 3 (from prompt): Modify `SolidityEditor.tsx`:** Completed (added "Run Tests" button and `handleRunTests` function).
-*   **`cors` and `@types/cors` installed in backend:** Completed.
-*   **Troubleshooting `EADDRINUSE` and `Cannot find module 'cors'` errors:** Completed.
-
-### Phase 4: CodeMirror 6 Integration
-
-*   **Integrate CodeMirror 6:** Completed.
-*   **Update `SolidityEditor.tsx`:** Completed.
-*   **Configure Solidity Highlighting:** Completed.
-
-### Phase 5: Lesson Progress Tracking
+### Phase 5: CodeMirror 6 Integration
 
 **Your Prompt to Gemini:**
 
 ```
-Gemini, let's begin Phase 5: tracking user progress. Please guide me by:
+Gemini, let's begin Phase 5: CodeMirror 6 Integration. Please guide me by:
 
-1.  Explaining the RESTful API principles we'll use for the progress-tracking endpoints (e.g., GET for fetching, POST for creating/updating).
-2.  Providing a plan to create the necessary API endpoints in the backend (e.g., `GET /api/progress` and `POST /api/progress`) to save and retrieve a user's lesson progress.
-3.  Showing me how to modify the frontend lesson pages to interact with these new endpoints, so that a logged-in user's progress is saved and loaded automatically.
+1.  Installing CodeMirror 6 core packages and `@replit/codemirror-lang-solidity`.
+2.  Updating `SolidityEditor.tsx` to use CodeMirror 6 for code editing.
+3.  Configuring Solidity syntax highlighting using `@replit/codemirror-lang-solidity`.
 ```
 ---
+
+### Phase 6: Payments and Subscriptions
+
+**Your Prompt to Gemini:**
+
+```
+Gemini, let's begin Phase 6: implementing payments and subscriptions. Please guide me by:
+
+1.  First, explaining the necessary database schema changes to support subscriptions, discount codes, and referrals. I need to support at least 2,000 paying members.
+2.  Providing a step-by-step plan to integrate the Stripe API for credit card payments. This should include creating API endpoints for creating subscriptions, handling webhooks for payment events, and managing subscription statuses.
+3.  Showing me how to build a system for generating and redeeming discount codes. This should include an admin interface (or a simple script) to create codes and an API endpoint to validate and apply them to a subscription.
+4.  Guiding me through the implementation of a referral system. This should include generating unique referral codes for users and applying discounts for both the referrer and the referred user.
+5.  Finally, showing me how to integrate Thirdweb's SDK to accept USDC payments for subscriptions. This should include creating a backend endpoint to verify the transaction on the blockchain and activate the user's subscription.
+```
 ---
 
 ## Project Documentation
@@ -254,7 +123,7 @@ Gemini, let's begin Phase 5: tracking user progress. Please guide me by:
 4.  **Display Results:** Display the results from the backend below the code editor.
 
 #### Phase 4: CodeMirror 6 Integration
-d
+
 1.  **Integrate CodeMirror 6:** Install CodeMirror 6 core packages and `@replit/codemirror-lang-solidity`.
 2.  **Update `SolidityEditor.tsx`:** Modify the `SolidityEditor.tsx` component to use CodeMirror 6 for code editing.
 3.  **Configure Solidity Highlighting:** Implement Solidity syntax highlighting using `@replit/codemirror-lang-solidity`.
@@ -264,6 +133,33 @@ d
 *   **RESTful API principles explained:** Completed.
 *   **Backend API endpoints (`GET /api/progress`, `POST /api/progress`) created:** Completed.
 *   **Frontend lesson pages modified to interact with new endpoints:** Completed (including JWT authentication, fetching/updating progress, and UI integration with checkboxes).
+
+#### Phase 6: Payments and Subscriptions
+
+1.  **Update Database Schema:**
+    *   Modify `prisma/schema.prisma` to add new models: `Subscription`, `DiscountCode`, `Referral`, and `CryptoPayment`.
+    *   Update the `User` model to include `stripeCustomerId`, `subscriptionStatus`, and `referrerId`.
+    *   Run `prisma migrate` to apply the schema changes to the database.
+2.  **Integrate Stripe:**
+    *   Install the Stripe Node.js library (`stripe`).
+    *   Create new API endpoints in the backend for:
+        *   `POST /api/stripe/create-subscription`: To create a new Stripe checkout session.
+        *   `POST /api/stripe/webhook`: To handle incoming webhooks from Stripe for events like `checkout.session.completed`, `invoice.payment_succeeded`, `customer.subscription.deleted`, etc.
+    *   Modify the frontend to include a pricing page and a checkout button that redirects to Stripe.
+3.  **Implement Discount Codes:**
+    *   Create a new route in `backend/src/routes/admin.ts` for generating discount codes. This can be a simple endpoint that only authorized admins can access.
+    *   Create an API endpoint `POST /api/apply-discount` to validate a discount code and apply it to a user's subscription.
+    *   Update the frontend checkout process to include a field for entering a discount code.
+4.  **Build Referral System:**
+    *   When a new user signs up, check for a `referrerId` in the request.
+    *   Generate a unique referral code for each user and display it on their profile page.
+    *   When a discount is applied through a referral, update the records for both the referrer and the referred user.
+5.  **Integrate Thirdweb for Crypto Payments:**
+    *   Install the Thirdweb SDK (`@thirdweb-dev/sdk`).
+    *   Create a new API endpoint `POST /api/crypto/pay` that takes a transaction hash as input.
+    *   In the backend, use the Thirdweb SDK to verify the transaction on the blockchain.
+    *   If the transaction is valid, update the user's subscription status in the database.
+    *   Modify the frontend to include a "Pay with USDC" button that initiates the transaction using the user's wallet (e.g., MetaMask).
 
 ### Technology Reasoning
 
@@ -281,6 +177,18 @@ We are using a database to permanently store information that changes over time 
 
 1.  **User Accounts:** To enable users to register and log in, we need a database to securely store their credentials (like a username and a hashed password).
 2.  **Lesson Progress Tracking:** To save a user's progress, we need to record which lessons they have completed. The database will store this information, allowing users to sign in and pick up where they left off.
+
+In addition to these core features, a robust database is essential for supporting a payment and subscription system. To handle paying members, we would need to add the following to our schema:
+
+*   **User Table Modifications**:
+    *   `stripeCustomerId`: A unique ID to link a user to their Stripe customer object.
+    *   `subscriptionStatus`: To track the user's current subscription status (e.g., `ACTIVE`, `CANCELED`).
+    *   `referrerId`: To track who referred this user.
+*   **New Tables**:
+    *   `Subscription`: To store details of each user's subscription.
+    *   `DiscountCode`: To store information about discount codes.
+    *   `Referral`: To track referrals.
+    *   `CryptoPayment`: To store a record of all cryptocurrency payments.
 
 ---
 
@@ -306,7 +214,7 @@ This section summarizes the work completed so far, referencing the plan outlined
 *   **Step 3: Install Prisma CLI and Client:** Completed.
 *   **Step 4: Initialize Prisma:** Completed (manual execution required).
 *   **Step 5: Configure `.env` for Database Connection:** Completed.
-*   **Step 6: Define initial schema in `schema.prisma`:** Completed (including correction for PostgreSQL ID type).
+*   **Step 6: Define initial schema in `prisma/schema.prisma`:** Completed (including correction for PostgreSQL ID type).
 *   **Step 7: Run Prisma Migrate:** Completed and verified.
 *   **Step 4 (from prompt): Create secure registration/login API endpoints:**
     *   Concepts (hashing, JWTs) explained: Completed.
@@ -314,3 +222,381 @@ This section summarizes the work completed so far, referencing the plan outlined
     *   Authentication routes (`backend/src/routes/auth.ts`) created: Completed.
     *   `backend/src/index.ts` updated to use auth routes: Completed.
     *   Endpoints (`/api/auth/register`, `/api/auth/login`) are ready for testing.
+
+### Phase 3: Solidity Code Testing with Forge
+
+*   **Explanation of Forge testing:** Completed.
+*   **Step 1 (from prompt): Create `/api/test-solidity` endpoint:** Completed (`backend/src/routes/test-solidity.ts` created).
+*   **Step 2 (from prompt): Execute code with Forge:** Completed (backend uses `child_process` to run `forge test` on temporary files).
+*   **Step 3 (from prompt): Modify `SolidityEditor.tsx`:** Completed (added "Run Tests" button and `handleRunTests` function).
+*   **`cors` and `@types/cors` installed in backend:** Completed.
+*   **Troubleshooting `EADDRINUSE` and `Cannot find module 'cors'` errors:** Completed.
+
+### Phase 4: CodeMirror 6 Integration
+
+*   **Integrate CodeMirror 6:** Completed.
+*   **Update `SolidityEditor.tsx`:** Completed.
+*   **Configure Solidity Highlighting:** Completed.
+
+### Phase 5: Lesson Progress Tracking
+
+*   **RESTful API principles explained:** Completed.
+*   **Backend API endpoints (`GET /api/progress`, `POST /api/progress`) created:** Completed.
+*   **Frontend lesson pages modified to interact with new endpoints:** Completed (including JWT authentication, fetching/updating progress, and UI integration with checkboxes).
+
+### Phase 6: Payments and Subscriptions
+
+Part 1: Database Schema for a Robust CRUD App
+
+  To support a scalable CRUD (Create, Read, Update, Delete) application with
+  subscriptions, we'll need to add the following to our database:
+
+   * User Table Modifications: We'll expand the User table to include:
+       * stripeCustomerId: A unique ID that connects a user to their Stripe account,
+         which is essential for managing their subscription and billing.
+       * subscriptionStatus: A field to track whether a user's subscription is ACTIVE,
+         CANCELED, or INCOMPLETE. This will allow us to easily control access to paid
+         features.
+       * referrerId: A field to store the ID of the user who referred them, forming
+         the basis of our referral system.
+
+   * New Tables: We'll create several new tables to manage the payment and
+     subscription process:
+       * Subscription: This table will store details about each user's subscription,
+         including their chosen plan, start and end dates, and current status.
+       * DiscountCode: This table will hold all the information about available
+         discount codes, such as the code itself, the type of discount (e.g., a
+         percentage or a fixed amount), its value, and when it expires.
+       * Referral: This table will link a referrer to the user they referred, enabling
+         us to track and reward users for bringing new members to the platform.
+       * CryptoPayment: This table will keep a record of all cryptocurrency payments,
+         including the user who made the payment, the transaction hash, the amount
+         paid, and the payment status.
+
+  These additions will provide a solid foundation for building a scalable and
+  feature-rich payment system.
+
+  First, let's address the necessary database schema changes to support
+  subscriptions, discount codes, and referrals, keeping in mind the need to support
+  at least 2,000 paying members.
+
+  To handle this, we'll need to modify the existing User table and introduce several
+  new tables:
+
+  Database Schema Changes for Payments and Subscriptions:
+
+  1. User Table Modifications:
+
+   * `stripeCustomerId` (String): A unique ID to link a user to their Stripe customer
+     object. This is crucial for managing their subscription and billing directly
+     through Stripe.
+   * `subscriptionStatus` (Enum: `ACTIVE`, `CANCELED`, `INCOMPLETE`, `PAST_DUE`, 
+     `UNPAID`): To track the user's current subscription status. This will allow us to
+     easily control access to paid features and manage user lifecycles.
+   * `referrerId` (String, Optional): A foreign key linking to another User's ID, to
+     track who referred this user. This forms the basis of our referral system.
+
+  2. New Tables:
+
+   * `Subscription`:
+       * id (String, Primary Key)
+       * userId (String, Foreign Key to User.id): Links the subscription to a specific
+         user.
+       * stripeSubscriptionId (String): The ID of the subscription in Stripe.
+       * planId (String): Identifier for the subscription plan (e.g., "monthly_pro",
+         "annual_premium").
+       * status (Enum: ACTIVE, CANCELED, PAST_DUE, UNPAID): Current status of the
+         subscription.
+       * startDate (DateTime): When the subscription began.
+       * endDate (DateTime, Optional): When the subscription is set to end (for
+         canceled or fixed-term subscriptions).
+       * currentPeriodEnd (DateTime): The end of the current billing period.
+       * amount (Float): The amount charged for the subscription.
+       * currency (String): The currency of the subscription (e.g., "usd").
+       * discountCodeId (String, Optional, Foreign Key to DiscountCode.id): If a
+         discount code was applied.
+
+   * `DiscountCode`:
+       * id (String, Primary Key)
+       * code (String, Unique): The actual discount code (e.g., "SAVE10",
+         "FREEMONTH").
+       * type (Enum: PERCENTAGE, FIXED_AMOUNT): Whether it's a percentage discount or
+         a fixed amount.
+       * value (Float): The discount value (e.g., 0.10 for 10%, or 5.00 for $5).
+       * expiresAt (DateTime, Optional): When the discount code expires.
+       * maxUses (Int, Optional): Maximum number of times the code can be used.
+       * uses (Int): Current number of times the code has been used.
+       * createdAt (DateTime)
+       * updatedAt (DateTime)
+
+   * `Referral`:
+       * id (String, Primary Key)
+       * referrerId (String, Foreign Key to User.id): The user who referred.
+       * referredId (String, Foreign Key to User.id): The user who was referred.
+       * referralCode (String, Unique): The unique code used for this referral.
+       * status (Enum: PENDING, COMPLETED, CANCELED): Status of the referral (e.g.,
+         completed when the referred user makes a payment).
+       * createdAt (DateTime)
+       * updatedAt (DateTime)
+
+   * `CryptoPayment`:
+       * id (String, Primary Key)
+       * userId (String, Foreign Key to User.id): The user who made the payment.
+       * transactionHash (String, Unique): The blockchain transaction hash.
+       * amount (Float): The amount of cryptocurrency paid.
+       * currency (String): The cryptocurrency used (e.g., "USDC").
+       * status (Enum: PENDING, COMPLETED, FAILED): Status of the blockchain
+         transaction.
+       * createdAt (DateTime)
+       * updatedAt (DateTime)
+
+  These additions will provide a robust and scalable foundation for managing user
+  subscriptions, discount codes, referrals, and crypto payments.
+
+
+   Revised Thirdweb Integration Plan:
+
+   1. Frontend:
+       * Implement a "Connect Wallet" button using Thirdweb's React SDK.
+       * Modify "Pay with USDC" to interact with a Thirdweb-deployed smart contract
+         for payment, which will emit a success event.
+       * Send the transaction hash to the POST /api/crypto/pay endpoint.
+
+   2. Backend:
+       * Enhance POST /api/crypto/pay to use the Thirdweb SDK to verify the
+         transaction against the payment smart contract and update the user's
+         subscription.
+       * The THIRDWEB_PRIVATE_KEY will enable the Thirdweb SDK to interact with the
+         deployed payment smart contract.
+
+  I'll start by installing Thirdweb's React SDK in the frontend, then modify
+  handleCryptoPayment to simulate contract interaction.
+
+  Phase 6.1 fix:
+  # Claude CLI Prompt: RareCode-style Payment System
+# Claude CLI Prompt: RareCode-style Payment System
+
+Create a complete blockchain education payment system similar to RareCode.ai/RareSkills with the following specifications:
+
+## Tech Stack
+- React TypeScript frontend with Thirdweb SDK
+- Express.js backend with Prisma ORM
+- USDC payments on Base blockchain
+- TailwindCSS for styling
+
+## Frontend Component Requirements
+
+Create a `RareCodePayment.tsx` component with:
+
+### UI Features
+- Dark theme professional education platform design
+- Wallet connection with Thirdweb ConnectWallet
+- Real-time USDC balance display
+- Three pricing tiers: Basic ($50), Premium ($200), Enterprise ($500)
+- "Most Popular" badge on Premium tier
+- Responsive grid layout for pricing cards
+- Loading states and payment status feedback
+- Security notice section at bottom
+
+### Pricing Plans Structure
+```typescript
+Basic ($50 USDC, 30 days):
+- Access to all Solidity lessons
+- Basic coding challenges  
+- Community Discord access
+- Certificate of completion
+
+Premium ($200 USDC, 90 days) - POPULAR:
+- Everything in Basic
+- Advanced ZK-proof modules
+- Smart contract security training
+- 1-on-1 mentor sessions
+- Priority job placement support
+- Lifetime Discord access
+
+Enterprise ($500 USDC, Lifetime):
+- Everything in Premium
+- White-label course access
+- Custom curriculum development
+- Team training sessions
+- Direct instructor access
+```
+
+### Blockchain Integration
+- USDC contract integration on Base (address: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913)
+- Balance checking before payment
+- Direct USDC transfer to recipient address
+- Transaction hash capture
+- Payment verification
+
+### Payment Flow
+1. User connects wallet
+2. System checks USDC balance
+3. User selects plan and clicks pay
+4. Execute USDC transfer on blockchain
+5. Record payment in backend
+6. Grant course access
+7. Redirect to dashboard
+
+## Backend API Requirements
+
+Create Express.js routes for:
+
+### POST `/api/payments/record`
+- Record successful blockchain payment
+- Grant course access based on plan
+- Calculate expiration dates (30/90 days, or lifetime)
+- Return success confirmation
+
+### GET `/api/course-access`
+- Check user's current access level
+- Return plan type and expiration date
+- Validate active access
+
+## Prisma Schema Extensions
+
+**IMPORTANT: Add these models AND update existing User model to support the new payment system**
+
+Add these new models:
+```prisma
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String?
+  userAddress     String?
+  planId          String   // 'monthly', 'annual'
+  amount          Float    // 35.00 or 420.00
+  currency        String   @default("USDC")
+  paymentMethod   String   // 'crypto' or 'fiat'
+  transactionHash String?  @unique
+  thirdwebPaymentId String? @unique
+  status          String   @default("completed")
+  paidAt          DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user User? @relation(fields: [userId], references: [id])
+}
+
+model CourseAccess {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  planId    String    // 'monthly' or 'annual'
+  isActive  Boolean   @default(true)
+  expiresAt DateTime  // 30 days for monthly, 365 days for annual
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user User @relation(fields: [userId], references: [id])
+}
+```
+
+**Update existing User model to include payment relationships:**
+```prisma
+model User {
+  // ... existing fields ...
+  payments      Payment[]
+  courseAccess  CourseAccess?
+  
+  // Add these fields if they don't exist:
+  walletAddress String?
+  subscription  String?       // 'monthly', 'annual', or null
+  subscriptionExpiresAt DateTime?
+}
+```
+
+**Required Prisma migration commands to include:**
+```bash
+npx prisma migrate dev --name add-payment-system
+npx prisma generate
+```
+
+**Database field additions needed:**
+- Payment tracking with Thirdweb integration
+- Subscription management (monthly/annual)
+- Course access control with expiration dates
+- **Billing period tracking** (start/end dates for each payment)
+- **Auto-renewal settings** and status
+- **First signup date** tracking
+- **Ethereum address storage** for each payment
+- User wallet address storage
+- Payment method tracking (crypto vs fiat)
+- Thirdweb payment ID storage for webhook verification
+
+**Additional Features Required:**
+- Page routing logic based on subscription status
+- Payment history display with Ethereum addresses
+- Subscription countdown timers
+- Auto-renewal management
+- Payment method display (crypto wallet vs credit card)
+
+## Design Specifications
+- Use modern glassmorphism card effects
+- Indigo/purple accent colors for premium feel
+- Hover animations and scale effects
+- Professional typography hierarchy
+- Loading spinners for async operations
+- Success/error toast notifications
+- Mobile-responsive design
+
+## Security Requirements
+- Use Thirdweb Pay Commerce for secure payment processing
+- Validate webhook signatures from Thirdweb
+- Store payment intent IDs for verification
+- Verify payments through Thirdweb's API before granting access
+- Secure API endpoints with authentication
+- Handle payment failures gracefully
+- Support both crypto and fiat payment verification
+
+## Error Handling
+- Insufficient balance warnings
+- Network connectivity issues
+- Transaction failures
+- Backend API errors
+- User-friendly error messages
+
+Generate complete, production-ready code with proper TypeScript types, error handling, and modern React patterns. Include all necessary imports and ensure compatibility with Thirdweb SDK v4.
+---
+Perfect! The complete RareCode-style payment system has been implemented with all
+  requested features:
+
+  ✅ Completed Implementation
+
+  Payment System Features:
+
+  - Modern glassmorphism design with dark theme professional education platform styling
+  - Three pricing tiers: Basic ($50, 30 days), Premium ($200, 90 days), Enterprise
+  ($500, lifetime)
+  - USDC payments on Base blockchain with direct wallet-to-wallet transfers
+  - Real-time USDC balance display and transaction verification
+  - Enhanced Prisma schema with billing period tracking, auto-renewal settings, and
+  first signup date
+
+  Payment History & Management:
+
+  - Payment history display with Ethereum addresses and transaction links to BaseScan
+  - Subscription countdown timers showing remaining days
+  - Payment method tracking (crypto vs fiat) with visual indicators
+  - Auto-renewal management interface
+
+  Page Routing & Access Control:
+
+  - ProtectedRoute component for subscription-based access control
+  - useSubscription hook for real-time subscription status checking
+  - Smart pricing page routing - shows subscription status for active users, payment
+  options for non-subscribers
+  - Plan hierarchy validation for premium features
+
+  Security & User Experience:
+
+  - JWT-based authentication for all payment endpoints
+  - Transaction hash verification before granting access
+  - Loading states, error handling, and user-friendly notifications
+  - Mobile-responsive design with hover animations and modern UI patterns
+
+  Backend API Endpoints:
+
+  - POST /api/payments/record - Records blockchain payments and grants access
+  - GET /api/payments/course-access - Checks current subscription status
+  - GET /api/payments/history - Retrieves payment history with Ethereum addresses
+
+  The system now provides a complete blockchain education payment experience similar to
+   RareCode.ai/RareSkills with professional UI, secure payment processing, and
+  comprehensive subscription management.

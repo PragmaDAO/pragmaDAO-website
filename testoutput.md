@@ -1,16 +1,9 @@
-Message: Command failed: forge test --match-path "*solidity-101.t.sol" -vvv
-Error: Compilation failed
-
-
-STDOUT:
-Compiler run failed:
-Error (2314): Expected ';' but got 'contract'
- --> test/solidity-101.t.sol:7:1:
-  |
-7 | contract HelloWorldTest is Test {
-  | ^^^^^^^^
-
-
-
-STDERR:
-Error: Compilation failed
+ERROR in src/components/SimplePayment.tsx:206:13
+TS2554: Expected 2 arguments, but got 1.
+    204 |             window.location.href = 'mailto:PragmaDAO@proton.me?subject=Enterprise%20Plan%20Inquiry';
+    205 |           } else {
+  > 206 |             handlePayment(plan);
+        |             ^^^^^^^^^^^^^^^^^^^
+    207 |           }
+    208 |         }}
+    209 |         disabled={paymentStatus === 'processing' && !plan.isContactUs}

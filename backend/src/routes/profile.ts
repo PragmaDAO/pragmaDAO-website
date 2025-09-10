@@ -28,7 +28,7 @@ router.get('/profile', authenticateToken, async (req: Request, res: Response) =>
     const userId = (req as any).user.id;
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, username: true, email: true, createdAt: true, password: true }, // Select password to check if it exists
+      select: { id: true, username: true, email: true, createdAt: true, password: true, referralCode: true }, // Select password to check if it exists and referralCode
     });
 
     if (!user) {

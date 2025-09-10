@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, DiscountType } from '@prisma/client';
 import { authenticateToken } from './profile'; // Assuming authenticateToken is exported from profile.ts
 
 const prisma = new PrismaClient();
@@ -24,6 +24,33 @@ router.get('/users', authenticateToken, async (req: Request, res: Response) => {
     res.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// POST a new discount code (Admin only)
+router.post('/discount-codes', authenticateToken, async (req: Request, res: Response) => {
+  // @ts-ignore
+  if (req.user.email !== 'admin@example.com') {
+    return res.status(403).json({ message: 'Forbidden' });
+  }
+
+  try {
+    const { code, type, value, expiresAt, maxUses } = req.body;
+
+    const newDiscountCode = await prisma.discountCode.create({
+      data: {
+        code,
+        type,
+        value,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        maxUses,
+      },
+    });
+
+    res.status(201).json(newDiscountCode);
+  } catch (error) {
+    console.error('Error creating discount code:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
 // Register Route
 router.post('/register', async (req: Request, res: Response) => {
-  const { username, password, email } = req.body;
+  const { username, password, email, referrerId } = req.body;
 
   if (!username || !password || !email) {
     return res.status(400).json({ message: 'Username, password, and email are required' });
@@ -33,14 +33,34 @@ router.post('/register', async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
 
+    // Generate a unique referral code for the new user
+    const newReferralCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
     // Create user
     const user = await prisma.user.create({
       data: {
         username,
         email,
         password: hashedPassword,
+        referrerId: referrerId || null, // Link referrer if provided
+        referralCode: newReferralCode,
       },
     });
+
+    // If referrerId is provided, create a Referral entry
+    if (referrerId) {
+      const referrer = await prisma.user.findUnique({ where: { id: referrerId } });
+      if (referrer) {
+        await prisma.referral.create({
+          data: {
+            referrerId: referrer.id,
+            referredId: user.id,
+            referralCode: newReferralCode,
+            status: 'PENDING',
+          },
+        });
+      }
+    }
 
     res.status(201).json({ message: 'User registered successfully', userId: user.id });
   } catch (error) {

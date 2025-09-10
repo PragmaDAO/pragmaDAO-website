@@ -14,16 +14,33 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  email     String   @unique // Add email field
-  password  String?  // Make password optional for social logins
-  googleId  String?  @unique // Add googleId
-  githubId  String?  @unique // Add githubId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  progress  UserLessonProgress[]
-  submittedCode UserSubmittedCode[] @relation("UserSubmissions") // Explicitly name the relation
+  id                   String             @id @default(uuid())
+  username             String             @unique
+  email                String             @unique // Add email field
+  password             String?            // Make password optional for social logins
+  googleId             String?            @unique // Add googleId
+  githubId             String?            @unique // Add githubId
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  progress             UserLessonProgress[]
+  submittedCode        UserSubmittedCode[] @relation("UserSubmissions") // Explicitly name the relation
+  stripeCustomerId     String?            @unique @map("stripe_customer_id")
+  subscriptionStatus   SubscriptionStatus @default(INCOMPLETE) @map("subscription_status")
+  referrerId           String?            @map("referrer_id")
+  subscriptions        Subscription[]
+  referredUsers        Referral[]         @relation("ReferredBy")
+  referrals            Referral[]         @relation("Referrer")
+  cryptoPayments       CryptoPayment[]
+  referralCode         String?            @unique @map("referral_code")
+  // New payment system fields
+  payments             Payment[]
+  courseAccess         CourseAccess?
+  walletAddress        String?            @map("wallet_address")
+  subscription         String?            // 'basic', 'premium', 'enterprise' or null
+  subscriptionExpiresAt DateTime?         @map("subscription_expires_at")
+  firstSignupDate      DateTime?          @map("first_signup_date") // First signup date tracking
+
+  @@map("users")
 }
 
 model UserLessonProgress {
@@ -36,6 +53,7 @@ model UserLessonProgress {
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, lessonId])
+  @@map("user_lesson_progress")
 }
 
 model UserSubmittedCode {
@@ -49,4 +67,128 @@ model UserSubmittedCode {
 
   user           User     @relation("UserSubmissions", fields: [userId], references: [id]) // Link to the named relation
   @@index([userId, lessonId]) // Add an index for faster lookups
+  @@map("user_submitted_code")
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String
+  stripeSubscriptionId String             @unique @map("stripe_subscription_id")
+  planId               String             @map("plan_id")
+  status               SubscriptionStatus
+  startDate            DateTime           @map("start_date")
+  endDate              DateTime?          @map("end_date")
+  currentPeriodEnd     DateTime           @map("current_period_end")
+  amount               Float
+  currency             String
+  discountCodeId       String?            @map("discount_code_id")
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id])
+  discountCode         DiscountCode?      @relation(fields: [discountCodeId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model DiscountCode {
+  id           String       @id @default(uuid())
+  code         String       @unique
+  type         DiscountType
+  value        Float
+  expiresAt    DateTime?    @map("expires_at")
+  maxUses      Int?         @map("max_uses")
+  uses         Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  subscriptions Subscription[]
+
+  @@map("discount_codes")
+}
+
+model Referral {
+  id           String         @id @default(uuid())
+  referrerId   String         @map("referrer_id")
+  referredId   String         @unique @map("referred_id")
+  referralCode String         @unique @map("referral_code")
+  status       ReferralStatus
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  referrer     User           @relation("Referrer", fields: [referrerId], references: [id])
+  referred     User           @relation("ReferredBy", fields: [referredId], references: [id])
+
+  @@map("referrals")
+}
+
+model CryptoPayment {
+  id              String            @id @default(uuid())
+  userId          String
+  transactionHash String            @unique @map("transaction_hash")
+  amount          Float
+  currency        String
+  status          CryptoPaymentStatus
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  user            User              @relation(fields: [userId], references: [id])
+
+  @@map("crypto_payments")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  INCOMPLETE
+  PAST_DUE
+  UNPAID
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  CANCELED
+}
+
+enum CryptoPaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  userId          String?
+  userAddress     String?  @map("user_address") // Ethereum address storage
+  planId          String   @map("plan_id") // 'basic', 'premium', 'enterprise'
+  amount          Float    // 50.00, 200.00, 500.00
+  currency        String   @default("USDC")
+  paymentMethod   String   @map("payment_method") // 'crypto' or 'fiat'
+  transactionHash String?  @unique @map("transaction_hash")
+  thirdwebPaymentId String? @unique @map("thirdweb_payment_id")
+  status          String   @default("completed")
+  paidAt          DateTime @default(now()) @map("paid_at")
+  billingPeriodStart DateTime @map("billing_period_start") // Billing period tracking
+  billingPeriodEnd   DateTime @map("billing_period_end")   // Billing period tracking
+  autoRenewal     Boolean  @default(false) @map("auto_renewal") // Auto-renewal settings
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  user            User?    @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+model CourseAccess {
+  id        String    @id @default(cuid())
+  userId    String    @unique @map("user_id")
+  planId    String    @map("plan_id") // 'basic', 'premium', 'enterprise'
+  isActive  Boolean   @default(true) @map("is_active")
+  expiresAt DateTime  @map("expires_at") // 30 days for basic, 90 days for premium, lifetime for enterprise
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("course_access")
 }

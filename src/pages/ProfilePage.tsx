@@ -8,6 +8,7 @@ interface UserProfile {
   email: string;
   createdAt: string;
   hasPassword?: boolean; // Add hasPassword property
+  referralCode?: string; // Add referralCode property
 }
 
 const ProfilePage: React.FC = () => {
@@ -49,7 +50,7 @@ const ProfilePage: React.FC = () => {
           throw new Error(errorData.message || 'Failed to fetch profile');
         }
 
-        const data: UserProfile & { hasPassword: boolean } = await response.json();
+        const data: UserProfile & { hasPassword: boolean; referralCode: string } = await response.json();
         setUserProfile(data);
         setEditableUsername(data.username); // Initialize editable username
       } catch (err: any) {
@@ -234,6 +235,10 @@ const ProfilePage: React.FC = () => {
           <div className="mb-6">
             <label className="block text-gray-400 text-sm font-bold mb-2">Member Since</label>
             <p className="text-white">{new Date(userProfile.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-400 text-sm font-bold mb-2">Your Referral Code</label>
+            <p className="text-white">{userProfile.referralCode || 'N/A'}</p>
           </div>
           <div className="flex justify-end">
             {isEditing ? (

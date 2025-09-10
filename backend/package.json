@@ -2,36 +2,43 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "prisma generate && tsc",
-    "dev": "npm run build && ts-node-dev --respawn ./dist/index.js"
+    "dev": "npx ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0",
+    "@types/archiver": "^6.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
     "@types/express-session": "^1.18.2",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^20.12.7",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.14.10",
     "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.16",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.4.5"
+    "@types/stripe": "^8.0.0",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@prisma/client": "^5.12.1",
-    "@types/archiver": "^6.0.3",
+    "@prisma/client": "^5.22.0",
+    "@thirdweb-dev/react": "^4.9.4",
+    "@thirdweb-dev/sdk": "^4.0.99",
+    "@types/react-router-dom": "^5.3.3",
     "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "express-session": "^1.18.2",
+    "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^5.12.1"
+    "react-router-dom": "^7.8.2",
+    "stripe": "^16.2.0",
+    "thirdweb": "^5.105.43"
   }
 }

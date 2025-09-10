@@ -7,6 +7,9 @@ import oauthRouter from './routes/oauth'; // Import the new oauth router
 import profileRouter from './routes/profile'; // Import the new profile router
 import codeRouter from './routes/code'; // Import the new code router
 import adminRouter from './routes/admin'; // Import the new admin router
+import stripeRouter from './routes/stripe'; // Import the new stripe router
+import cryptoRouter from './routes/crypto'; // Import the new crypto router
+import paymentsRouter from './routes/payments'; // Import the new payments router
 import cors from 'cors';
 import passport from 'passport'; // Import passport
 import session from 'express-session'; // Import express-session
@@ -40,6 +43,9 @@ app.use('/api/auth', oauthRouter); // Use the new oauth router
 app.use('/api', profileRouter); // Use the new profile router
 app.use('/api/code', codeRouter); // Use the new code router
 app.use('/api/admin', adminRouter); // Use the new admin router
+app.use('/api/stripe', stripeRouter); // Use the new stripe router
+app.use('/api/crypto', cryptoRouter); // Use the new crypto router
+app.use('/api/payments', paymentsRouter); // Use the new payments router
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World from the backend!');
