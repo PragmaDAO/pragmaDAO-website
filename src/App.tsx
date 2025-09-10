@@ -337,7 +337,7 @@ export default function App() {
             <div className="bg-gray-900 text-white min-h-screen flex flex-col">
                 <GlobalStyles />
                 <Header setCurrentPage={setCurrentPage} />
-                <div className="flex-grow">
+                <div className="flex-grow pt-[70px]">
                     {renderPage()}
                 </div>
                 <Footer />
