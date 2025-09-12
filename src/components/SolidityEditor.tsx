@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { EditorView, keymap } from '@codemirror/view';
 import { basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
@@ -27,7 +27,15 @@ pragma solidity ^0.8.7;
     const workerRef = useRef<Worker | null>(null);
     const editorRef = useRef<HTMLDivElement>(null);
     const viewRef = useRef<EditorView | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const { user, token } = useAuth();
+    
+    // Resizable panels state
+    const [editorHeight, setEditorHeight] = useState<number>(() => {
+        const saved = localStorage.getItem(`editor_height_${lessonId}`);
+        return saved ? parseInt(saved) : 50; // Default 50%
+    });
+    const [isDragging, setIsDragging] = useState(false);
 
     // Debounced localStorage save
     useEffect(() => {
@@ -210,6 +218,88 @@ pragma solidity ^0.8.7;
             console.error('Error saving code:', error);
         }
     };
+
+    // Save editor height to localStorage
+    useEffect(() => {
+        if (lessonId) {
+            localStorage.setItem(`editor_height_${lessonId}`, editorHeight.toString());
+        }
+    }, [editorHeight, lessonId]);
+
+    // Resize handling functions
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+        document.body.style.cursor = 'ns-resize';
+        document.body.style.userSelect = 'none';
+    }, []);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+        e.preventDefault();
+        setIsDragging(true);
+        document.body.style.userSelect = 'none';
+    }, []);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging || !containerRef.current) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const containerHeight = containerRect.height;
+        const mouseY = e.clientY - containerRect.top;
+        
+        // Calculate new height percentage with constraints (20% - 80%)
+        let newHeightPercentage = (mouseY / containerHeight) * 100;
+        newHeightPercentage = Math.max(20, Math.min(80, newHeightPercentage));
+        
+        setEditorHeight(Math.round(newHeightPercentage));
+    }, [isDragging]);
+
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (!isDragging || !containerRef.current) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const containerHeight = containerRect.height;
+        const touchY = e.touches[0].clientY - containerRect.top;
+        
+        // Calculate new height percentage with constraints (20% - 80%)
+        let newHeightPercentage = (touchY / containerHeight) * 100;
+        newHeightPercentage = Math.max(20, Math.min(80, newHeightPercentage));
+        
+        setEditorHeight(Math.round(newHeightPercentage));
+    }, [isDragging]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
+        setIsDragging(false);
+        document.body.style.userSelect = '';
+    }, []);
+
+    // Add/remove global mouse and touch event listeners
+    useEffect(() => {
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('touchmove', handleTouchMove);
+            document.addEventListener('touchend', handleTouchEnd);
+        } else {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
     
     useEffect(() => {
         const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
@@ -380,12 +470,39 @@ pragma solidity ^0.8.7;
     };
 
     return (
-        <div className="solidity-editor-container flex flex-col overflow-hidden">
-            <div className="editor-wrapper h-1/2 flex-shrink-0 overflow-hidden" ref={editorRef} style={{ overflowY: 'auto' }}>
+        <div className="solidity-editor-container flex flex-col overflow-hidden" ref={containerRef}>
+            <div 
+                className="editor-wrapper flex-shrink-0 overflow-hidden" 
+                ref={editorRef} 
+                style={{ 
+                    height: `${editorHeight}%`,
+                    overflowY: 'auto'
+                }}
+            >
                 {/* CodeMirror editor will be mounted here */}
             </div>
 
-            <div className="output-wrapper h-1/2 flex-shrink-0 flex flex-col overflow-hidden">
+            {/* Draggable resize handle */}
+            <div 
+                className={`resize-handle flex items-center justify-center cursor-ns-resize select-none transition-colors duration-200 ${
+                    isDragging ? 'bg-indigo-500' : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+                style={{ height: '8px', minHeight: '8px' }}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+                title="Drag to resize panels"
+            >
+                <div className="flex space-x-1">
+                    <div className={`w-1 h-1 rounded-full ${isDragging ? 'bg-white' : 'bg-gray-600'}`}></div>
+                    <div className={`w-1 h-1 rounded-full ${isDragging ? 'bg-white' : 'bg-gray-600'}`}></div>
+                    <div className={`w-1 h-1 rounded-full ${isDragging ? 'bg-white' : 'bg-gray-600'}`}></div>
+                </div>
+            </div>
+
+            <div 
+                className="output-wrapper flex-shrink-0 flex flex-col overflow-hidden"
+                style={{ height: `${100 - editorHeight}%` }}
+            >
                 <div className="flex items-center justify-between mt-2 mb-2 flex-shrink-0 px-2">
                     <span className="text-xs text-gray-400">Solidity v0.8.26 (Mock)</span>
                     <div className="flex space-x-2">
