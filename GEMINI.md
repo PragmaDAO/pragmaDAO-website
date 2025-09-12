@@ -600,3 +600,110 @@ Perfect! The complete RareCode-style payment system has been implemented with al
   The system now provides a complete blockchain education payment experience similar to
    RareCode.ai/RareSkills with professional UI, secure payment processing, and
   comprehensive subscription management.
+
+### Phase 7: Persist User Code
+
+**Your Prompt to Gemini:**
+  let's begin Phase 7. I want to the users code to save. When they revisit
+   the lesson, their code should be there. Use localstorage to save the code. Save
+   the user's code to the backend database when they move from the lesson to
+  another lesson or to another part of the page. Create a plan and show me that
+  plan before proceeding.
+
+  Plan to Implement Code Persistence
+
+    This plan is divided into three parts: frontend modifications to handle
+    localStorage and backend communication, backend API and database changes, and
+    finally, integrating everything.
+
+    Part 1: Frontend (SolidityEditor.tsx and Lesson Components)
+
+      1. Local Persistence with localStorage:
+          * In SolidityEditor.tsx, when the component mounts, I'll check for and
+            load
+           any existing code from localStorage for the specific lessonId.
+          * As the user types, I'll save the code to localStorage. This will be a
+           debounced operation to prevent performance issues.
+
+      2. Backend Persistence on Navigation:
+          * In the individual lesson components (like HelloWorld.tsx), I'll use a
+           useEffect cleanup function. When the component unmounts (i.e., the
+  user
+           navigates away), this function will trigger, sending the current code
+  from
+           the editor to the new backend endpoint.
+
+    Part 2: Backend (API and Database)
+
+      1. Database Schema Update:
+          * I'll add a new UserCode table to the prisma/schema.prisma file. It will
+           store the code for a given userId and lessonId.
+
+      2. New API Endpoints:
+          * POST /api/code: This endpoint will receive the lessonId and code and
+           save or update it in the UserCode table for the currently authenticated
+           user.
+          * GET /api/code/:lessonId: This endpoint will retrieve the saved code for
+           the authenticated user and the specified lessonId.
+
+    Part 3: Integration
+
+
+      1. Fetch Code on Load:
+          * When a lesson component loads, it will call the GET /api/code/:lessonId
+           endpoint to see if there's any code saved in the database.
+      2. Prioritize and Display Code:
+          * The SolidityEditor will prioritize loading code in the following order:
+              1. Code from localStorage (to prevent loss of unsaved work from a page
+                refresh).
+              2. Code from the backend database (the user's previously saved work).
+              3. The default lesson code (if no other code is found).
+
+    This approach ensures that the user's code is always safe and accessible.
+
+### Phase 7 Improved Plan: Cost-Effective Code Persistence
+
+**Updated Strategy (Optimized for Server Costs):**
+
+#### **Understanding Debouncing:**
+Debouncing is a programming technique that delays function execution until after a specified time period has passed since the last time it was called.
+
+**Example**: If a user types "Hello" in the editor:
+- Without debouncing: Save triggered 5 times (H-e-l-l-o)
+- With debouncing (500ms delay): Save triggered once, 500ms after they stop typing
+
+**Benefits**:
+- Reduces localStorage writes from hundreds to just a few
+- Prevents performance issues from excessive saves
+- Still provides immediate persistence without overwhelming the system
+
+#### **Save Triggers (Cost-Optimized):**
+1. **localStorage**: Debounced saves as user types (no server cost)
+2. **Backend**: Only on navigation away from lessons (minimal server cost)
+3. **No backend saving on test runs** (saves server resources and reduces hosting costs)
+
+#### **Loading Priority:**
+1. localStorage (immediate, free)
+2. Backend database (one-time load per lesson visit)
+3. Default lesson code (fallback)
+
+#### **Cost Analysis:**
+**Optimized backend API calls per user session:**
+- Load saved code: 1 call per lesson visit
+- Save code: 1 call when leaving lesson
+- **Total: 2 calls per lesson**
+
+**vs. "save on test run" approach:**
+- Load: 1 call per lesson visit  
+- Save: Multiple calls per lesson (every test run)
+- **Total: 3-10+ calls per lesson**
+
+**Cost savings: 50-80% reduction in backend calls**
+
+#### **Implementation Strategy:**
+1. ✅ Keep existing backend API (`/api/code/save`, `/api/code/load`)
+2. Add localStorage with debouncing for typing
+3. Add navigation-away saving to backend
+4. Remove backend saving from test runs entirely
+
+This approach provides immediate persistence (localStorage) with reliable backup (backend) while minimizing server costs.

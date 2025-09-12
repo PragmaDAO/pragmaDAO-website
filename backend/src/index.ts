@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Express, Request, Response } from 'express';
 import authRouter from './routes/auth';
 import testSolidityRouter from './routes/test-solidity';

@@ -20,6 +20,7 @@ const VariablesTypes: React.FC<{
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
   const [isLessonCompleted, setIsLessonCompleted] = useState(false); // New state for completion
   const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
+  const [currentCode, setCurrentCode] = useState<string>(''); // Track current editor code
 
   const handleToggleLessonCompletion = useCallback(async (completed: boolean) => {
     if (!user || !token) {
@@ -50,6 +51,44 @@ const VariablesTypes: React.FC<{
       alert("An error occurred while updating the lesson status.");
     }
   }, [user, token, lessonId, setCurrentPage]);
+
+  const saveCodeToBackend = useCallback(async (code: string) => {
+    if (!user || !token || !lessonId || !code.trim()) return;
+
+    try {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const response = await fetch(`${backendUrl}/api/code/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          lessonId,
+          code,
+          testResults: null,
+          passed: null
+        })
+      });
+
+      if (response.ok) {
+        console.log('Code saved to backend on navigation away for lesson:', lessonId);
+      } else {
+        console.error('Failed to save code to backend:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error saving code to backend:', error);
+    }
+  }, [user, token, lessonId]);
+
+  // Save code to backend when navigating away from lesson
+  useEffect(() => {
+    return () => {
+      if (currentCode.trim()) {
+        saveCodeToBackend(currentCode);
+      }
+    };
+  }, [currentCode, saveCodeToBackend]);
 
   useEffect(() => {
     const container = testResultsContainerRef.current;
@@ -199,7 +238,8 @@ const VariablesTypes: React.FC<{
               solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
               lessonId={lessonId}
               onTestResults={setTestResults}
-              onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop
+              onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)}
+              onCodeChange={setCurrentCode} // Track code changes for navigation-away saving
             />
             {/* Removed Mark as Complete button */}
           </div>

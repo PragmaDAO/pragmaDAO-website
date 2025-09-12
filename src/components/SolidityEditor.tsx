@@ -5,14 +5,14 @@ import { EditorState } from '@codemirror/state';
 import { solidity } from '@replit/codemirror-lang-solidity';
 import { indentWithTab } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext';
 import { CompiledOutput, TestCase } from '../types';
 
 
 
 const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
-     initialCode?: string, solidityFilePath?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void }> = ({ onCompile,
-     initialCode, solidityFilePath, lessonId, onTestResults, onAllTestsPassed }) => {
+     initialCode?: string, solidityFilePath?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void, onCodeChange?: (code: string) => void }> = ({ onCompile,
+     initialCode, solidityFilePath, lessonId, onTestResults, onAllTestsPassed, onCodeChange }) => {
     const [code, setCode] = useState(initialCode || `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
@@ -25,8 +25,27 @@ pragma solidity ^0.8.7;
     const [isCompilerReady, setIsCompilerReady] = useState<boolean>(false);
     const [isOutputExpanded, setIsOutputExpanded] = useState<boolean>(false);
     const workerRef = useRef<Worker | null>(null);
-    const editorRef = useRef<HTMLDivElement>(null); // Ref for CodeMirror editor container
-    const viewRef = useRef<EditorView | null>(null); // Ref for EditorView instance
+    const editorRef = useRef<HTMLDivElement>(null);
+    const viewRef = useRef<EditorView | null>(null);
+    const { user, token } = useAuth();
+
+    // Debounced localStorage save
+    useEffect(() => {
+        if (!lessonId) return;
+        
+        const timeoutId = setTimeout(() => {
+            localStorage.setItem(`lesson_code_${lessonId}`, code);
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [code, lessonId]);
+
+    // Notify parent component of code changes for navigation-away saving
+    useEffect(() => {
+        if (onCodeChange) {
+            onCodeChange(code);
+        }
+    }, [code, onCodeChange]);
 
     useEffect(() => {
         if (!editorRef.current) return;
@@ -69,36 +88,128 @@ pragma solidity ^0.8.7;
 
     useEffect(() => {
         if (solidityFilePath) {
-            fetch(solidityFilePath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    setCode(text);
-                    if (viewRef.current) {
-                        viewRef.current.dispatch({
-                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error("Could not load solidity file:", error);
-                    const errorText = `// Error loading file from ${solidityFilePath}
+            loadSavedCodeOrDefault(solidityFilePath);
+        }
+    }, [solidityFilePath, initialCode, user, token, lessonId]);
+
+    const loadSavedCodeOrDefault = async (fallbackPath: string) => {
+        // Three-tier loading priority: localStorage → backend → default
+        
+        // 1. First, check localStorage (highest priority - most recent unsaved changes)
+        if (lessonId) {
+            const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
+            if (localCode) {
+                setCode(localCode);
+                if (viewRef.current) {
+                    viewRef.current.dispatch({
+                        changes: { from: 0, to: viewRef.current.state.doc.length, insert: localCode }
+                    });
+                }
+                console.log('Loaded code from localStorage for lesson:', lessonId);
+                return;
+            }
+        }
+
+        // 2. Then, check backend database (previously saved work)
+        if (user && token && lessonId) {
+            const savedCodeLoaded = await loadSavedCode();
+            if (savedCodeLoaded) {
+                return;
+            }
+        }
+        
+        // 3. Finally, load default lesson code (fallback)
+        try {
+            const response = await fetch(fallbackPath);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const text = await response.text();
+            setCode(text);
+            if (viewRef.current) {
+                viewRef.current.dispatch({
+                    changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
+                });
+            }
+            console.log('Loaded default lesson code from:', fallbackPath);
+        } catch (error) {
+            console.error("Could not load solidity file:", error);
+            const errorText = `// Error loading file from ${fallbackPath}
 // Please check the path and ensure the file exists.
 
 ` + (initialCode || '');
-                    setCode(errorText);
-                    if (viewRef.current) {
-                        viewRef.current.dispatch({
-                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: errorText }
-                        });
-                    }
+            setCode(errorText);
+            if (viewRef.current) {
+                viewRef.current.dispatch({
+                    changes: { from: 0, to: viewRef.current.state.doc.length, insert: errorText }
                 });
+            }
         }
-    }, [solidityFilePath, initialCode]);
+    };
+
+    const loadSavedCode = async (): Promise<boolean> => {
+        if (!user || !token || !lessonId) return false;
+
+        try {
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+            const response = await fetch(`${backendUrl}/api/code/load/${lessonId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const savedCode = data.code;
+                setCode(savedCode);
+                if (viewRef.current) {
+                    viewRef.current.dispatch({
+                        changes: { from: 0, to: viewRef.current.state.doc.length, insert: savedCode }
+                    });
+                }
+                console.log('Loaded saved code for lesson:', lessonId);
+                return true;
+            } else if (response.status === 404) {
+                console.log('No saved code found for lesson:', lessonId);
+                return false;
+            } else {
+                console.error('Failed to load saved code:', response.statusText);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error loading saved code:', error);
+            return false;
+        }
+    };
+
+    const saveCode = async (testResults?: any, passed?: boolean) => {
+        if (!user || !token || !lessonId) return;
+
+        try {
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+            const response = await fetch(`${backendUrl}/api/code/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    lessonId,
+                    code,
+                    testResults,
+                    passed
+                })
+            });
+
+            if (response.ok) {
+                console.log('Code saved successfully for lesson:', lessonId);
+            } else {
+                console.error('Failed to save code:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error saving code:', error);
+        }
+    };
     
     useEffect(() => {
         const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
