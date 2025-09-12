@@ -143,20 +143,34 @@ const StateAndLocalVariables: React.FC<{
             &larr; Back to Lessons
           </button>
           <div className="flex items-center space-x-4">
-            {/* Checkbox for completion */}
-            <input
-              type="checkbox"
-              checked={isLessonCompleted}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                if (checked && !canMarkComplete) {
-                  alert("All tests must pass before marking the lesson as complete.");
+            {/* Status circle */}
+            <div
+              onClick={() => {
+                if (isLessonCompleted) {
+                  // If currently completed, allow uncompleting (turn red)
+                  handleToggleLessonCompletion(false);
+                } else if (canMarkComplete) {
+                  // Only allow marking complete if tests have passed
+                  handleToggleLessonCompletion(true);
                 } else {
-                  handleToggleLessonCompletion(checked);
+                  // Tests haven't passed, show alert
+                  alert("All tests must pass before marking the lesson as complete.");
                 }
               }}
-              disabled={!canMarkComplete && !isLessonCompleted} // Disable if not all tests passed AND not already completed
-              className={`form-checkbox h-5 w-5 text-indigo-600 transition duration-150 ease-in-out ${isLessonCompleted ? 'lesson-completed-checkbox' : ''}`}
+              className={`w-6 h-6 rounded-full cursor-pointer transition-all duration-300 ${
+                isLessonCompleted 
+                  ? 'bg-green-500' 
+                  : canMarkComplete 
+                    ? 'bg-green-300 hover:bg-green-400'
+                    : 'bg-red-500'
+              }`}
+              title={
+                isLessonCompleted
+                  ? 'Lesson completed - click to unmark'
+                  : canMarkComplete
+                    ? 'Tests passed - click to mark complete'
+                    : 'Tests not passed - run tests first'
+              }
             />
             <button
               onClick={handleGoToPreviousLesson}
