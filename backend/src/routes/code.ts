@@ -23,6 +23,73 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 const router = Router();
 const prisma = new PrismaClient();
 
+// POST /api/code - Save or update user code for a lesson
+router.post('/', authenticateToken, async (req, res) => {
+  const { lessonId, code } = req.body;
+  const userId = (req as any).user?.id; // req.user is populated by authenticateToken
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  if (!lessonId || code === undefined) {
+    return res.status(400).json({ message: 'lessonId and code are required' });
+  }
+
+  try {
+    const userCode = await prisma.userCode.upsert({
+      where: {
+        userId_lessonId: {
+          userId,
+          lessonId,
+        },
+      },
+      update: {
+        code,
+      },
+      create: {
+        userId,
+        lessonId,
+        code,
+      },
+    });
+    res.status(200).json(userCode);
+  } catch (error) {
+    console.error('Error saving user code:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// GET /api/code/:lessonId - Retrieve user code for a lesson
+router.get('/:lessonId', authenticateToken, async (req, res) => {
+  const { lessonId } = req.params;
+  const userId = (req as any).user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  try {
+    const userCode = await prisma.userCode.findUnique({
+      where: {
+        userId_lessonId: {
+          userId,
+          lessonId,
+        },
+      },
+    });
+
+    if (userCode) {
+      res.status(200).json({ code: userCode.code });
+    } else {
+      res.status(404).json({ message: 'Code not found for this lesson and user' });
+    }
+  } catch (error) {
+    console.error('Error retrieving user code:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 router.get('/download', authenticateToken, async (req, res) => {
   const userId = (req as any).user.id; // Authenticated user's ID
 

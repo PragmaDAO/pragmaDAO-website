@@ -302,7 +302,11 @@ pragma solidity ^0.8.7;
     }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
     
     useEffect(() => {
-        const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
+        // Use backend server for development and production
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+        const soljsonUrl = process.env.NODE_ENV === 'production' 
+            ? window.location.origin + process.env.PUBLIC_URL + '/soljson.js'
+            : `${backendUrl}/soljson.js`;
         const workerCode = `
             var solc; // Declare solc globally
             var Module; // Declare Module globally
@@ -398,7 +402,8 @@ pragma solidity ^0.8.7;
         setOutput('Running Solidity tests...');
 
         try {
-            const response = await fetch('/api/test-solidity', {
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+            const response = await fetch(`${backendUrl}/api/test-solidity`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

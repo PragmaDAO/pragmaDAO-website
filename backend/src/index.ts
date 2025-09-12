@@ -50,6 +50,13 @@ app.use('/api/stripe', stripeRouter); // Use the new stripe router
 app.use('/api/crypto', cryptoRouter); // Use the new crypto router
 app.use('/api/payments', paymentsRouter); // Use the new payments router
 
+// Serve soljson.js for Solidity compilation
+app.get('/soljson.js', (req: Request, res: Response) => {
+  const path = require('path');
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, '../public/soljson.js'));
+});
+
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello World from the backend!');
 });
