@@ -28,7 +28,8 @@ const IntegersAndUnsignedIntegers: React.FC<{
     }
 
     try {
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      console.log('Updating lesson completion:', lessonId, 'to:', completed);
       const response = await fetch(`${backendUrl}/api/progress`, {
         method: 'POST',
         headers: {
@@ -39,6 +40,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
       });
 
       if (response.ok) {
+        console.log('Successfully updated lesson completion in backend');
         setIsLessonCompleted(completed); // Update local state on success
       } else {
         const errorData = await response.json();
@@ -88,7 +90,8 @@ const IntegersAndUnsignedIntegers: React.FC<{
     const fetchLessonStatus = async () => {
       if (user && token) {
         try {
-          const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+          const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+          console.log('Fetching lesson status for:', lessonId, 'from:', `${backendUrl}/api/progress`);
           const response = await fetch(`${backendUrl}/api/progress`, {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -96,7 +99,9 @@ const IntegersAndUnsignedIntegers: React.FC<{
           });
           if (response.ok) {
             const progressData = await response.json();
+            console.log('Progress data received:', progressData);
             const completed = progressData.some((p: any) => p.lessonId === lessonId && p.completed);
+            console.log('Lesson completed status:', completed, 'for lessonId:', lessonId);
             setIsLessonCompleted(completed);
           } else {
             console.error('Failed to fetch progress:', response.statusText);
@@ -106,6 +111,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
         }
       } else {
         setIsLessonCompleted(false); // Not completed if no user
+        console.log('No user or token, setting lesson as incomplete');
       }
     };
 
