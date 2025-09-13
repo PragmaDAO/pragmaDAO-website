@@ -19,7 +19,7 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: cd backend && npm install && npm run build
+    buildCommand: cd backend && npm ci --include=dev && npm run build
     startCommand: cd backend && npm start
     envVars:
       - key: DATABASE_URL
