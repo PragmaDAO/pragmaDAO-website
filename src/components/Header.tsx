@@ -22,7 +22,6 @@ const Header: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurre
                 <nav className="hidden md:flex items-center space-x-8">
                     <NavLink onClick={() => setCurrentPage('lessons')}>Lessons</NavLink>
                     <NavLink onClick={() => setCurrentPage('community')}>Community</NavLink>
-                    <NavLink onClick={() => setCurrentPage('pricing')}>Pricing</NavLink>
                     {user ? (
                         <>
                             <NavLink onClick={() => setCurrentPage('profile')}>Welcome, {user.username}!</NavLink>

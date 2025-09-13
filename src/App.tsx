@@ -7,7 +7,6 @@ import CommunityPage from './pages/CommunityPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage'; // Import ProfilePage
-import PricingPage from './pages/PricingPage'; // Import PricingPage
 import { lessons } from './lessons';
 import './index.css'; // Assuming global styles are here
 import { useAuth } from './context/AuthContext';
@@ -292,7 +291,7 @@ export default function App() {
         const lesson = lessons.find(l => l.id === page);
         if (lesson) {
             setCurrentPage(page);
-        } else if (['home', 'lessons', 'community', 'login', 'register', 'profile', 'pricing'].includes(page)) {
+        } else if (['home', 'lessons', 'community', 'login', 'register', 'profile'].includes(page)) {
             setCurrentPage(page);
         } else {
             setCurrentPage('home');
@@ -325,8 +324,6 @@ export default function App() {
                 return <RegisterPage setCurrentPage={setCurrentPage} />;
             case 'profile':
                 return <ProfilePage />;
-            case 'pricing':
-                return <PricingPage setCurrentPage={setCurrentPage} />;
             default:
                 return <HomePage setCurrentPage={setCurrentPage} />;
         }
