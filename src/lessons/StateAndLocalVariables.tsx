@@ -193,7 +193,7 @@ const StateAndLocalVariables: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/state-and-local-variables.md" />
+          <Lesson markdownPath="/lessons/markdown/state-and-local-variables.md" />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}

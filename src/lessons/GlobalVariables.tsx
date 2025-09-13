@@ -196,7 +196,7 @@ const GlobalVariables: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/global-variables.md" />
+          <Lesson markdownPath="/lessons/markdown/global-variables.md" />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}

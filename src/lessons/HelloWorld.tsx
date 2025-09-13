@@ -202,7 +202,7 @@ const HelloWorld: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/pragmaDAO-website/lessons/markdown/hello-world.md" />
+          <Lesson markdownPath="/lessons/markdown/hello-world.md" />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
