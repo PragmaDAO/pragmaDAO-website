@@ -203,7 +203,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/pragmaDAO-website/lessons/solidity/IntegersAndUnsignedIntegers.sol"
+              solidityFilePath="/lessons/solidity/IntegersAndUnsignedIntegers.sol"
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop

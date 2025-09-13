@@ -241,7 +241,7 @@ const VariablesTypes: React.FC<{
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/pragmaDAO-website/lessons/solidity/VariableTypes.sol"
+              solidityFilePath="/lessons/solidity/VariableTypes.sol"
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)}

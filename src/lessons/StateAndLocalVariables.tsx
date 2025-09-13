@@ -197,7 +197,7 @@ const StateAndLocalVariables: React.FC<{
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/pragmaDAO-website/lessons/solidity/StateAndLocalVariables.sol"
+              solidityFilePath="/lessons/solidity/StateAndLocalVariables.sol"
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop
