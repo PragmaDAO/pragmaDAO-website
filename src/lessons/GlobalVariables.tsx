@@ -200,7 +200,7 @@ const GlobalVariables: React.FC<{
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/GlobalVariables.sol"
+              solidityFilePath="/lessons/solidity/GlobalVariables.txt"
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop
