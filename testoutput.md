@@ -1,87 +1,64 @@
-2025-09-13T03:28:52.600273984Z ==> Cloning from https://github.com/PragmaDAO/pragmaDAO-website
-2025-09-13T03:28:54.119629101Z ==> Syncing Git submodules
-2025-09-13T03:28:54.843691383Z ==> Checking out commit 2e1bc509f4dcc372ae7b62ace59b8c96f04f6254 in branch main
-2025-09-13T03:28:56.004628926Z ==> Using Node.js version 22.16.0 (default)
-2025-09-13T03:28:56.031902995Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
-2025-09-13T03:28:57.903535792Z ==> Running build command 'cd backend && npm install'...
-2025-09-13T03:31:13.832132846Z 
-2025-09-13T03:31:13.832158037Z added 1287 packages, and audited 1289 packages in 2m
-2025-09-13T03:31:13.832203938Z 
-2025-09-13T03:31:13.832221668Z 216 packages are looking for funding
-2025-09-13T03:31:13.832242649Z   run `npm fund` for details
-2025-09-13T03:31:14.180202655Z 
-2025-09-13T03:31:14.180226885Z 25 vulnerabilities (2 low, 18 high, 5 critical)
-2025-09-13T03:31:14.180230975Z 
-2025-09-13T03:31:14.180235545Z To address issues that do not require attention, run:
-2025-09-13T03:31:14.180239296Z   npm audit fix
-2025-09-13T03:31:14.180242685Z 
-2025-09-13T03:31:14.180246476Z To address all issues (including breaking changes), run:
-2025-09-13T03:31:14.180250536Z   npm audit fix --force
-2025-09-13T03:31:14.180253866Z 
-2025-09-13T03:31:14.180258246Z Run `npm audit` for details.
-2025-09-13T03:31:16.267361349Z ==> Uploading build...
-2025-09-13T03:31:44.489561176Z ==> Uploaded in 11.7s. Compression took 16.6s
-2025-09-13T03:31:44.565906249Z ==> Build successful 🎉
-2025-09-13T03:31:46.662774594Z ==> Deploying...
-2025-09-13T03:32:29.373454856Z ==> Running 'cd backend && npm start'
-2025-09-13T03:32:29.710976968Z 
-2025-09-13T03:32:29.711000239Z > backend@1.0.0 start
-2025-09-13T03:32:29.711003469Z > node dist/index.js
-2025-09-13T03:32:29.711005499Z 
-2025-09-13T03:32:29.78906812Z node:internal/modules/cjs/loader:1404
-2025-09-13T03:32:29.789090661Z   throw err;
-2025-09-13T03:32:29.789094231Z   ^
-2025-09-13T03:32:29.789096721Z 
-2025-09-13T03:32:29.789099961Z Error: Cannot find module '/opt/render/project/src/backend/dist/index.js'
-2025-09-13T03:32:29.789102711Z     at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
-2025-09-13T03:32:29.789105521Z     at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
-2025-09-13T03:32:29.789108461Z     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
-2025-09-13T03:32:29.789112531Z     at Function._load (node:internal/modules/cjs/loader:1211:37)
-2025-09-13T03:32:29.789115392Z     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
-2025-09-13T03:32:29.789118552Z     at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
-2025-09-13T03:32:29.789121852Z     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
-2025-09-13T03:32:29.789125652Z     at node:internal/main/run_main_module:36:49 {
-2025-09-13T03:32:29.789128742Z   code: 'MODULE_NOT_FOUND',
-2025-09-13T03:32:29.789132372Z   requireStack: []
-2025-09-13T03:32:29.789135002Z }
-2025-09-13T03:32:29.789137152Z 
-2025-09-13T03:32:29.789139492Z Node.js v22.16.0
-2025-09-13T03:32:29.794786549Z npm error Lifecycle script `start` failed with error:
-2025-09-13T03:32:29.794898193Z npm error code 1
-2025-09-13T03:32:29.794957034Z npm error path /opt/render/project/src/backend
-2025-09-13T03:32:29.795172021Z npm error workspace backend@1.0.0
-2025-09-13T03:32:29.795274734Z npm error location /opt/render/project/src/backend
-2025-09-13T03:32:29.795302645Z npm error command failed
-2025-09-13T03:32:29.795377997Z npm error command sh -c node dist/index.js
-2025-09-13T03:32:42.526614828Z ==> Exited with status 1
-2025-09-13T03:32:42.545321956Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
-2025-09-13T03:32:44.918630118Z ==> Running 'cd backend && npm start'
-2025-09-13T03:32:45.204553563Z 
-2025-09-13T03:32:45.204572723Z > backend@1.0.0 start
-2025-09-13T03:32:45.204575193Z > node dist/index.js
-2025-09-13T03:32:45.204576784Z 
-2025-09-13T03:32:45.230032297Z node:internal/modules/cjs/loader:1404
-2025-09-13T03:32:45.230047607Z   throw err;
-2025-09-13T03:32:45.230050098Z   ^
-2025-09-13T03:32:45.230051798Z 
-2025-09-13T03:32:45.230054278Z Error: Cannot find module '/opt/render/project/src/backend/dist/index.js'
-2025-09-13T03:32:45.230056128Z     at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
-2025-09-13T03:32:45.230058038Z     at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
-2025-09-13T03:32:45.230059918Z     at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
-2025-09-13T03:32:45.230062268Z     at Function._load (node:internal/modules/cjs/loader:1211:37)
-2025-09-13T03:32:45.230063908Z     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
-2025-09-13T03:32:45.230065648Z     at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
-2025-09-13T03:32:45.230067978Z     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
-2025-09-13T03:32:45.230070888Z     at node:internal/main/run_main_module:36:49 {
-2025-09-13T03:32:45.230073128Z   code: 'MODULE_NOT_FOUND',
-2025-09-13T03:32:45.230075398Z   requireStack: []
-2025-09-13T03:32:45.230077108Z }
-2025-09-13T03:32:45.230078648Z 
-2025-09-13T03:32:45.230080279Z Node.js v22.16.0
-2025-09-13T03:32:45.288956451Z npm error Lifecycle script `start` failed with error:
-2025-09-13T03:32:45.289030814Z npm error code 1
-2025-09-13T03:32:45.289094546Z npm error path /opt/render/project/src/backend
-2025-09-13T03:32:45.289328322Z npm error workspace backend@1.0.0
-2025-09-13T03:32:45.289434416Z npm error location /opt/render/project/src/backend
-2025-09-13T03:32:45.289482287Z npm error command failed
-2025-09-13T03:32:45.289541219Z npm error command sh -c node dist/index.js
+2025-09-13T18:08:27.331641863Z ==> Cloning from https://github.com/PragmaDAO/pragmaDAO-website
+2025-09-13T18:08:28.150866146Z ==> Syncing Git submodules
+2025-09-13T18:08:28.73072107Z ==> Checking out commit 18767b5f3f6b5627195a5f63ad39f08f643147e6 in branch main
+2025-09-13T18:08:46.164010036Z ==> Using Node.js version 22.16.0 (default)
+2025-09-13T18:08:46.18949985Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2025-09-13T18:08:48.046754173Z ==> Running build command 'cd backend && npm install && npm run build'...
+2025-09-13T18:10:48.520608304Z 
+2025-09-13T18:10:48.520642336Z added 1287 packages, and audited 1289 packages in 2m
+2025-09-13T18:10:48.520654366Z 
+2025-09-13T18:10:48.520669906Z 216 packages are looking for funding
+2025-09-13T18:10:48.520676216Z   run `npm fund` for details
+2025-09-13T18:10:48.869969516Z 
+2025-09-13T18:10:48.870001547Z 25 vulnerabilities (2 low, 18 high, 5 critical)
+2025-09-13T18:10:48.870012297Z 
+2025-09-13T18:10:48.870020217Z To address issues that do not require attention, run:
+2025-09-13T18:10:48.870026688Z   npm audit fix
+2025-09-13T18:10:48.870030278Z 
+2025-09-13T18:10:48.870034328Z To address all issues (including breaking changes), run:
+2025-09-13T18:10:48.870039768Z   npm audit fix --force
+2025-09-13T18:10:48.870044028Z 
+2025-09-13T18:10:48.870048778Z Run `npm audit` for details.
+2025-09-13T18:10:49.145810278Z 
+2025-09-13T18:10:49.145833419Z > backend@1.0.0 build
+2025-09-13T18:10:49.145837759Z > tsc
+2025-09-13T18:10:49.145841189Z 
+2025-09-13T18:10:51.635986482Z src/index.ts(1,20): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+2025-09-13T18:10:51.636152506Z src/index.ts(16,18): error TS7016: Could not find a declaration file for module 'cors'. '/opt/render/project/src/node_modules/cors/lib/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636160726Z   Try `npm i --save-dev @types/cors` if it exists or add a new declaration (.d.ts) file containing `declare module 'cors';`
+2025-09-13T18:10:51.636175057Z src/index.ts(18,21): error TS7016: Could not find a declaration file for module 'express-session'. '/opt/render/project/src/node_modules/express-session/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636183497Z   Try `npm i --save-dev @types/express-session` if it exists or add a new declaration (.d.ts) file containing `declare module 'express-session';`
+2025-09-13T18:10:51.636205638Z src/routes/admin.ts(2,24): error TS2305: Module '"@prisma/client"' has no exported member 'DiscountType'.
+2025-09-13T18:10:51.636218268Z src/routes/auth.ts(3,20): error TS7016: Could not find a declaration file for module 'bcryptjs'. '/opt/render/project/src/node_modules/bcryptjs/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636224808Z   Try `npm i --save-dev @types/bcryptjs` if it exists or add a new declaration (.d.ts) file containing `declare module 'bcryptjs';`
+2025-09-13T18:10:51.636269599Z src/routes/auth.ts(4,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. '/opt/render/project/src/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636276109Z   Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+2025-09-13T18:10:51.636279809Z src/routes/code.ts(3,22): error TS7016: Could not find a declaration file for module 'archiver'. '/opt/render/project/src/node_modules/archiver/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.63630255Z   Try `npm i --save-dev @types/archiver` if it exists or add a new declaration (.d.ts) file containing `declare module 'archiver';`
+2025-09-13T18:10:51.63630509Z src/routes/code.ts(5,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. '/opt/render/project/src/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.63630716Z   Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+2025-09-13T18:10:51.636405663Z src/routes/code.ts(16,34): error TS7006: Parameter 'err' implicitly has an 'any' type.
+2025-09-13T18:10:51.636537496Z src/routes/code.ts(16,39): error TS7006: Parameter 'user' implicitly has an 'any' type.
+2025-09-13T18:10:51.636542906Z src/routes/code.ts(122,31): error TS7006: Parameter 'snippet' implicitly has an 'any' type.
+2025-09-13T18:10:51.636549596Z src/routes/code.ts(122,40): error TS7006: Parameter 'index' implicitly has an 'any' type.
+2025-09-13T18:10:51.636565167Z src/routes/oauth.ts(3,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. '/opt/render/project/src/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636571277Z   Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+2025-09-13T18:10:51.636667839Z src/routes/payments.ts(3,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. '/opt/render/project/src/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636673509Z   Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+2025-09-13T18:10:51.636676029Z src/routes/profile.ts(3,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. '/opt/render/project/src/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.636682479Z   Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+2025-09-13T18:10:51.636687299Z src/routes/profile.ts(4,20): error TS7016: Could not find a declaration file for module 'bcryptjs'. '/opt/render/project/src/node_modules/bcryptjs/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.63669027Z   Try `npm i --save-dev @types/bcryptjs` if it exists or add a new declaration (.d.ts) file containing `declare module 'bcryptjs';`
+2025-09-13T18:10:51.63669862Z src/routes/profile.ts(18,34): error TS7006: Parameter 'err' implicitly has an 'any' type.
+2025-09-13T18:10:51.63670168Z src/routes/profile.ts(18,39): error TS7006: Parameter 'user' implicitly has an 'any' type.
+2025-09-13T18:10:51.636707Z src/routes/progress.ts(3,17): error TS7016: Could not find a declaration file for module 'jsonwebtoken'. '/opt/render/project/src/node_modules/jsonwebtoken/index.js' implicitly has an 'any' type.
+2025-09-13T18:10:51.63670975Z   Try `npm i --save-dev @types/jsonwebtoken` if it exists or add a new declaration (.d.ts) file containing `declare module 'jsonwebtoken';`
+2025-09-13T18:10:51.67389108Z npm error Lifecycle script `build` failed with error:
+2025-09-13T18:10:51.673951492Z npm error code 2
+2025-09-13T18:10:51.674006113Z npm error path /opt/render/project/src/backend
+2025-09-13T18:10:51.674160997Z npm error workspace backend@1.0.0
+2025-09-13T18:10:51.674190488Z npm error location /opt/render/project/src/backend
+2025-09-13T18:10:51.674219208Z npm error command failed
+2025-09-13T18:10:51.674264719Z npm error command sh -c tsc
+2025-09-13T18:10:51.690178549Z ==> Build failed 😞
+2025-09-13T18:10:51.690197699Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys

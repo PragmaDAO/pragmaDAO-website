@@ -13,7 +13,7 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 
   if (token == null) return res.sendStatus(401); // No token
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
     if (err) return res.sendStatus(403); // Invalid token
     (req as any).user = user; // Attach user payload to request
     next();
@@ -119,7 +119,7 @@ router.get('/download', authenticateToken, async (req, res) => {
     archive.pipe(res);
 
     // Append code snippets to the archive
-    userCodeSnippets.forEach((snippet, index) => {
+    userCodeSnippets.forEach((snippet: any, index: number) => {
       const filename = `lesson_${snippet.lessonId}_${snippet.submissionTime?.toISOString().replace(/[:.]/g, '-') || index}.sol`;
       archive.append(snippet.code, { name: filename });
     });
