@@ -5,6 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+import understandingFunctionsMarkdown from './assets/markdown/understanding-functions.md';
+import understandingFunctionsSolidity from './assets/solidity/UnderstandingFunctions.sol?raw';
 
 const UnderstandingFunctions: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -198,11 +200,11 @@ const UnderstandingFunctions: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/lessons/markdown/understanding-functions.md" />
+          <Lesson markdownContent={understandingFunctionsMarkdown} />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/UnderstandingFunctions.txt"
+              initialCode={understandingFunctionsSolidity}
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop

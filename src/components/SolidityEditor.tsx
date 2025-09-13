@@ -8,11 +8,9 @@ import { indentUnit } from '@codemirror/language';
 import { useAuth } from '../context/AuthContext';
 import { CompiledOutput, TestCase } from '../types';
 
-
-
 const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
-     initialCode?: string, solidityFilePath?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void, onCodeChange?: (code: string) => void }> = ({ onCompile,
-     initialCode, solidityFilePath, lessonId, onTestResults, onAllTestsPassed, onCodeChange }) => {
+     initialCode?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void, onCodeChange?: (code: string) => void }> = ({ onCompile,
+     initialCode, lessonId, onTestResults, onAllTestsPassed, onCodeChange }) => {
     const [code, setCode] = useState(initialCode || `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
@@ -95,65 +93,43 @@ pragma solidity ^0.8.7;
     }, [initialCode]);
 
     useEffect(() => {
-        if (solidityFilePath) {
-            loadSavedCodeOrDefault(solidityFilePath);
-        }
-    }, [solidityFilePath, initialCode, user, token, lessonId]);
+        const loadCode = async () => {
+            // 1. First, check localStorage
+            if (lessonId) {
+                const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
+                if (localCode) {
+                    setCode(localCode);
+                    if (viewRef.current) {
+                        viewRef.current.dispatch({
+                            changes: { from: 0, to: viewRef.current.state.doc.length, insert: localCode }
+                        });
+                    }
+                    console.log('Loaded code from localStorage for lesson:', lessonId);
+                    return;
+                }
+            }
 
-    const loadSavedCodeOrDefault = async (fallbackPath: string) => {
-        // Three-tier loading priority: localStorage → backend → default
-        
-        // 1. First, check localStorage (highest priority - most recent unsaved changes)
-        if (lessonId) {
-            const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
-            if (localCode) {
-                setCode(localCode);
+            // 2. Then, check backend database
+            if (user && token && lessonId) {
+                const savedCodeLoaded = await loadSavedCode();
+                if (savedCodeLoaded) {
+                    return;
+                }
+            }
+
+            // 3. Finally, use initialCode from props
+            if (initialCode) {
+                setCode(initialCode);
                 if (viewRef.current) {
                     viewRef.current.dispatch({
-                        changes: { from: 0, to: viewRef.current.state.doc.length, insert: localCode }
+                        changes: { from: 0, to: viewRef.current.state.doc.length, insert: initialCode }
                     });
                 }
-                console.log('Loaded code from localStorage for lesson:', lessonId);
-                return;
             }
-        }
+        };
 
-        // 2. Then, check backend database (previously saved work)
-        if (user && token && lessonId) {
-            const savedCodeLoaded = await loadSavedCode();
-            if (savedCodeLoaded) {
-                return;
-            }
-        }
-        
-        // 3. Finally, load default lesson code (fallback)
-        try {
-            const response = await fetch(process.env.PUBLIC_URL + fallbackPath);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const text = await response.text();
-            setCode(text);
-            if (viewRef.current) {
-                viewRef.current.dispatch({
-                    changes: { from: 0, to: viewRef.current.state.doc.length, insert: text }
-                });
-            }
-            console.log('Loaded default lesson code from:', fallbackPath);
-        } catch (error) {
-            console.error("Could not load solidity file:", error);
-            const errorText = `// Error loading file from ${fallbackPath}
-// Please check the path and ensure the file exists.
-
-` + (initialCode || '');
-            setCode(errorText);
-            if (viewRef.current) {
-                viewRef.current.dispatch({
-                    changes: { from: 0, to: viewRef.current.state.doc.length, insert: errorText }
-                });
-            }
-        }
-    };
+        loadCode();
+    }, [initialCode, user, token, lessonId]);
 
     const loadSavedCode = async (): Promise<boolean> => {
         if (!user || !token || !lessonId) return false;
@@ -446,7 +422,7 @@ pragma solidity ^0.8.7;
 
     // Helper function to parse forge test output
     const parseForgeTestOutput = (rawOutput: string): TestCase[] => {
-        const testCaseRegex = /^	*\t*\[(PASS|FAIL)\]\t*(.*?)\t*\(gas: \d+\)/gm;
+        const testCaseRegex = /^\s*\[(PASS|FAIL)\]\s*(.*?)\s*\(gas: \d+\)/gm;
         const testCases: TestCase[] = [];
         let match;
 

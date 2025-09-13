@@ -4,30 +4,18 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface LessonProps {
-  markdownPath: string;
+  markdownContent: string;
 }
 
-const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
+const Lesson: React.FC<LessonProps> = ({ markdownContent }) => {
   const [staticMarkdownContent, setStaticMarkdownContent] = useState('');
   const [instructions, setInstructions] = useState<any[]>([]);
   const [activeHint, setActiveHint] = useState<number | null>(null);
   const [checkedItems, setCheckedItems] = useState<boolean[]>([]);
 
   useEffect(() => {
-    const cacheBuster = new Date().getTime();
-    console.log(`Lesson: Attempting to fetch markdown from: ${markdownPath}?${cacheBuster}`);
-    fetch(`${markdownPath}?${cacheBuster}`, { cache: 'no-store' })
-      .then((res) => {
-        console.log(`Lesson: Fetch response status for ${markdownPath}: ${res.status}`);
-        if (!res.ok) {
-          console.error(`Lesson: Fetch failed for ${markdownPath}: ${res.statusText}`);
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.text();
-      })
-      .then((text) => {
-        console.log(`Lesson: Markdown fetched successfully for ${markdownPath}. Content length: ${text.length}`);
-        const parts = text.split('### Instructions');
+    if (markdownContent) {
+        const parts = markdownContent.split('### Instructions');
         const staticContent = parts[0];
         const instructionsText = parts.length > 1 ? parts[1] : '';
 
@@ -39,8 +27,8 @@ const Lesson: React.FC<LessonProps> = ({ markdownPath }) => {
         );
         setInstructions(parsedInstructions);
         setCheckedItems(new Array(parsedInstructions.length).fill(false));
-      });
-  }, [markdownPath]);
+    }
+  }, [markdownContent]);
 
   const handleCheckboxClick = (index: number) => {
     const newCheckedItems = [...checkedItems];

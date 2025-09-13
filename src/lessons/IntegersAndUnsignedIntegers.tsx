@@ -5,6 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+import integersAndUnsignedIntegersMarkdown from './assets/markdown/integers-and-unsigned-integers.md';
+import integersAndUnsignedIntegersSolidity from './assets/solidity/IntegersAndUnsignedIntegers.sol?raw';
 
 const IntegersAndUnsignedIntegers: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -199,11 +201,11 @@ const IntegersAndUnsignedIntegers: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/lessons/markdown/integers-and-unsigned-integers.md" />
+          <Lesson markdownContent={integersAndUnsignedIntegersMarkdown} />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/IntegersAndUnsignedIntegers.txt"
+              initialCode={integersAndUnsignedIntegersSolidity}
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop

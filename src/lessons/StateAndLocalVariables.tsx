@@ -5,6 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+import stateAndLocalVariablesMarkdown from './assets/markdown/state-and-local-variables.md';
+import stateAndLocalVariablesSolidity from './assets/solidity/StateAndLocalVariables.sol?raw';
 
 const StateAndLocalVariables: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -193,11 +195,11 @@ const StateAndLocalVariables: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/lessons/markdown/state-and-local-variables.md" />
+          <Lesson markdownContent={stateAndLocalVariablesMarkdown} />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/StateAndLocalVariables.txt"
+              initialCode={stateAndLocalVariablesSolidity}
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop

@@ -5,6 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+import globalVariablesMarkdown from './assets/markdown/global-variables.md';
+import globalVariablesSolidity from './assets/solidity/GlobalVariables.sol?raw';
 
 const GlobalVariables: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -196,11 +198,11 @@ const GlobalVariables: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/lessons/markdown/global-variables.md" />
+          <Lesson markdownContent={globalVariablesMarkdown} />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/GlobalVariables.txt"
+              initialCode={globalVariablesSolidity}
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop

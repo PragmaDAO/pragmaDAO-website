@@ -5,6 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+import helloWorldMarkdown from './assets/markdown/hello-world.md';
+import helloWorldSolidity from './assets/solidity/HelloWorld.sol?raw';
 
 const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -202,11 +204,11 @@ const HelloWorld: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/lessons/markdown/hello-world.md" />
+          <Lesson markdownContent={helloWorldMarkdown} />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/HelloWorld.txt"
+              initialCode={helloWorldSolidity}
               lessonId={lessonId} // Use lessonId prop
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)} // New prop

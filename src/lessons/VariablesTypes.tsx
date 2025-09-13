@@ -5,6 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+import variablesTypesMarkdown from './assets/markdown/understanding-variables-and-types.md';
+import variablesTypesSolidity from './assets/solidity/VariableTypes.sol?raw';
 
 const VariablesTypes: React.FC<{
   setCurrentPage: (page: string) => void;
@@ -237,11 +239,11 @@ const VariablesTypes: React.FC<{
           </div>
         </div>
         <div className="lesson-container">
-          <Lesson markdownPath="/lessons/markdown/understanding-variables-and-types.md" />
+          <Lesson markdownContent={variablesTypesMarkdown} />
           <div className="flex flex-col gap-4 h-[700px]">
             <SolidityEditor
               onCompile={setCompiledResult}
-              solidityFilePath="/lessons/solidity/VariableTypes.txt"
+              initialCode={variablesTypesSolidity}
               lessonId={lessonId}
               onTestResults={setTestResults}
               onAllTestsPassed={(passed: boolean) => setCanMarkComplete(passed)}
