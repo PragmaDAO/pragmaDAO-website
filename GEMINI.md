@@ -707,3 +707,99 @@ Debouncing is a programming technique that delays function execution until after
 4. Remove backend saving from test runs entirely
 
 This approach provides immediate persistence (localStorage) with reliable backup (backend) while minimizing server costs.
+
+---
+
+### Phase 8: Next.js Migration for Enhanced Marketing
+
+**Your Prompt to Claude:**
+
+```
+Claude, let's begin Phase 8: Migrating to Next.js for enhanced marketing capabilities. This migration will transform our educational content into a marketing machine that works 24/7 to attract and convert students through search engines and social media. Please guide me through:
+
+1. **Migration Planning:**
+   - Analyze current React + Express architecture
+   - Create a comprehensive migration strategy
+   - Identify components that need restructuring
+   - Plan API routes migration from Express to Next.js
+
+2. **SEO & Marketing Benefits Implementation:**
+   - Server-Side Rendering (SSR) for lesson content
+   - Static Site Generation (SSG) for marketing pages
+   - Dynamic Open Graph image generation for social sharing
+   - Rich meta tags and Schema.org structured data
+   - Automatic sitemap generation
+
+3. **Marketing Features:**
+   - SEO-optimized lesson URL structure (/lessons/[slug])
+   - Built-in blog system for content marketing
+   - A/B testing landing page framework
+   - Personalized landing pages based on traffic source
+   - Social media integration with rich previews
+
+4. **Performance Optimization:**
+   - Image optimization with Next.js Image component
+   - Code splitting and prefetching
+   - Core Web Vitals improvements
+   - Fast loading landing pages for better conversion
+
+5. **Full-Stack Consolidation:**
+   - Migrate Express API routes to Next.js API routes
+   - Maintain existing Prisma database integration
+   - Preserve authentication system (JWT)
+   - Keep Solidity compilation and testing functionality
+
+6. **Deployment Strategy:**
+   - Update deployment configurations for Next.js
+   - Environment variables management
+   - Vercel optimization (if chosen platform)
+   - Cost analysis comparison
+
+Please create a detailed step-by-step migration plan with code examples showing:
+- How to migrate key components (SolidityEditor, lesson pages)
+- API routes conversion examples
+- SEO implementation patterns
+- Marketing page templates
+- Social sharing optimization
+```
+
+**Benefits Expected from This Migration:**
+
+### 🔍 **SEO & Search Visibility:**
+- Each lesson becomes a searchable landing page
+- Rich snippets for course ratings and duration
+- Featured snippets for "how to" queries
+- Individual lessons ranking for specific keywords like "solidity variables tutorial"
+
+### 📱 **Social Media Marketing:**
+- Automatic beautiful previews when lessons are shared
+- Dynamic Open Graph images with lesson titles
+- Twitter Cards for professional sharing
+- Viral potential from shareable lesson completions
+
+### 🚀 **Performance & Conversion:**
+- Faster loading pages = better conversion rates
+- Static generation for marketing content
+- Improved Core Web Vitals scores
+- Better user experience leading to higher engagement
+
+### 🎯 **Content Marketing:**
+- Built-in blog system for SEO content
+- Automatic RSS feeds for subscribers
+- A/B testing for landing pages
+- Personalized content based on traffic source
+
+### 📊 **Long-term Growth:**
+- Month 1: Current traffic baseline
+- Month 3: 3-5x traffic growth from SEO
+- Month 6: 10-15x traffic from content marketing
+- Month 12: 25-50x traffic from viral sharing + SEO authority
+
+**Target Keywords We Can Rank For:**
+- "solidity tutorial for beginners"
+- "learn blockchain development"
+- "web3 programming course"
+- "smart contract tutorial"
+- "ethereum development lessons"
+
+This migration will transform PragmaDAO from a functional educational platform into a marketing powerhouse that attracts students organically through search engines and social media while maintaining all existing functionality.

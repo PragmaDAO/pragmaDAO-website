@@ -1,0 +1,35 @@
+services:
+  # Frontend (React App)
+  - type: web
+    name: pragmadao-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_BACKEND_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # Backend (Node.js API)
+  - type: web
+    name: pragmadao-backend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: NODE_ENV
+        value: production
+    
+databases:
+  - name: pragmadao-db
+    databaseName: pragmadao
+    user: pragmadao
