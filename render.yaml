@@ -8,10 +8,7 @@ services:
     envVars:
       - key: REACT_APP_BACKEND_URL
         sync: false
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    
 
   # Backend (Node.js API)
   - type: web
