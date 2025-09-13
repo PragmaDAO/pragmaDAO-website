@@ -128,7 +128,7 @@ pragma solidity ^0.8.7;
         
         // 3. Finally, load default lesson code (fallback)
         try {
-            const response = await fetch(fallbackPath);
+            const response = await fetch(process.env.PUBLIC_URL + fallbackPath);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -446,7 +446,7 @@ pragma solidity ^0.8.7;
 
     // Helper function to parse forge test output
     const parseForgeTestOutput = (rawOutput: string): TestCase[] => {
-        const testCaseRegex = /^\s*\[(PASS|FAIL)\]\s*(.*?)\s*\(gas: \d+\)/gm;
+        const testCaseRegex = /^	*\t*\[(PASS|FAIL)\]\t*(.*?)\t*\(gas: \d+\)/gm;
         const testCases: TestCase[] = [];
         let match;
 
@@ -479,7 +479,7 @@ pragma solidity ^0.8.7;
             <div 
                 className="editor-wrapper flex-shrink-0 overflow-hidden" 
                 ref={editorRef} 
-                style={{ 
+                style={{
                     height: `${editorHeight}%`,
                     overflowY: 'auto'
                 }}
@@ -489,7 +489,7 @@ pragma solidity ^0.8.7;
 
             {/* Draggable resize handle */}
             <div 
-                className={`resize-handle flex items-center justify-center cursor-ns-resize select-none transition-colors duration-200 ${
+                className={`resize-handle flex items-center justify-center cursor-ns-resize select-none transition-colors duration-200 ${ 
                     isDragging ? 'bg-indigo-500' : 'bg-gray-300 hover:bg-gray-400'
                 }`}
                 style={{ height: '8px', minHeight: '8px' }}
