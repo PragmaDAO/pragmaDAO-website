@@ -40,6 +40,9 @@
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
     "react-router-dom": "^7.8.2",
     "stripe": "^16.2.0",
     "thirdweb": "^5.105.43"
