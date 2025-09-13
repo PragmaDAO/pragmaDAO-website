@@ -26,6 +26,10 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
       - key: NODE_ENV
         value: production
     
