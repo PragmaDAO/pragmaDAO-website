@@ -40,8 +40,10 @@ const PaymentHistory: React.FC = () => {
         return;
       }
 
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+
       // Fetch course access status
-      const accessResponse = await fetch('/api/payments/course-access', {
+      const accessResponse = await fetch(`${backendUrl}/api/payments/course-access`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -53,7 +55,7 @@ const PaymentHistory: React.FC = () => {
       }
 
       // Fetch payment history
-      const paymentsResponse = await fetch('/api/payments/history', {
+      const paymentsResponse = await fetch(`${backendUrl}/api/payments/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

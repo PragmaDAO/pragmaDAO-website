@@ -27,7 +27,8 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      const response = await fetch(`${backendUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,7 +42,7 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
       }
 
       // Log in the user automatically after registration
-      const loginResponse = await fetch('/api/auth/login', {
+      const loginResponse = await fetch(`${backendUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +155,8 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
                 type="button"
                 onClick={() => {
                   console.log('Google button clicked');
-                  window.open('http://localhost:3003/api/auth/google', '_self');
+                  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+                  window.open(`${backendUrl}/api/auth/google`, '_self');
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
               >
@@ -163,7 +165,10 @@ const RegisterPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ se
               </button>
               <button
                 type="button"
-                onClick={() => window.open('http://localhost:3003/api/auth/github', '_self')}
+                onClick={() => {
+                  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+                  window.open(`${backendUrl}/api/auth/github`, '_self');
+                }}
                 className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
               >
                 <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" className="w-5 h-5 mr-2" />

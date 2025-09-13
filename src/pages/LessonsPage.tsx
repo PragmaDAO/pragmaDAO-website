@@ -32,8 +32,8 @@ const LessonsPage: React.FC<{ setCurrentPage: (page: string) => void }> = ({ set
         const fetchProgress = async () => {
             if (user) {
                 try {
-                    // Assuming your backend is running on the same origin or you've configured CORS
-                    const response = await fetch('/api/progress', {
+                    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+                    const response = await fetch(`${backendUrl}/api/progress`, {
                         headers: {
                             'Authorization': `Bearer ${localStorage.getItem('token')}` // Send JWT for authentication
                         }

@@ -69,6 +69,8 @@ const SimplePayment: React.FC<SimplePaymentProps> = ({ setCurrentPage }) => {
     setErrorMessage('');
     setSelectedPlan(plan);
 
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+
     try {
       if (paymentMethod === 'stripe') {
         // Simulate Stripe payment process
@@ -84,7 +86,7 @@ const SimplePayment: React.FC<SimplePaymentProps> = ({ setCurrentPage }) => {
         // Record Stripe payment in backend
         const token = localStorage.getItem('token');
         if (token) {
-          const response = await fetch('/api/payments/record', {
+          const response = await fetch(`${backendUrl}/api/payments/record`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -119,7 +121,7 @@ const SimplePayment: React.FC<SimplePaymentProps> = ({ setCurrentPage }) => {
         // Record USDC payment in backend
         const token = localStorage.getItem('token');
         if (token) {
-          const response = await fetch('/api/payments/record', {
+          const response = await fetch(`${backendUrl}/api/payments/record`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

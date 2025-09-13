@@ -39,7 +39,8 @@ const ProfilePage: React.FC = () => {
       }
 
       try {
-        const response = await fetch('http://localhost:3003/api/profile', {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+        const response = await fetch(`${backendUrl}/api/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -72,7 +73,8 @@ const ProfilePage: React.FC = () => {
     if (!token || !userProfile) return;
 
     try {
-      const response = await fetch('http://localhost:3003/api/profile', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      const response = await fetch(`${backendUrl}/api/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +126,8 @@ const ProfilePage: React.FC = () => {
     // }
 
     try {
-      const response = await fetch('http://localhost:3003/api/profile/password', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      const response = await fetch(`${backendUrl}/api/profile/password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +157,8 @@ const ProfilePage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3003/api/code/download', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      const response = await fetch(`${backendUrl}/api/code/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

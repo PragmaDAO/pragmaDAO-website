@@ -47,7 +47,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
 
-      const response = await fetch('/api/payments/course-access', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      const response = await fetch(`${backendUrl}/api/payments/course-access`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

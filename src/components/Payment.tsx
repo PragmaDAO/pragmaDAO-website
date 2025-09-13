@@ -89,7 +89,8 @@ const Payment: React.FC<PaymentProps> = ({ setCurrentPage }) => {
         return;
       }
 
-      const response = await fetch('/api/stripe/create-checkout-session', {
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+      const response = await fetch(`${backendUrl}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,6 +149,8 @@ const Payment: React.FC<PaymentProps> = ({ setCurrentPage }) => {
     setIsLoading(true);
     setPaymentStatus('processing');
     setErrorMessage('');
+    
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
 
     try {
       // Check balance
@@ -170,7 +173,8 @@ const Payment: React.FC<PaymentProps> = ({ setCurrentPage }) => {
       if (receipt.status === 1) {
         // Record payment in backend
         const token = localStorage.getItem('token');
-        const response = await fetch('/api/payments/record', {
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+        const response = await fetch(`${backendUrl}/api/payments/record`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
