@@ -5,7 +5,9 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
+// eslint-disable-next-line import/no-webpack-loader-syntax
 import variablesTypesMarkdown from '!!raw-loader!./assets/markdown/understanding-variables-and-types.md';
+// eslint-disable-next-line import/no-webpack-loader-syntax
 import variablesTypesSolidity from '!!raw-loader!./assets/solidity/VariableTypes.sol';
 
 const VariablesTypes: React.FC<{
