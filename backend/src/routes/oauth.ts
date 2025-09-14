@@ -6,17 +6,18 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 const router: Router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
 
-router.get('/github/callback', 
-  passport.authenticate('github', { failureRedirect: '/login' }),
+router.get('/github/callback',
+  passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login` }),
   async (req: Request, res: Response) => {
     try {
       const githubUser = req.user as any;
       
       if (!githubUser) {
-        return res.redirect('/login?error=oauth_failed');
+        return res.redirect(`${FRONTEND_URL}/login?error=oauth_failed`);
       }
 
       let user = await prisma.user.findUnique({
@@ -38,11 +39,11 @@ router.get('/github/callback',
         { expiresIn: '24h' }
       );
 
-      res.redirect(`http://localhost:3000/?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: user.id, username: user.username, email: user.email }))}`);
-      
+      res.redirect(`${FRONTEND_URL}/?token=${token}&user=${encodeURIComponent(JSON.stringify({ id: user.id, username: user.username, email: user.email }))}`);
+
     } catch (error) {
       console.error('OAuth callback error:', error);
-      res.redirect('/login?error=oauth_callback_failed');
+      res.redirect(`${FRONTEND_URL}/login?error=oauth_callback_failed`);
     }
   }
 );
