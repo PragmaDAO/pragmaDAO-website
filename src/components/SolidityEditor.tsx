@@ -108,18 +108,30 @@ pragma solidity ^0.8.7;
 
     useEffect(() => {
         const loadCode = async () => {
+            console.log('=== CODE LOADING DEBUG ===');
+            console.log('Lesson ID:', lessonId);
+            console.log('User:', user ? 'logged in' : 'not logged in');
+            console.log('Token:', token ? 'exists' : 'missing');
+            console.log('Initial Code:', initialCode ? `${initialCode.length} chars` : 'undefined/empty');
+            console.log('Initial Code Preview:', initialCode ? initialCode.substring(0, 100) + '...' : 'N/A');
+
             // 1. First, check backend database for saved user code
             if (user && token && lessonId) {
                 const savedCodeLoaded = await loadSavedCode();
                 if (savedCodeLoaded) {
-                    console.log('Prioritizing saved user code from database for lesson:', lessonId);
+                    console.log('✅ Loaded saved user code from database for lesson:', lessonId);
                     return;
                 }
+                console.log('⚠️ No saved code found in database');
+            } else {
+                console.log('⚠️ Skipping database check - user not authenticated');
             }
 
             // 2. Then, check localStorage for temporary saves
             if (lessonId) {
                 const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
+                console.log('LocalStorage code:', localCode ? `${localCode.length} chars` : 'none');
+
                 if (localCode && localCode.trim().length > 50) { // Only use localStorage if it has meaningful content
                     setCode(localCode);
                     if (viewRef.current) {
@@ -127,21 +139,39 @@ pragma solidity ^0.8.7;
                             changes: { from: 0, to: viewRef.current.state.doc.length, insert: localCode }
                         });
                     }
-                    console.log('Loaded code from localStorage for lesson:', lessonId);
+                    console.log('✅ Loaded code from localStorage for lesson:', lessonId);
                     return;
                 }
+                console.log('⚠️ LocalStorage code too short or empty');
             }
 
             // 3. Finally, use initialCode as the default template for new users
-            if (initialCode) {
+            if (initialCode && initialCode.trim().length > 10) {
                 setCode(initialCode);
                 if (viewRef.current) {
                     viewRef.current.dispatch({
                         changes: { from: 0, to: viewRef.current.state.doc.length, insert: initialCode }
                     });
                 }
-                console.log('Loaded default template code from initialCode for lesson:', lessonId);
+                console.log('✅ Loaded default template code from initialCode for lesson:', lessonId);
+                return;
             }
+
+            // 4. Last resort: use default template
+            const defaultCode = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.29;
+
+// Your contract will go here
+
+`;
+            setCode(defaultCode);
+            if (viewRef.current) {
+                viewRef.current.dispatch({
+                    changes: { from: 0, to: viewRef.current.state.doc.length, insert: defaultCode }
+                });
+            }
+            console.log('⚠️ Using fallback default code - initialCode was empty/invalid');
+            console.log('=== END CODE LOADING DEBUG ===');
         };
 
         loadCode();

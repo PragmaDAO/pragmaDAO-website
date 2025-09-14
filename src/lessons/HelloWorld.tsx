@@ -10,6 +10,11 @@ import helloWorldMarkdown from '!!raw-loader!./assets/markdown/hello-world.md';
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import helloWorldSolidity from '!!raw-loader!./assets/solidity/HelloWorld.sol';
 
+console.log('HelloWorld.tsx - Imported data:');
+console.log('Markdown length:', helloWorldMarkdown ? helloWorldMarkdown.length : 'undefined');
+console.log('Solidity length:', helloWorldSolidity ? helloWorldSolidity.length : 'undefined');
+console.log('Solidity preview:', helloWorldSolidity ? helloWorldSolidity.substring(0, 100) + '...' : 'N/A');
+
 const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
   lessonId: string; // Add lessonId as a prop
