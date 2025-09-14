@@ -5,8 +5,10 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-import integersAndUnsignedIntegersMarkdown from './assets/markdown/integers-and-unsigned-integers.md';
-import integersAndUnsignedIntegersSolidity from './assets/solidity/IntegersAndUnsignedIntegers.sol?raw';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import integersAndUnsignedIntegersMarkdown from '!!raw-loader!./assets/markdown/integers-and-unsigned-integers.md';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import integersAndUnsignedIntegersSolidity from '!!raw-loader!./assets/solidity/IntegersAndUnsignedIntegers.sol';
 
 const IntegersAndUnsignedIntegers: React.FC<{
   setCurrentPage: (page: string) => void;

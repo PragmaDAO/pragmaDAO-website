@@ -5,10 +5,10 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-import globalVariablesMarkdown from './assets/markdown/global-variables.md';
-import globalVariablesSolidity from './assets/solidity/GlobalVariables.sol?raw';
-
-console.log('GlobalVariables.tsx - globalVariablesSolidity:', globalVariablesSolidity);
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import globalVariablesMarkdown from '!!raw-loader!./assets/markdown/global-variables.md';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import globalVariablesSolidity from '!!raw-loader!./assets/solidity/GlobalVariables.sol';
 
 const GlobalVariables: React.FC<{
   setCurrentPage: (page: string) => void;

@@ -35,6 +35,9 @@ pragma solidity ^0.8.7;
     });
     const [isDragging, setIsDragging] = useState(false);
 
+    // Track if code has changed since last database save
+    const [lastSavedToDatabase, setLastSavedToDatabase] = useState('');
+
     // Debounced localStorage save
     useEffect(() => {
         if (!lessonId) return;
@@ -52,6 +55,17 @@ pragma solidity ^0.8.7;
             onCodeChange(code);
         }
     }, [code, onCodeChange]);
+
+    // Save to database when component unmounts (user navigates away)
+    useEffect(() => {
+        return () => {
+            // Save to database if code has changed
+            if (code && code !== lastSavedToDatabase && user && token && lessonId) {
+                addToBatchSaveQueue(lessonId, code);
+                console.log('Added to batch queue on unmount:', lessonId);
+            }
+        };
+    }, [code, lastSavedToDatabase, user, token, lessonId]);
 
     useEffect(() => {
         if (!editorRef.current) return;
@@ -94,22 +108,19 @@ pragma solidity ^0.8.7;
 
     useEffect(() => {
         const loadCode = async () => {
-            // 1. First, prioritize initialCode if it's substantial (from raw import)
-            if (initialCode && initialCode.trim().length > 100) {
-                setCode(initialCode);
-                if (viewRef.current) {
-                    viewRef.current.dispatch({
-                        changes: { from: 0, to: viewRef.current.state.doc.length, insert: initialCode }
-                    });
+            // 1. First, check backend database for saved user code
+            if (user && token && lessonId) {
+                const savedCodeLoaded = await loadSavedCode();
+                if (savedCodeLoaded) {
+                    console.log('Prioritizing saved user code from database for lesson:', lessonId);
+                    return;
                 }
-                console.log('Loaded code from initialCode (raw import) for lesson:', lessonId);
-                return;
             }
 
-            // 2. Then, check localStorage
+            // 2. Then, check localStorage for temporary saves
             if (lessonId) {
                 const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
-                if (localCode) {
+                if (localCode && localCode.trim().length > 50) { // Only use localStorage if it has meaningful content
                     setCode(localCode);
                     if (viewRef.current) {
                         viewRef.current.dispatch({
@@ -121,15 +132,7 @@ pragma solidity ^0.8.7;
                 }
             }
 
-            // 3. Then, check backend database
-            if (user && token && lessonId) {
-                const savedCodeLoaded = await loadSavedCode();
-                if (savedCodeLoaded) {
-                    return;
-                }
-            }
-
-            // 4. Finally, use initialCode from props (fallback)
+            // 3. Finally, use initialCode as the default template for new users
             if (initialCode) {
                 setCode(initialCode);
                 if (viewRef.current) {
@@ -137,6 +140,7 @@ pragma solidity ^0.8.7;
                         changes: { from: 0, to: viewRef.current.state.doc.length, insert: initialCode }
                     });
                 }
+                console.log('Loaded default template code from initialCode for lesson:', lessonId);
             }
         };
 
@@ -147,8 +151,8 @@ pragma solidity ^0.8.7;
         if (!user || !token || !lessonId) return false;
 
         try {
-            const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
-            const response = await fetch(`${backendUrl}/api/code/load/${lessonId}`, {
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+            const response = await fetch(`${backendUrl}/api/code/${lessonId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -178,12 +182,13 @@ pragma solidity ^0.8.7;
         }
     };
 
-    const saveCode = async (testResults?: any, passed?: boolean) => {
+    const saveCodeToDatabase = async () => {
         if (!user || !token || !lessonId) return;
+        if (code === lastSavedToDatabase) return; // No changes
 
         try {
-            const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
-            const response = await fetch(`${backendUrl}/api/code/save`, {
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+            const response = await fetch(`${backendUrl}/api/code`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -191,20 +196,35 @@ pragma solidity ^0.8.7;
                 },
                 body: JSON.stringify({
                     lessonId,
-                    code,
-                    testResults,
-                    passed
+                    code
                 })
             });
 
             if (response.ok) {
-                console.log('Code saved successfully for lesson:', lessonId);
+                console.log('Code saved to database for lesson:', lessonId);
+                setLastSavedToDatabase(code);
             } else {
-                console.error('Failed to save code:', response.statusText);
+                console.error('Failed to save code to database:', response.statusText);
             }
         } catch (error) {
-            console.error('Error saving code:', error);
+            console.error('Error saving code to database:', error);
         }
+    };
+
+    // Queue for batch saves (shared across all editors)
+    const addToBatchSaveQueue = (lessonId: string, code: string) => {
+        if (!user || !token) return;
+
+        // Add to global queue
+        const saveItem = { lessonId, code, timestamp: Date.now() };
+        const existingQueue = JSON.parse(localStorage.getItem('batchSaveQueue') || '[]');
+
+        // Remove any existing save for this lesson (replace with latest)
+        const filteredQueue = existingQueue.filter((item: any) => item.lessonId !== lessonId);
+        filteredQueue.push(saveItem);
+
+        localStorage.setItem('batchSaveQueue', JSON.stringify(filteredQueue));
+        console.log('Added to batch save queue:', lessonId);
     };
 
     // Save editor height to localStorage
@@ -377,11 +397,13 @@ pragma solidity ^0.8.7;
         return () => workerRef.current?.terminate();
     }, [onCompile]);
 
-    const handleCompile = () => {
+    const handleCompile = async () => {
         if (!isCompilerReady || !workerRef.current) return;
         setIsLoading(true);
         const input = { language: 'Solidity', sources: { 'contract.sol': { content: code } }, settings: { outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } } } };
         workerRef.current.postMessage({ type: 'COMPILE', payload: { input } });
+
+        // No database save on compile - only localStorage auto-save handles this
     };
 
     const handleRunTests = async () => {
@@ -414,6 +436,8 @@ pragma solidity ^0.8.7;
                 const allTestsPassed = parsedTestCases.length > 0 && parsedTestCases.every(test => test.passed);
                 console.log('SolidityEditor: allTestsPassed', allTestsPassed); // Add this line
                 onAllTestsPassed(allTestsPassed); // Notify parent about overall test status
+
+                // No database save on test run - only localStorage auto-save handles this
             } else {
                 const errorMessage = data.output || data.error || 'An unknown error occurred.';
                 // The backend sends a string with '\n' for newlines, so we replace them with actual newlines

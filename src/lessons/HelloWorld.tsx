@@ -5,8 +5,10 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-import helloWorldMarkdown from './assets/markdown/hello-world.md';
-import helloWorldSolidity from './assets/solidity/HelloWorld.sol?raw';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import helloWorldMarkdown from '!!raw-loader!./assets/markdown/hello-world.md';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import helloWorldSolidity from '!!raw-loader!./assets/solidity/HelloWorld.sol';
 
 const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;

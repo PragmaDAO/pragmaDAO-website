@@ -5,8 +5,10 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-import understandingFunctionsMarkdown from './assets/markdown/understanding-functions.md';
-import understandingFunctionsSolidity from './assets/solidity/UnderstandingFunctions.sol?raw';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import understandingFunctionsMarkdown from '!!raw-loader!./assets/markdown/understanding-functions.md';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import understandingFunctionsSolidity from '!!raw-loader!./assets/solidity/UnderstandingFunctions.sol';
 
 const UnderstandingFunctions: React.FC<{
   setCurrentPage: (page: string) => void;

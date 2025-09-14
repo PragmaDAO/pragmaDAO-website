@@ -5,8 +5,10 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-import stateAndLocalVariablesMarkdown from './assets/markdown/state-and-local-variables.md';
-import stateAndLocalVariablesSolidity from './assets/solidity/StateAndLocalVariables.sol?raw';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import stateAndLocalVariablesMarkdown from '!!raw-loader!./assets/markdown/state-and-local-variables.md';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import stateAndLocalVariablesSolidity from '!!raw-loader!./assets/solidity/StateAndLocalVariables.sol';
 
 const StateAndLocalVariables: React.FC<{
   setCurrentPage: (page: string) => void;

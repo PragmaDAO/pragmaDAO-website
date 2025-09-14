@@ -11,6 +11,7 @@ import { lessons } from './lessons';
 import './index.css'; // Assuming global styles are here
 import { useAuth } from './context/AuthContext';
 import { SubscriptionProvider } from './hooks/useSubscription';
+import './utils/batchSaver'; // Initialize batch saver
 
 // --- STYLES COMPONENT ---
 const GlobalStyles = () => (

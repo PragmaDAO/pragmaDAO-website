@@ -133,4 +133,69 @@ router.get('/download', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/code/batch - Save multiple lessons in one request
+router.post('/batch', authenticateToken, async (req, res) => {
+  const { saves } = req.body; // Array of { lessonId, code, timestamp }
+  const userId = (req as any).user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  if (!Array.isArray(saves) || saves.length === 0) {
+    return res.status(400).json({ message: 'saves array is required and must not be empty' });
+  }
+
+  try {
+    console.log(`Processing batch save for user ${userId}: ${saves.length} lessons`);
+
+    const results = [];
+
+    for (const save of saves) {
+      const { lessonId, code } = save;
+
+      if (!lessonId || code === undefined) {
+        results.push({ lessonId, error: 'lessonId and code are required' });
+        continue;
+      }
+
+      try {
+        const userCode = await prisma.userCode.upsert({
+          where: {
+            userId_lessonId: {
+              userId,
+              lessonId,
+            },
+          },
+          update: {
+            code,
+          },
+          create: {
+            userId,
+            lessonId,
+            code,
+          },
+        });
+
+        results.push({ lessonId, success: true, id: userCode.id });
+        console.log(`Batch saved lesson ${lessonId} for user ${userId}`);
+      } catch (error) {
+        console.error(`Error saving lesson ${lessonId} for user ${userId}:`, error);
+        results.push({ lessonId, error: 'Database error' });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    console.log(`Batch save completed: ${successCount}/${saves.length} successful`);
+
+    res.status(200).json({
+      message: `Batch save completed: ${successCount}/${saves.length} successful`,
+      results
+    });
+  } catch (error) {
+    console.error('Error in batch save:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 export default router;
