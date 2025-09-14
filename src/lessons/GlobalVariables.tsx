@@ -8,6 +8,8 @@ import { lessons } from "../lessons"; // Import lessons array
 import globalVariablesMarkdown from './assets/markdown/global-variables.md';
 import globalVariablesSolidity from './assets/solidity/GlobalVariables.sol?raw';
 
+console.log('GlobalVariables.tsx - globalVariablesSolidity:', globalVariablesSolidity);
+
 const GlobalVariables: React.FC<{
   setCurrentPage: (page: string) => void;
   lessonId: string; // Add lessonId as a prop

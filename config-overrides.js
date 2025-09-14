@@ -23,6 +23,17 @@ module.exports = function override(config, env) {
     }),
   ]);
   config.ignoreWarnings = [/Failed to parse source map/];
+  config.module.rules.unshift(
+    {
+      test: /\.sol$/,
+      type: 'javascript/auto',
+      use: 'raw-loader',
+    },
+    {
+      test: /\.md$/,
+      use: 'raw-loader'
+    }
+  );
   config.module.rules.push({
     test: /\.m?js/,
     resolve: {
