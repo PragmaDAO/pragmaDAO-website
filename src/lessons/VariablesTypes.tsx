@@ -5,8 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-import variablesTypesMarkdown from './assets/markdown/understanding-variables-and-types.md';
-import variablesTypesSolidity from './assets/solidity/VariableTypes.sol?raw';
+import variablesTypesMarkdown from '!!raw-loader!./assets/markdown/understanding-variables-and-types.md';
+import variablesTypesSolidity from '!!raw-loader!./assets/solidity/VariableTypes.sol';
 
 const VariablesTypes: React.FC<{
   setCurrentPage: (page: string) => void;
