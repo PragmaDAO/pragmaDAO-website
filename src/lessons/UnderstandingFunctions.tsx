@@ -10,6 +10,9 @@ import understandingFunctionsMarkdown from '!!raw-loader!./assets/markdown/under
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import understandingFunctionsSolidity from '!!raw-loader!./assets/solidity/UnderstandingFunctions.sol';
 
+console.log('UnderstandingFunctions.tsx - Imported data:');
+console.log('Solidity length:', understandingFunctionsSolidity ? understandingFunctionsSolidity.length : 'undefined');
+
 const UnderstandingFunctions: React.FC<{
   setCurrentPage: (page: string) => void;
   lessonId: string; // Add lessonId as a prop

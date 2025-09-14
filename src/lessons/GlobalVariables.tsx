@@ -10,6 +10,11 @@ import globalVariablesMarkdown from '!!raw-loader!./assets/markdown/global-varia
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import globalVariablesSolidity from '!!raw-loader!./assets/solidity/GlobalVariables.sol';
 
+console.log('GlobalVariables.tsx - Imported data:');
+console.log('Markdown length:', globalVariablesMarkdown ? globalVariablesMarkdown.length : 'undefined');
+console.log('Solidity length:', globalVariablesSolidity ? globalVariablesSolidity.length : 'undefined');
+console.log('Solidity preview:', globalVariablesSolidity ? globalVariablesSolidity.substring(0, 100) + '...' : 'N/A');
+
 const GlobalVariables: React.FC<{
   setCurrentPage: (page: string) => void;
   lessonId: string; // Add lessonId as a prop

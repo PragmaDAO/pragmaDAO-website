@@ -10,6 +10,9 @@ import stateAndLocalVariablesMarkdown from '!!raw-loader!./assets/markdown/state
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import stateAndLocalVariablesSolidity from '!!raw-loader!./assets/solidity/StateAndLocalVariables.sol';
 
+console.log('StateAndLocalVariables.tsx - Imported data:');
+console.log('Solidity length:', stateAndLocalVariablesSolidity ? stateAndLocalVariablesSolidity.length : 'undefined');
+
 const StateAndLocalVariables: React.FC<{
   setCurrentPage: (page: string) => void;
   lessonId: string; // Add lessonId as a prop
