@@ -8,10 +8,6 @@ import { lessons } from "../lessons"; // Import lessons array
 import helloWorldMarkdown from './assets/markdown/hello-world.md';
 import helloWorldSolidity from './assets/solidity/HelloWorld.sol';
 
-console.log('HelloWorld.tsx - Imported data:');
-console.log('Markdown length:', helloWorldMarkdown ? helloWorldMarkdown.length : 'undefined');
-console.log('Solidity length:', helloWorldSolidity ? helloWorldSolidity.length : 'undefined');
-console.log('Solidity preview:', helloWorldSolidity ? helloWorldSolidity.substring(0, 100) + '...' : 'N/A');
 
 const HelloWorld: React.FC<{
   setCurrentPage: (page: string) => void;
