@@ -94,7 +94,19 @@ pragma solidity ^0.8.7;
 
     useEffect(() => {
         const loadCode = async () => {
-            // 1. First, check localStorage
+            // 1. First, prioritize initialCode if it's substantial (from raw import)
+            if (initialCode && initialCode.trim().length > 100) {
+                setCode(initialCode);
+                if (viewRef.current) {
+                    viewRef.current.dispatch({
+                        changes: { from: 0, to: viewRef.current.state.doc.length, insert: initialCode }
+                    });
+                }
+                console.log('Loaded code from initialCode (raw import) for lesson:', lessonId);
+                return;
+            }
+
+            // 2. Then, check localStorage
             if (lessonId) {
                 const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
                 if (localCode) {
@@ -109,7 +121,7 @@ pragma solidity ^0.8.7;
                 }
             }
 
-            // 2. Then, check backend database
+            // 3. Then, check backend database
             if (user && token && lessonId) {
                 const savedCodeLoaded = await loadSavedCode();
                 if (savedCodeLoaded) {
@@ -117,7 +129,7 @@ pragma solidity ^0.8.7;
                 }
             }
 
-            // 3. Finally, use initialCode from props
+            // 4. Finally, use initialCode from props (fallback)
             if (initialCode) {
                 setCode(initialCode);
                 if (viewRef.current) {
