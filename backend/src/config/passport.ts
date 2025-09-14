@@ -1,5 +1,6 @@
 import passport from 'passport';
 import { Strategy as GitHubStrategy } from 'passport-github2';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -16,6 +17,22 @@ passport.use(new GitHubStrategy({
     return done(null, profile);
   } catch (error) {
     console.error('GitHub strategy error:', error);
+    return done(error, null);
+  }
+}));
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  callbackURL: process.env.NODE_ENV === 'production'
+    ? "https://pragmadao-backend.onrender.com/api/auth/google/callback"
+    : "/api/auth/google/callback"
+}, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+  try {
+    console.log('Google profile:', profile);
+    return done(null, profile);
+  } catch (error) {
+    console.error('Google strategy error:', error);
     return done(error, null);
   }
 }));
