@@ -8,9 +8,11 @@ const prisma = new PrismaClient();
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID!,
   clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-  callbackURL: process.env.NODE_ENV === 'production'
-    ? "https://pragmadao-backend.onrender.com/api/auth/github/callback"
-    : "/api/auth/github/callback"
+  callbackURL: process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api/auth/github/callback`
+    : (process.env.NODE_ENV === 'production'
+      ? "https://pragmadao-backend.onrender.com/api/auth/github/callback"
+      : "/api/auth/github/callback")
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
   try {
     console.log('GitHub profile:', profile);
@@ -24,9 +26,11 @@ passport.use(new GitHubStrategy({
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: process.env.NODE_ENV === 'production'
-    ? "https://pragmadao-backend.onrender.com/api/auth/google/callback"
-    : "/api/auth/google/callback"
+  callbackURL: process.env.BACKEND_URL
+    ? `${process.env.BACKEND_URL}/api/auth/google/callback`
+    : (process.env.NODE_ENV === 'production'
+      ? "https://pragmadao-backend.onrender.com/api/auth/google/callback"
+      : "/api/auth/google/callback")
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
   try {
     console.log('Google profile:', profile);
