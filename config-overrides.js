@@ -23,26 +23,48 @@ module.exports = function override(config, env) {
     }),
   ]);
   config.ignoreWarnings = [/Failed to parse source map/];
+
+  // Add raw-loader rules directly to the beginning of rules array
+  config.module.rules.unshift(
+    {
+      test: /\.sol$/i,
+      use: 'raw-loader',
+      exclude: /node_modules/
+    },
+    {
+      test: /\.md$/i,
+      use: 'raw-loader',
+      exclude: /node_modules/
+    }
+  );
+
+  // Then modify existing rules to exclude .sol and .md files
   config.module.rules = config.module.rules.map(rule => {
     if (rule.oneOf) {
-      rule.oneOf.unshift(
-        {
-          test: /\.sol$/,
-          use: 'raw-loader',
-        },
-        {
-          test: /\.md$/,
-          use: 'raw-loader',
+      rule.oneOf.forEach(subRule => {
+        // Exclude from asset processing
+        if (subRule.type === 'asset/resource' || subRule.type === 'asset') {
+          if (!subRule.exclude) {
+            subRule.exclude = [];
+          }
+          if (Array.isArray(subRule.exclude)) {
+            subRule.exclude.push(/\.sol$/i, /\.md$/i);
+          } else {
+            subRule.exclude = [subRule.exclude, /\.sol$/i, /\.md$/i].filter(Boolean);
+          }
         }
-      );
-      // Find and modify the asset/resource rule to exclude .sol and .md
-      const assetRule = rule.oneOf.find(subRule => subRule.type === 'asset/resource');
-      if (assetRule) {
-        if (!assetRule.exclude) {
-          assetRule.exclude = [];
+        // Exclude from file-loader
+        if (subRule.loader && (subRule.loader.includes('file-loader') || subRule.loader.includes('url-loader'))) {
+          if (!subRule.exclude) {
+            subRule.exclude = [];
+          }
+          if (Array.isArray(subRule.exclude)) {
+            subRule.exclude.push(/\.sol$/i, /\.md$/i);
+          } else {
+            subRule.exclude = [subRule.exclude, /\.sol$/i, /\.md$/i].filter(Boolean);
+          }
         }
-        assetRule.exclude.push(/\.sol$/, /\.md$/);
-      }
+      });
     }
     return rule;
   });
