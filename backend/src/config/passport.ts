@@ -23,23 +23,28 @@ passport.use(new GitHubStrategy({
   }
 }));
 
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID!,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: process.env.BACKEND_URL
-    ? `${process.env.BACKEND_URL}/api/auth/google/callback`
-    : (process.env.NODE_ENV === 'production'
-      ? "https://pragmadao-backend.onrender.com/api/auth/google/callback"
-      : "/api/auth/google/callback")
-}, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
-  try {
-    console.log('Google profile:', profile);
-    return done(null, profile);
-  } catch (error) {
-    console.error('Google strategy error:', error);
-    return done(error, null);
-  }
-}));
+// Only configure Google OAuth if credentials are provided
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.BACKEND_URL
+      ? `${process.env.BACKEND_URL}/api/auth/google/callback`
+      : (process.env.NODE_ENV === 'production'
+        ? "https://pragmadao-backend.onrender.com/api/auth/google/callback"
+        : "/api/auth/google/callback")
+  }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+    try {
+      console.log('Google profile:', profile);
+      return done(null, profile);
+    } catch (error) {
+      console.error('Google strategy error:', error);
+      return done(error, null);
+    }
+  }));
+} else {
+  console.log('Google OAuth not configured - GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET required');
+}
 
 passport.serializeUser((user: any, done: (err: any, id?: any) => void) => {
   done(null, user.id || user);
