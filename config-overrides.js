@@ -23,18 +23,29 @@ module.exports = function override(config, env) {
     }),
   ]);
   config.ignoreWarnings = [/Failed to parse source map/];
-  config.module.rules.unshift(
-    {
-      test: /\.sol$/,
-      type: 'javascript/auto',
-      use: 'raw-loader',
-    },
-    {
-      test: /\.md$/,
-      type: 'javascript/auto',
-      use: 'raw-loader'
+  config.module.rules = config.module.rules.map(rule => {
+    if (rule.oneOf) {
+      rule.oneOf.unshift(
+        {
+          test: /\.sol$/,
+          use: 'raw-loader',
+        },
+        {
+          test: /\.md$/,
+          use: 'raw-loader',
+        }
+      );
+      // Find and modify the asset/resource rule to exclude .sol and .md
+      const assetRule = rule.oneOf.find(subRule => subRule.type === 'asset/resource');
+      if (assetRule) {
+        if (!assetRule.exclude) {
+          assetRule.exclude = [];
+        }
+        assetRule.exclude.push(/\.sol$/, /\.md$/);
+      }
     }
-  );
+    return rule;
+  });
   config.module.rules.push({
     test: /\.m?js/,
     resolve: {
