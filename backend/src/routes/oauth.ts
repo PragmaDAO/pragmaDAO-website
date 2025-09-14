@@ -54,15 +54,19 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login` }),
   async (req: Request, res: Response) => {
     try {
+      console.log('Google OAuth callback - full request user:', JSON.stringify(req.user, null, 2));
       const googleUser = req.user as any;
 
       if (!googleUser) {
+        console.log('No Google user found in request');
         return res.redirect(`${FRONTEND_URL}/login?error=oauth_failed`);
       }
 
       // Handle different Google profile structures
       const email = googleUser.emails?.[0]?.value || googleUser.email || googleUser._json?.email;
       const username = googleUser.displayName || googleUser.name?.givenName || googleUser._json?.name || email?.split('@')[0];
+
+      console.log('Extracted email:', email, 'username:', username);
 
       if (!email) {
         console.error('No email found in Google profile:', googleUser);
