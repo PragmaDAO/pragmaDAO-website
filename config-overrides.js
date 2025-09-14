@@ -31,6 +31,7 @@ module.exports = function override(config, env) {
     },
     {
       test: /\.md$/,
+      type: 'javascript/auto',
       use: 'raw-loader'
     }
   );

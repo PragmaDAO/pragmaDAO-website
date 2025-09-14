@@ -10,6 +10,7 @@ import globalVariablesSolidity from './assets/solidity/GlobalVariables.sol';
 
 console.log('GlobalVariables.tsx - Imported data:');
 console.log('Markdown length:', globalVariablesMarkdown ? globalVariablesMarkdown.length : 'undefined');
+console.log('Markdown preview:', globalVariablesMarkdown ? globalVariablesMarkdown.substring(0, 100) + '...' : 'N/A');
 console.log('Solidity length:', globalVariablesSolidity ? globalVariablesSolidity.length : 'undefined');
 console.log('Solidity preview:', globalVariablesSolidity ? globalVariablesSolidity.substring(0, 100) + '...' : 'N/A');
 
