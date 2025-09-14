@@ -60,15 +60,24 @@ router.get('/google/callback',
         return res.redirect(`${FRONTEND_URL}/login?error=oauth_failed`);
       }
 
+      // Handle different Google profile structures
+      const email = googleUser.emails?.[0]?.value || googleUser.email || googleUser._json?.email;
+      const username = googleUser.displayName || googleUser.name?.givenName || googleUser._json?.name || email?.split('@')[0];
+
+      if (!email) {
+        console.error('No email found in Google profile:', googleUser);
+        return res.redirect(`${FRONTEND_URL}/login?error=oauth_no_email`);
+      }
+
       let user = await prisma.user.findUnique({
-        where: { email: googleUser.emails[0].value }
+        where: { email: email }
       });
 
       if (!user) {
         user = await prisma.user.create({
           data: {
-            username: googleUser.displayName || googleUser.name.givenName,
-            email: googleUser.emails[0].value,
+            username: username,
+            email: email,
           }
         });
       }
