@@ -13,6 +13,10 @@ const Lesson: React.FC<LessonProps> = ({ markdownContent }) => {
   const [activeHint, setActiveHint] = useState<number | null>(null);
   const [checkedItems, setCheckedItems] = useState<boolean[]>([]);
 
+  console.log('Lesson.tsx - Received markdownContent:', markdownContent ? `${markdownContent.length} chars` : 'undefined/empty');
+  console.log('Lesson.tsx - Content type:', typeof markdownContent);
+  console.log('Lesson.tsx - Content preview:', markdownContent ? markdownContent.substring(0, 100) + '...' : 'N/A');
+
   useEffect(() => {
     if (markdownContent) {
         const parts = markdownContent.split('### Instructions');
