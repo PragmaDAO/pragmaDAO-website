@@ -1,7 +1,12 @@
 import React from 'react';
 import SolidityEditor from '../components/SolidityEditor';
 import { FeatureCardProps, StepCardProps } from '../types';
-import helloWorldSolidity from '../lessons/assets/solidity/HelloWorld.sol?raw';
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import helloWorldSolidity from '!!raw-loader!../lessons/assets/solidity/HelloWorld.sol';
+
+console.log('HomePage.tsx - Imported HelloWorld solidity:');
+console.log('Length:', helloWorldSolidity ? helloWorldSolidity.length : 'undefined');
+console.log('Preview:', helloWorldSolidity ? helloWorldSolidity.substring(0, 100) + '...' : 'N/A');
 
 const Hero: React.FC<{ setCurrentPage: (page: string) => void }> = ({ setCurrentPage }) => (
     <section id="hero" className="container mx-auto px-6 text-center">
