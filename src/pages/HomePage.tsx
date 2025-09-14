@@ -1,8 +1,7 @@
 import React from 'react';
 import SolidityEditor from '../components/SolidityEditor';
 import { FeatureCardProps, StepCardProps } from '../types';
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import helloWorldSolidity from '!!raw-loader!../lessons/assets/solidity/HelloWorld.sol';
+import helloWorldSolidity from '../lessons/assets/solidity/HelloWorld.sol';
 
 console.log('HomePage.tsx - Imported HelloWorld solidity:');
 console.log('Length:', helloWorldSolidity ? helloWorldSolidity.length : 'undefined');

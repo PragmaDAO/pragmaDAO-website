@@ -5,10 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import helloWorldMarkdown from '!!raw-loader!./assets/markdown/hello-world.md';
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import helloWorldSolidity from '!!raw-loader!./assets/solidity/HelloWorld.sol';
+import helloWorldMarkdown from './assets/markdown/hello-world.md';
+import helloWorldSolidity from './assets/solidity/HelloWorld.sol';
 
 console.log('HelloWorld.tsx - Imported data:');
 console.log('Markdown length:', helloWorldMarkdown ? helloWorldMarkdown.length : 'undefined');

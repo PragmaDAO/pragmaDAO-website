@@ -5,10 +5,8 @@ import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import stateAndLocalVariablesMarkdown from '!!raw-loader!./assets/markdown/state-and-local-variables.md';
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import stateAndLocalVariablesSolidity from '!!raw-loader!./assets/solidity/StateAndLocalVariables.sol';
+import stateAndLocalVariablesMarkdown from './assets/markdown/state-and-local-variables.md';
+import stateAndLocalVariablesSolidity from './assets/solidity/StateAndLocalVariables.sol';
 
 console.log('StateAndLocalVariables.tsx - Imported data:');
 console.log('Solidity length:', stateAndLocalVariablesSolidity ? stateAndLocalVariablesSolidity.length : 'undefined');
