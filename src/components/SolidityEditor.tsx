@@ -132,7 +132,7 @@ pragma solidity ^0.8.7;
                 const localCode = localStorage.getItem(`lesson_code_${lessonId}`);
                 console.log('LocalStorage code:', localCode ? `${localCode.length} chars` : 'none');
 
-                if (localCode && localCode.trim().length > 50) { // Only use localStorage if it has meaningful content
+                if (localCode && localCode.trim().length > 200) { // Only use localStorage if it has meaningful content (raised from 50)
                     setCode(localCode);
                     if (viewRef.current) {
                         viewRef.current.dispatch({
