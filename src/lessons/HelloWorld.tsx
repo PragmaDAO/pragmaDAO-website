@@ -24,6 +24,14 @@ const HelloWorld: React.FC<{
   const [isLessonCompleted, setIsLessonCompleted] = useState(false); // New state for completion
   const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
 
+  // Clear problematic localStorage for solidity-101 lesson to ensure initialCode is used
+  useEffect(() => {
+    if (lessonId === 'solidity-101') {
+      localStorage.removeItem('lesson_code_solidity-101');
+      console.log('🧹 Cleared localStorage for solidity-101 to force initialCode usage');
+    }
+  }, [lessonId]);
+
   const handleToggleLessonCompletion = useCallback(async (completed: boolean) => {
     if (!user || !token) {
       setCurrentPage('login');
