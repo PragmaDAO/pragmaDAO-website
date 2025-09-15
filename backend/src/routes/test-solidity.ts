@@ -338,10 +338,53 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const importRegex = new RegExp(`import "([^"]*${contractName}\\.sol)";`, 'g');
         const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol";`);
 
-        console.log('🐳 Using Docker-based Foundry test execution...');
+        console.log('🔨 Using pre-installed Foundry in container...');
 
-        // Use Docker-based Foundry testing
-        const result = await runFoundryInDocker(code, updatedTestCode, contractName);
+        // Create temporary directory for test execution
+        const tempDir = await mkdtempAsync(path.join(require('os').tmpdir(), 'pragma-forge-'));
+        let result;
+
+        try {
+            // Initialize forge project
+            await execCommand('forge init --no-git', tempDir);
+
+            const tempSrcDir = path.join(tempDir, 'src');
+            const tempTestDir = path.join(tempDir, 'test');
+
+            // Write user contract
+            await writeFileAsync(path.join(tempSrcDir, `${contractName}.sol`), code);
+
+            // Write test file
+            await writeFileAsync(path.join(tempTestDir, `${contractName}.t.sol`), updatedTestCode);
+
+            // Configure foundry.toml with user_contract remapping
+            const foundryTomlContent = `[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = ["user_contract/=src/"]`;
+            await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryTomlContent);
+
+            // Run tests
+            const { stdout: testOutput } = await execCommand(`forge test --match-path "*${contractName}.t.sol" -vvv`, tempDir);
+            const passed = testOutput.includes('1 passed') || (testOutput.includes('passed') && !testOutput.includes('0 passed'));
+
+            result = {
+                success: true,
+                output: testOutput,
+                passed,
+                method: 'forge-native'
+            };
+
+            // Clean up
+            await rmAsync(tempDir, { recursive: true, force: true });
+        } catch (error: any) {
+            // Clean up on error
+            if (tempDir) {
+                await rmAsync(tempDir, { recursive: true, force: true });
+            }
+            throw error;
+        }
 
         // Store the submission
         const userId = (req as any).user?.id;
