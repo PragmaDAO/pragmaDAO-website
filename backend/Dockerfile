@@ -29,6 +29,9 @@ WORKDIR /app
 # Copy package files and npm configuration
 COPY package*.json .npmrc ./
 
+# Copy Prisma schema (needed for postinstall script)
+COPY prisma ./prisma/
+
 # Install Node.js dependencies (including dev for building)
 RUN npm install
 
