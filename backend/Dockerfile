@@ -20,6 +20,9 @@ RUN curl -L https://foundry.paradigm.xyz | bash
 ENV PATH="/root/.foundry/bin:$PATH"
 RUN foundryup
 
+# Set execute permissions on Foundry binaries
+RUN chmod +x /root/.foundry/bin/*
+
 # Verify Foundry installation
 RUN forge --version
 
