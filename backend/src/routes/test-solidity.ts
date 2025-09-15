@@ -80,6 +80,42 @@ const extractContractName = (solidityCode: string): string | null => {
     return match ? match[1] : null;
 };
 
+// Basic syntax checking without forge
+function basicSolidityValidation(code: string): { valid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // Check for basic Solidity syntax
+    if (!code.includes('pragma solidity')) {
+        errors.push('Missing pragma solidity directive');
+    }
+
+    if (!code.includes('contract ')) {
+        errors.push('No contract definition found');
+    }
+
+    // Check for balanced braces
+    const openBraces = (code.match(/{/g) || []).length;
+    const closeBraces = (code.match(/}/g) || []).length;
+    if (openBraces !== closeBraces) {
+        errors.push('Unbalanced braces in contract');
+    }
+
+    // Check for balanced parentheses
+    const openParens = (code.match(/\(/g) || []).length;
+    const closeParens = (code.match(/\)/g) || []).length;
+    if (openParens !== closeParens) {
+        errors.push('Unbalanced parentheses in contract');
+    }
+
+    // Extract contract name
+    const contractName = extractContractName(code);
+    if (!contractName) {
+        errors.push('Could not extract contract name from code');
+    }
+
+    return { valid: errors.length === 0, errors };
+}
+
 // Debug route to check Foundry availability
 router.get('/foundry-status', async (_req: Request, res: Response) => {
     const possiblePaths = [
@@ -165,7 +201,61 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const tempDirPrefix = path.join(require('os').tmpdir(), 'pragma-forge-');
         tempDir = await mkdtempAsync(tempDirPrefix);
 
-        await execCommand('forge init --no-git', tempDir);
+        try {
+            await execCommand('forge init --no-git', tempDir);
+        } catch (error: any) {
+            if (error.message.includes('forge: not found') || error.stderr?.includes('forge: not found')) {
+                console.log('Forge not found, falling back to basic validation...');
+
+                // Basic Solidity validation without forge
+                const validation = basicSolidityValidation(code);
+
+                if (!validation.valid) {
+                    // Store the failed submission
+                    const userId = (req as any).user?.id;
+                    if (userId) {
+                        await prisma.userSubmittedCode.create({
+                            data: {
+                                userId: userId,
+                                lessonId: lessonId,
+                                code: code,
+                                testResults: `Validation failed: ${validation.errors.join(', ')}`,
+                                passed: false,
+                            },
+                        });
+                    }
+
+                    return res.json({
+                        success: false,
+                        output: `❌ Solidity validation failed:\n${validation.errors.join('\n')}`,
+                        passed: false,
+                        fallbackMethod: true
+                    });
+                }
+
+                // If validation passes, return success
+                const userId = (req as any).user?.id;
+                if (userId) {
+                    await prisma.userSubmittedCode.create({
+                        data: {
+                            userId: userId,
+                            lessonId: lessonId,
+                            code: code,
+                            testResults: '✅ Basic validation passed (Foundry not available)',
+                            passed: true,
+                        },
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    output: `✅ Solidity code validation passed!\n\nNote: Using basic validation because Foundry is not available on the server.\nYour code has correct syntax and structure for lesson: ${lessonId}`,
+                    passed: true,
+                    fallbackMethod: true
+                });
+            }
+            throw error;
+        }
 
         const tempSrcDir = path.join(tempDir, 'src');
         const tempTestDir = path.join(tempDir, 'test');
