@@ -105,6 +105,76 @@ const extractContractName = (solidityCode: string): string | null => {
 };
 
 
+// Debug route to check Docker availability
+router.get('/docker-status', async (_req: Request, res: Response) => {
+    const status: any = {
+        environment: {
+            NODE_ENV: process.env.NODE_ENV,
+            platform: process.platform,
+            arch: process.arch
+        },
+        docker: {}
+    };
+
+    // Check if docker command exists
+    try {
+        const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+            exec('which docker', (error, stdout, stderr) => {
+                if (error) {
+                    reject({ message: error.message, stdout, stderr });
+                } else {
+                    resolve({ stdout, stderr });
+                }
+            });
+        });
+        status.docker.path = stdout.trim();
+        status.docker.available = true;
+    } catch (e: any) {
+        status.docker.available = false;
+        status.docker.error = e.message;
+    }
+
+    // Try to get docker version
+    if (status.docker.available) {
+        try {
+            const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+                exec('docker --version', (error, stdout, stderr) => {
+                    if (error) {
+                        reject({ message: error.message, stdout, stderr });
+                    } else {
+                        resolve({ stdout, stderr });
+                    }
+                });
+            });
+            status.docker.version = stdout.trim();
+        } catch (e: any) {
+            status.docker.versionError = e.message;
+        }
+    }
+
+    // Test if we can run a simple docker command
+    if (status.docker.available) {
+        try {
+            const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+                exec('docker run --rm hello-world', { timeout: 10000 }, (error, stdout, stderr) => {
+                    if (error) {
+                        reject({ message: error.message, stdout, stderr });
+                    } else {
+                        resolve({ stdout, stderr });
+                    }
+                });
+            });
+            status.docker.canRun = true;
+            status.docker.testOutput = stdout.substring(0, 200) + '...';
+        } catch (e: any) {
+            status.docker.canRun = false;
+            status.docker.runError = e.message;
+        }
+    }
+
+    res.json(status);
+});
+
 // Debug route to check Foundry availability
 router.get('/foundry-status', async (_req: Request, res: Response) => {
     const possiblePaths = [
