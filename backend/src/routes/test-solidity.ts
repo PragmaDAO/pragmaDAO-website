@@ -154,6 +154,69 @@ router.get('/foundry-status', async (_req: Request, res: Response) => {
     res.json(status);
 });
 
+// Import the external Docker-based testing function
+async function runFoundryInDocker(userCode: string, testCode: string, contractName: string): Promise<{ success: boolean; output: string; passed: boolean }> {
+    const tempDir = await mkdtempAsync(path.join(require('os').tmpdir(), 'pragma-docker-'));
+
+    try {
+        // Create project structure
+        const srcDir = path.join(tempDir, 'src');
+        const testDir = path.join(tempDir, 'test');
+
+        await mkdirAsync(srcDir, { recursive: true });
+        await mkdirAsync(testDir, { recursive: true });
+
+        // Write foundry.toml
+        const foundryToml = `[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = ["user_contract/=src/"]
+
+[rpc_endpoints]
+mainnet = "https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY"
+`;
+        await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryToml);
+
+        // Write user contract
+        await writeFileAsync(path.join(srcDir, `${contractName}.sol`), userCode);
+
+        // Write test file
+        await writeFileAsync(path.join(testDir, `${contractName}.t.sol`), testCode);
+
+        // Try using Docker to run forge test
+        const dockerCommand = `docker run --rm -v "${tempDir}:/workspace" -w /workspace ghcr.io/foundry-rs/foundry:latest forge test -vvv`;
+
+        const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+            exec(dockerCommand, { timeout: 30000 }, (error, stdout, stderr) => {
+                if (error) {
+                    reject({ message: error.message, stdout, stderr });
+                } else {
+                    resolve({ stdout, stderr });
+                }
+            });
+        });
+
+        const passed = stdout.includes('1 passed') && !stdout.includes('0 failed');
+
+        return {
+            success: true,
+            output: stdout,
+            passed
+        };
+
+    } catch (error: any) {
+        console.log('Docker forge test failed:', error);
+        return {
+            success: false,
+            output: `Docker test failed: ${error.message}\n\nSTDOUT: ${error.stdout}\nSTDERR: ${error.stderr}`,
+            passed: false
+        };
+    } finally {
+        await rmAsync(tempDir, { recursive: true, force: true });
+    }
+}
+
 router.post('/test-solidity', async (req: Request, res: Response) => {
     let { code, lessonId } = req.body;
 
@@ -185,174 +248,57 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         return res.status(400).json({ error: `No test file found for lesson: ${lessonId} at ${originalTestFilePath}` });
     }
 
-    let tempDir: string | undefined;
     try {
-        const tempDirPrefix = path.join(require('os').tmpdir(), 'pragma-forge-');
-        tempDir = await mkdtempAsync(tempDirPrefix);
-
-        // Ensure forge is available before proceeding
-        try {
-            // Try to install Foundry if not available
-            const { ensureFoundryAtRuntime } = require('../../ensure-foundry-runtime');
-            await ensureFoundryAtRuntime();
-        } catch (foundryError) {
-            console.warn('Could not ensure Foundry installation:', foundryError);
-        }
-
-        try {
-            await execCommand('forge init --no-git', tempDir);
-        } catch (error: any) {
-            console.log('Error caught during forge init:', {
-                message: error.message,
-                stderr: error.stderr,
-                stdout: error.stdout
-            });
-
-            // If forge is not found, this is a critical error
-            if (error.message.includes('forge: not found') ||
-                error.stderr?.includes('forge: not found') ||
-                error.message.includes('forge: command not found') ||
-                error.message.includes('/bin/sh: 1: forge: not found')) {
-
-                console.error('❌ CRITICAL: Foundry/forge is not available on the server');
-
-                return res.status(500).json({
-                    success: false,
-                    error: 'Foundry is not properly installed on the server. Please contact support.',
-                    details: 'The Solidity testing environment requires Foundry to be installed and accessible.',
-                    output: error.message
-                });
-            }
-
-            throw error;
-        }
-
-        const tempSrcDir = path.join(tempDir, 'src');
-        const tempTestDir = path.join(tempDir, 'test');
-
-        // Explicitly set src and test paths in foundry.toml
-        const foundryTomlPath = path.join(tempDir, 'foundry.toml');
-        let foundryTomlContent = await readFileAsync(foundryTomlPath, 'utf8');
-        foundryTomlContent = foundryTomlContent.replace(
-            /src = ".*"/g, 'src = "src"'
-        );
-        // Ensure 'test = "test"' is present in the [profile.default] section
-        if (!foundryTomlContent.includes('test = "test"')) {
-            foundryTomlContent = foundryTomlContent.replace(
-                /(\n\[profile.default\]\n)/,
-                '$1test = "test"\n'
-            );
-        }
-        // Add remapping for user contract with trailing slash
-        foundryTomlContent += `\nremappings = ["user_contract/=${tempSrcDir}/"]`;
-        await writeFileAsync(foundryTomlPath, foundryTomlContent);
-
-        // Ensure src and test directories exist
-        await mkdirAsync(tempSrcDir, { recursive: true });
-        await mkdirAsync(tempTestDir, { recursive: true });
-
-        console.log('tempSrcDir exists: ' + fs.existsSync(tempSrcDir));
-        console.log('tempTestDir exists: ' + fs.existsSync(tempTestDir));
-
         // Extract contract name from user's code
         const contractName = extractContractName(code);
         if (!contractName) {
             return res.status(400).json({ error: 'Could not extract contract name from provided Solidity code.' });
         }
-        console.log('Extracted contract name:', contractName);
 
-        const tempContractPath = path.join(tempSrcDir, `${contractName}.sol`);
-        await writeFileAsync(tempContractPath, code);
-
-        // Log forge config to debug src path
-        console.log('\n--- Forge Config Output ---');
-        try {
-            const { stdout: forgeConfigOutput } = await execCommand('forge config', tempDir);
-            console.log(forgeConfigOutput);
-        } catch (configErr: any) {
-            console.error('Error running forge config:', configErr.message);
-        }
-        console.log('--- End Forge Config Output ---\n');
-
+        // Read the original test file
         const originalTestCode = await readFileAsync(originalTestFilePath, 'utf8');
-        // Normalize line endings to Unix style to ensure consistent regex matching
         const normalizedOriginalTestCode = originalTestCode.replace(/\r\n/g, '\n');
 
-        console.log('\n--- Original Test Code Content ---');
-        console.log(normalizedOriginalTestCode);
-        console.log('--- End Original Test Code Content ---\n');
-
-        // This regex finds the import statement for the contract under test
-        // and replaces it with the path to the user's temporary contract file.
-        // Replace any import path that references the contract with user_contract/ remapping
+        // Replace import paths with user_contract/ remapping
         const importRegex = new RegExp(`import "([^"]*${contractName}\\.sol)";`, 'g');
         const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol";`);
 
-        console.log('\n--- Updated Test Code Content (after replace) ---');
-        console.log(updatedTestCode);
-        console.log(`--- End Updated Test Code Content (after replace)---\n`);
+        console.log('🐳 Using Docker-based Foundry test execution...');
 
-        const tempTestPath = path.join(tempTestDir, lessonMapping.testFile);
-        console.log('Updated Test Code (before writing to file): ' + updatedTestCode);
-        await writeFileAsync(tempTestPath, updatedTestCode);
+        // Use Docker-based Foundry testing
+        const result = await runFoundryInDocker(code, updatedTestCode, contractName);
 
-        // --- DEEPER DEBUGGING LOGS ---
-        console.log('--- Debugging Test Run for lessonId: ' + lessonId + ' ---');
-        console.log('Temporary directory: ' + tempDir);
-        console.log('\n--- Temporary Contract File Content ---');
-        console.log(fs.readFileSync(tempContractPath, 'utf8'));
-        console.log('\n--- Temporary Test File Content ---');
-        console.log(fs.readFileSync(tempTestPath, 'utf8'));
-        console.log('\n--- Temporary foundry.toml Content (Modified) ---');
-        console.log(fs.readFileSync(path.join(tempDir, 'foundry.toml'), 'utf8'));
-        console.log('\n--- Running Forge Test... ---');
-        // --- END DEEPER DEBUGGING LOGS ---
-
-        const { stdout: testOutput } = await execCommand(`forge test --match-path "*${lessonMapping.testFile}" -vvv`, tempDir);
-
-        // Determine if tests passed based on output (simple check for now)
-        const passed = testOutput.includes('1 passed') && !testOutput.includes('0 failed');
-
-        // Assuming userId is available from authentication middleware
-        const userId = (req as any).user?.id; // Cast req to any to access req.user
-
+        // Store the submission
+        const userId = (req as any).user?.id;
         if (userId) {
             await prisma.userSubmittedCode.create({
                 data: {
                     userId: userId,
                     lessonId: lessonId,
                     code: code,
-                    testResults: testOutput, // Store the full output
-                    passed: passed,
+                    testResults: result.output,
+                    passed: result.passed,
                 },
             });
         } else {
             console.warn('User ID not found in request. Code submission not saved.');
         }
 
-        console.log('Forge Test Output (backend):', testOutput);
+        console.log('Docker Forge Test Output (backend):', result.output);
         res.json({
-            success: true,
-            output: testOutput,
-            passed: passed, // Include passed status in response
+            success: result.success,
+            output: result.output,
+            passed: result.passed,
+            method: 'docker'
         });
 
     } catch (err: any) {
         console.error('Error processing Solidity test:', err);
-        const fullError = `Message: ${err.message}\n\nSTDOUT:\n${err.stdout}\n\nSTDERR:\n${err.stderr}`;
         res.status(500).json({
             success: false,
-            output: fullError,
-            error: fullError,
+            output: `Error: ${err.message}`,
+            error: err.message,
         });
-    } finally {
-        if (tempDir) {
-            try {
-                await rmAsync(tempDir, { recursive: true, force: true });
-            } catch (cleanupError) {
-                console.error(`Failed to clean up temporary directory ${tempDir}:`, cleanupError);
-            }
-        }
     }
 });
 

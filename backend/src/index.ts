@@ -4,6 +4,7 @@ dotenv.config();
 import express, { Express, Request, Response } from 'express';
 import authRouter from './routes/auth';
 import testSolidityRouter from './routes/test-solidity';
+import testSolidityExternalRouter from './routes/test-solidity-external';
 import lessonContentRouter from './routes/lesson-content';
 import progressRouter from './routes/progress';
 import oauthRouter from './routes/oauth'; // Import the new oauth router
@@ -40,6 +41,7 @@ app.use(passport.session());
 // Use the authentication router
 app.use('/api/auth', authRouter);
 app.use('/api', testSolidityRouter);
+app.use('/api', testSolidityExternalRouter);
 app.use('/api', lessonContentRouter);
 app.use('/api', progressRouter);
 app.use('/api/auth', oauthRouter); // Use the new oauth router
@@ -61,21 +63,13 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World from the backend!');
 });
 
-// Ensure Foundry is installed before starting the server
+// Start the server directly since we're using Docker-based Foundry testing
 async function startServer() {
-  console.log('🔧 Ensuring Foundry is available...');
-
-  const { ensureFoundryAtRuntime } = require('../ensure-foundry-runtime');
-  const foundryAvailable = await ensureFoundryAtRuntime();
-
-  if (foundryAvailable) {
-    console.log('✅ Foundry is ready for Solidity testing');
-  } else {
-    console.log('⚠️ Warning: Foundry installation failed, some features may not work');
-  }
+  console.log('🚀 Starting server with Docker-based Foundry testing...');
 
   app.listen(port, () => {
     console.log(`Backend server is running at http://localhost:${port}`);
+    console.log('🐳 Solidity testing will use Docker-based Foundry execution');
   });
 }
 
