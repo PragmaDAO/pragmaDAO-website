@@ -17,7 +17,13 @@ const mkdirAsync = promisify(fs.mkdir);
 
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise((resolve, reject) => {
-        exec(command, { cwd }, (error, stdout, stderr) => {
+        // Ensure Foundry is in the PATH
+        const env = {
+            ...process.env,
+            PATH: `${process.env.PATH}:${process.env.HOME}/.foundry/bin:/usr/local/bin:/usr/bin:/bin`
+        };
+
+        exec(command, { cwd, env }, (error, stdout, stderr) => {
             if (error) {
                 reject({ message: error.message, stdout, stderr });
             } else {
@@ -69,7 +75,17 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const tempDirPrefix = path.join(require('os').tmpdir(), 'pragma-forge-');
         tempDir = await mkdtempAsync(tempDirPrefix);
 
-        await execCommand('forge init --no-git', tempDir);
+        try {
+            await execCommand('forge init --no-git', tempDir);
+        } catch (error: any) {
+            if (error.message.includes('forge: not found')) {
+                return res.status(500).json({
+                    error: 'Foundry (forge) is not installed on the server. Please contact support.',
+                    details: 'The Solidity testing environment requires Foundry to be installed.'
+                });
+            }
+            throw error;
+        }
 
         const tempSrcDir = path.join(tempDir, 'src');
         const tempTestDir = path.join(tempDir, 'test');

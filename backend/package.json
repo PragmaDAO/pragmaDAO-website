@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "npx ts-node src/index.ts",
-    "build": "tsc",
+    "build": "npm run install-foundry && tsc",
     "start": "node dist/index.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "install-foundry": "./install-foundry.sh"
   },
   "keywords": [],
   "author": "",
