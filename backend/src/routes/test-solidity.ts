@@ -16,7 +16,7 @@ const rmAsync = promisify(fs.rm);
 const mkdirAsync = promisify(fs.mkdir);
 
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         // Try to find forge in common locations
         const possiblePaths = [
             `${process.env.HOME}/.foundry/bin`,
@@ -46,10 +46,34 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
                 try {
                     require('fs').accessSync(forgePath, require('fs').constants.F_OK);
                     finalCommand = command.replace('forge ', `${forgePath} `);
-                    console.log(`Using forge at: ${forgePath}`);
+                    console.log(`✅ Using forge at: ${forgePath}`);
                     break;
                 } catch (e) {
                     // Continue to next path
+                }
+            }
+
+            // If we couldn't find forge with absolute path, try installing it now
+            if (finalCommand === command) {
+                console.log('⚠️ Forge not found in any location, attempting installation...');
+                try {
+                    const { ensureFoundryAtRuntime } = require('../../ensure-foundry-runtime');
+                    await ensureFoundryAtRuntime();
+
+                    // Try again to find forge after installation
+                    for (const path of possiblePaths) {
+                        const forgePath = `${path}/forge`;
+                        try {
+                            require('fs').accessSync(forgePath, require('fs').constants.F_OK);
+                            finalCommand = command.replace('forge ', `${forgePath} `);
+                            console.log(`✅ Using newly installed forge at: ${forgePath}`);
+                            break;
+                        } catch (e) {
+                            // Continue to next path
+                        }
+                    }
+                } catch (installError) {
+                    console.error('❌ Failed to install Foundry:', installError);
                 }
             }
         }
@@ -165,6 +189,15 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
     try {
         const tempDirPrefix = path.join(require('os').tmpdir(), 'pragma-forge-');
         tempDir = await mkdtempAsync(tempDirPrefix);
+
+        // Ensure forge is available before proceeding
+        try {
+            // Try to install Foundry if not available
+            const { ensureFoundryAtRuntime } = require('../../ensure-foundry-runtime');
+            await ensureFoundryAtRuntime();
+        } catch (foundryError) {
+            console.warn('Could not ensure Foundry installation:', foundryError);
+        }
 
         try {
             await execCommand('forge init --no-git', tempDir);
