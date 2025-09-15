@@ -23,6 +23,9 @@ RUN foundryup
 # Verify Foundry installation
 RUN forge --version
 
+# Ensure Foundry is available in runtime PATH
+ENV PATH="/root/.foundry/bin:$PATH"
+
 # Set working directory
 WORKDIR /app
 

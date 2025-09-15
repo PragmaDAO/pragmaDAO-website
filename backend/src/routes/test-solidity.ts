@@ -17,15 +17,16 @@ const mkdirAsync = promisify(fs.mkdir);
 
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise(async (resolve, reject) => {
-        // Try to find forge in common locations
+        // Try to find forge in common locations (including Docker container paths)
         const possiblePaths = [
+            '/root/.foundry/bin',           // Docker container default
             `${process.env.HOME}/.foundry/bin`,
             '/tmp/.foundry/bin',
             '/opt/render/.foundry/bin',
             '/usr/local/bin',
             '/usr/bin',
             '/bin',
-            '/app/.foundry/bin'  // Common in containerized environments
+            '/app/.foundry/bin'
         ];
 
         // Also check for dynamic /tmp/foundry-* directories
