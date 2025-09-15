@@ -26,8 +26,8 @@ RUN forge --version
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files and npm configuration
+COPY package*.json .npmrc ./
 
 # Install Node.js dependencies (including dev for building)
 RUN npm install
