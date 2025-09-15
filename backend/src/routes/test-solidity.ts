@@ -204,8 +204,19 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         try {
             await execCommand('forge init --no-git', tempDir);
         } catch (error: any) {
-            if (error.message.includes('forge: not found') || error.stderr?.includes('forge: not found')) {
-                console.log('Forge not found, falling back to basic validation...');
+            console.log('Error caught:', {
+                message: error.message,
+                stderr: error.stderr,
+                stdout: error.stdout
+            });
+
+            const isForgeNotFound = error.message.includes('forge: not found') ||
+                error.stderr?.includes('forge: not found') ||
+                error.message.includes('forge: command not found') ||
+                error.message.includes('/bin/sh: 1: forge: not found');
+
+            if (isForgeNotFound) {
+                console.log('✅ Forge not found detected, falling back to basic validation...');
 
                 // Basic Solidity validation without forge
                 const validation = basicSolidityValidation(code);
