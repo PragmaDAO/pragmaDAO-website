@@ -105,6 +105,11 @@ const extractContractName = (solidityCode: string): string | null => {
 };
 
 
+// Simple test route
+router.get('/test', (_req: Request, res: Response) => {
+    res.json({ message: 'Test route working', timestamp: new Date().toISOString() });
+});
+
 // Debug route to check Docker availability
 router.get('/docker-status', async (_req: Request, res: Response) => {
     const status: any = {
