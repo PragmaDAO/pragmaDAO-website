@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "npx ts-node src/index.ts",
     "build": "npm run install-foundry && tsc",
-    "start": "node dist/index.js",
-    "postinstall": "prisma generate",
+    "start": "./start.sh",
+    "postinstall": "prisma generate && npm run install-foundry",
     "install-foundry": "./install-foundry.sh"
   },
   "keywords": [],

@@ -5,8 +5,6 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { PrismaClient } from '@prisma/client'; // Import PrismaClient
 
-const { ensureFoundry } = require('../../ensure-foundry');
-
 const prisma = new PrismaClient(); // Instantiate PrismaClient
 
 const router = Router();
@@ -77,22 +75,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const tempDirPrefix = path.join(require('os').tmpdir(), 'pragma-forge-');
         tempDir = await mkdtempAsync(tempDirPrefix);
 
-        // Ensure Foundry is available before proceeding
-        try {
-            await ensureFoundry();
-            console.log('Foundry is ready for testing');
-        } catch (foundryError: any) {
-            return res.status(500).json({
-                error: 'Failed to install Foundry on the server.',
-                details: foundryError.message
-            });
-        }
-
-        try {
-            await execCommand('forge init --no-git', tempDir);
-        } catch (error: any) {
-            throw error;
-        }
+        await execCommand('forge init --no-git', tempDir);
 
         const tempSrcDir = path.join(tempDir, 'src');
         const tempTestDir = path.join(tempDir, 'test');
