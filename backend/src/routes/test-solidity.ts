@@ -40,15 +40,25 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'Solidity code and lessonId are required.' });
     }
 
-    // Handle the HelloWorld lesson ID mismatch
-    if (lessonId === 'HelloWorld') {
-        lessonId = 'solidity-101';
+    // Map lesson IDs to the new directory structure
+    const lessonDirectoryMap: { [key: string]: { dir: string; testFile: string } } = {
+        'solidity-101': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol' },
+        'HelloWorld': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol' },
+        'integers-and-unsigned-integers': { dir: 'IntegersAndUnsignedIntegers', testFile: 'IntegersAndUnsignedIntegers.t.sol' },
+        'understanding-variables-and-types': { dir: 'UnderstandingVariablesAndTypes', testFile: 'UnderstandingVariablesAndTypes.t.sol' },
+        'state-and-local-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol' },
+        'understanding-functions': { dir: 'UnderstandingFunctions', testFile: 'UnderstandingFunctions.t.sol' }
+    };
+
+    const lessonMapping = lessonDirectoryMap[lessonId];
+    if (!lessonMapping) {
+        return res.status(400).json({ error: `Unknown lesson ID: ${lessonId}` });
     }
 
     // Force pragma to be ^0.8.26 to match the test files
     code = code.replace(/pragma solidity .*/, 'pragma solidity ^0.8.26;');
 
-    const originalTestFilePath = path.join(__dirname, '..', '..', 'forge_base_project', 'test', lessonId, `${lessonId}.t.sol`);
+    const originalTestFilePath = path.join(__dirname, '..', '..', 'forge_base_project', 'test', lessonMapping.dir, lessonMapping.testFile);
 
     if (!fs.existsSync(originalTestFilePath)) {
         return res.status(400).json({ error: `No test file found for lesson: ${lessonId} at ${originalTestFilePath}` });
@@ -118,19 +128,15 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
 
         // This regex finds the import statement for the contract under test
         // and replaces it with the path to the user's temporary contract file.
-        let importRegex;
-        if (lessonId === 'solidity-101') {
-            importRegex = new RegExp(`import \"user_contract/HelloWorld.sol\";`, 'g');
-        } else {
-            importRegex = new RegExp(`import \"user_contract/${lessonId}.sol\";`, 'g');
-        }
+        // Replace any import path that references the contract with user_contract/ remapping
+        const importRegex = new RegExp(`import "([^"]*${contractName}\\.sol)";`, 'g');
         const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol";`);
 
         console.log('\n--- Updated Test Code Content (after replace) ---');
         console.log(updatedTestCode);
         console.log(`--- End Updated Test Code Content (after replace)---\n`);
 
-        const tempTestPath = path.join(tempTestDir, `${lessonId}.t.sol`);
+        const tempTestPath = path.join(tempTestDir, lessonMapping.testFile);
         console.log('Updated Test Code (before writing to file): ' + updatedTestCode);
         await writeFileAsync(tempTestPath, updatedTestCode);
 
@@ -146,7 +152,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         console.log('\n--- Running Forge Test... ---');
         // --- END DEEPER DEBUGGING LOGS ---
 
-        const { stdout: testOutput } = await execCommand(`forge test --match-path "*${lessonId}.t.sol" -vvv`, tempDir);
+        const { stdout: testOutput } = await execCommand(`forge test --match-path "*${lessonMapping.testFile}" -vvv`, tempDir);
 
         // Determine if tests passed based on output (simple check for now)
         const passed = testOutput.includes('1 passed') && !testOutput.includes('0 failed');
