@@ -61,6 +61,25 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World from the backend!');
 });
 
-app.listen(port, () => {
-  console.log(`Backend server is running at http://localhost:${port}`);
+// Ensure Foundry is installed before starting the server
+async function startServer() {
+  console.log('🔧 Ensuring Foundry is available...');
+
+  const { ensureFoundryAtRuntime } = require('../ensure-foundry-runtime');
+  const foundryAvailable = await ensureFoundryAtRuntime();
+
+  if (foundryAvailable) {
+    console.log('✅ Foundry is ready for Solidity testing');
+  } else {
+    console.log('⚠️ Warning: Foundry installation failed, some features may not work');
+  }
+
+  app.listen(port, () => {
+    console.log(`Backend server is running at http://localhost:${port}`);
+  });
+}
+
+startServer().catch(error => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });

@@ -80,41 +80,6 @@ const extractContractName = (solidityCode: string): string | null => {
     return match ? match[1] : null;
 };
 
-// Basic syntax checking without forge
-function basicSolidityValidation(code: string): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    // Check for basic Solidity syntax
-    if (!code.includes('pragma solidity')) {
-        errors.push('Missing pragma solidity directive');
-    }
-
-    if (!code.includes('contract ')) {
-        errors.push('No contract definition found');
-    }
-
-    // Check for balanced braces
-    const openBraces = (code.match(/{/g) || []).length;
-    const closeBraces = (code.match(/}/g) || []).length;
-    if (openBraces !== closeBraces) {
-        errors.push('Unbalanced braces in contract');
-    }
-
-    // Check for balanced parentheses
-    const openParens = (code.match(/\(/g) || []).length;
-    const closeParens = (code.match(/\)/g) || []).length;
-    if (openParens !== closeParens) {
-        errors.push('Unbalanced parentheses in contract');
-    }
-
-    // Extract contract name
-    const contractName = extractContractName(code);
-    if (!contractName) {
-        errors.push('Could not extract contract name from code');
-    }
-
-    return { valid: errors.length === 0, errors };
-}
 
 // Debug route to check Foundry availability
 router.get('/foundry-status', async (_req: Request, res: Response) => {
@@ -204,67 +169,28 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         try {
             await execCommand('forge init --no-git', tempDir);
         } catch (error: any) {
-            console.log('Error caught:', {
+            console.log('Error caught during forge init:', {
                 message: error.message,
                 stderr: error.stderr,
                 stdout: error.stdout
             });
 
-            const isForgeNotFound = error.message.includes('forge: not found') ||
+            // If forge is not found, this is a critical error
+            if (error.message.includes('forge: not found') ||
                 error.stderr?.includes('forge: not found') ||
                 error.message.includes('forge: command not found') ||
-                error.message.includes('/bin/sh: 1: forge: not found');
+                error.message.includes('/bin/sh: 1: forge: not found')) {
 
-            if (isForgeNotFound) {
-                console.log('✅ Forge not found detected, falling back to basic validation...');
+                console.error('❌ CRITICAL: Foundry/forge is not available on the server');
 
-                // Basic Solidity validation without forge
-                const validation = basicSolidityValidation(code);
-
-                if (!validation.valid) {
-                    // Store the failed submission
-                    const userId = (req as any).user?.id;
-                    if (userId) {
-                        await prisma.userSubmittedCode.create({
-                            data: {
-                                userId: userId,
-                                lessonId: lessonId,
-                                code: code,
-                                testResults: `Validation failed: ${validation.errors.join(', ')}`,
-                                passed: false,
-                            },
-                        });
-                    }
-
-                    return res.json({
-                        success: false,
-                        output: `❌ Solidity validation failed:\n${validation.errors.join('\n')}`,
-                        passed: false,
-                        fallbackMethod: true
-                    });
-                }
-
-                // If validation passes, return success
-                const userId = (req as any).user?.id;
-                if (userId) {
-                    await prisma.userSubmittedCode.create({
-                        data: {
-                            userId: userId,
-                            lessonId: lessonId,
-                            code: code,
-                            testResults: '✅ Basic validation passed (Foundry not available)',
-                            passed: true,
-                        },
-                    });
-                }
-
-                return res.json({
-                    success: true,
-                    output: `✅ Solidity code validation passed!\n\nNote: Using basic validation because Foundry is not available on the server.\nYour code has correct syntax and structure for lesson: ${lessonId}`,
-                    passed: true,
-                    fallbackMethod: true
+                return res.status(500).json({
+                    success: false,
+                    error: 'Foundry is not properly installed on the server. Please contact support.',
+                    details: 'The Solidity testing environment requires Foundry to be installed and accessible.',
+                    output: error.message
                 });
             }
+
             throw error;
         }
 
