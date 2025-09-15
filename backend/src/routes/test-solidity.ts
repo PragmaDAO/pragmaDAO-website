@@ -17,13 +17,42 @@ const mkdirAsync = promisify(fs.mkdir);
 
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise((resolve, reject) => {
+        // Try to find forge in common locations
+        const possiblePaths = [
+            `${process.env.HOME}/.foundry/bin`,
+            '/usr/local/bin',
+            '/usr/bin',
+            '/bin',
+            '/app/.foundry/bin'  // Common in containerized environments
+        ];
+
+        // If the command starts with 'forge', try to use the full path
+        let finalCommand = command;
+        if (command.startsWith('forge ')) {
+            for (const path of possiblePaths) {
+                const forgePath = `${path}/forge`;
+                try {
+                    require('fs').accessSync(forgePath, require('fs').constants.F_OK);
+                    finalCommand = command.replace('forge ', `${forgePath} `);
+                    console.log(`Using forge at: ${forgePath}`);
+                    break;
+                } catch (e) {
+                    // Continue to next path
+                }
+            }
+        }
+
         // Ensure Foundry is in the PATH
         const env = {
             ...process.env,
-            PATH: `${process.env.PATH}:${process.env.HOME}/.foundry/bin:/usr/local/bin:/usr/bin:/bin`
+            PATH: possiblePaths.join(':') + ':' + process.env.PATH
         };
 
-        exec(command, { cwd, env }, (error, stdout, stderr) => {
+        console.log(`Executing: ${finalCommand}`);
+        console.log(`CWD: ${cwd}`);
+        console.log(`PATH: ${env.PATH}`);
+
+        exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
             if (error) {
                 reject({ message: error.message, stdout, stderr });
             } else {
@@ -38,6 +67,55 @@ const extractContractName = (solidityCode: string): string | null => {
     const match = solidityCode.match(/contract\s+(\w+)\s*{/);
     return match ? match[1] : null;
 };
+
+// Debug route to check Foundry availability
+router.get('/foundry-status', async (_req: Request, res: Response) => {
+    const possiblePaths = [
+        `${process.env.HOME}/.foundry/bin`,
+        '/usr/local/bin',
+        '/usr/bin',
+        '/bin',
+        '/app/.foundry/bin'
+    ];
+
+    const status: any = {
+        environment: {
+            HOME: process.env.HOME,
+            PATH: process.env.PATH,
+            NODE_ENV: process.env.NODE_ENV
+        },
+        foundryLocations: {}
+    };
+
+    // Check each possible location
+    for (const path of possiblePaths) {
+        const forgePath = `${path}/forge`;
+        try {
+            fs.accessSync(forgePath, fs.constants.F_OK);
+            status.foundryLocations[path] = 'exists';
+
+            // Try to get version
+            try {
+                const { stdout } = await execCommand(`${forgePath} --version`, process.cwd());
+                status.foundryLocations[path] = { exists: true, version: stdout.trim() };
+            } catch (e) {
+                status.foundryLocations[path] = { exists: true, version: 'error getting version' };
+            }
+        } catch (e) {
+            status.foundryLocations[path] = 'not found';
+        }
+    }
+
+    // Try which command
+    try {
+        const { stdout } = await execCommand('which forge', process.cwd());
+        status.whichForge = stdout.trim();
+    } catch (e) {
+        status.whichForge = 'not found';
+    }
+
+    res.json(status);
+});
 
 router.post('/test-solidity', async (req: Request, res: Response) => {
     let { code, lessonId } = req.body;

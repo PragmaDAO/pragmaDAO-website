@@ -8,7 +8,7 @@
     "build": "npm run install-foundry && tsc",
     "start": "./start.sh",
     "postinstall": "prisma generate && npm run install-foundry",
-    "install-foundry": "./install-foundry.sh"
+    "install-foundry": "./install-foundry-simple.sh"
   },
   "keywords": [],
   "author": "",
