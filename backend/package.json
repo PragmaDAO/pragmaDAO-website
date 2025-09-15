@@ -5,9 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "npx ts-node src/index.ts",
-    "build": "npm run install-foundry && tsc",
+    "build": "npm run install-foundry || echo 'Foundry install failed, continuing...' && tsc",
     "start": "./start.sh",
-    "postinstall": "prisma generate && npm run install-foundry",
+    "postinstall": "prisma generate",
+    "prestart": "npm run install-foundry || echo 'Foundry install failed, will try at runtime'",
     "install-foundry": "./install-foundry-simple.sh"
   },
   "keywords": [],

@@ -20,11 +20,23 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
         // Try to find forge in common locations
         const possiblePaths = [
             `${process.env.HOME}/.foundry/bin`,
+            '/tmp/.foundry/bin',
+            '/opt/render/.foundry/bin',
             '/usr/local/bin',
             '/usr/bin',
             '/bin',
             '/app/.foundry/bin'  // Common in containerized environments
         ];
+
+        // Also check for dynamic /tmp/foundry-* directories
+        try {
+            const tmpDirs = require('fs').readdirSync('/tmp').filter((dir: string) => dir.startsWith('foundry-'));
+            for (const dir of tmpDirs) {
+                possiblePaths.push(`/tmp/${dir}/bin`);
+            }
+        } catch (e) {
+            // Ignore if we can't read /tmp
+        }
 
         // If the command starts with 'forge', try to use the full path
         let finalCommand = command;
