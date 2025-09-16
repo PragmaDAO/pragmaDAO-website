@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { exec, spawn } from 'child_process';
+import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -15,204 +15,17 @@ const readFileAsync = promisify(fs.readFile);
 const rmAsync = promisify(fs.rm);
 const mkdirAsync = promisify(fs.mkdir);
 
+// This command now works because the Dockerfile installs forge to /usr/local/bin,
+// which is in the PATH for all users.
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
-    return new Promise(async (resolve, reject) => {
-        console.log(`🔧 execCommand called with:`);
-        console.log(`   Command: ${command}`);
-        console.log(`   CWD: ${cwd}`);
-        console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
-        console.log(`   HOME: ${process.env.HOME}`);
-        console.log(`   PATH: ${process.env.PATH}`);
-
-        // Try to find forge in common locations (prioritize based on environment)
-        const possiblePaths = process.env.NODE_ENV === 'production' ? [
-            // Production paths (Docker/Render.com)
-            '/root/.foundry/bin',           // Docker container default
-            '/tmp/.foundry/bin',
-            '/opt/render/.foundry/bin',
-            '/app/.foundry/bin',
-            '/usr/local/bin',
-            '/usr/bin',
-            '/bin',
-            `${process.env.HOME}/.foundry/bin` // Fallback for production
-        ] : [
-            // Development paths (local machine)
-            `${process.env.HOME}/.foundry/bin`, // Local user installation (macOS/Linux)
-            '/root/.foundry/bin',           // Docker container default
-            '/tmp/.foundry/bin',
-            '/opt/render/.foundry/bin',
-            '/usr/local/bin',
-            '/usr/bin',
-            '/bin',
-            '/app/.foundry/bin'
-        ];
-
-        // Also check for dynamic /tmp/foundry-* directories
-        try {
-            const tmpDirs = require('fs').readdirSync('/tmp').filter((dir: string) => dir.startsWith('foundry-'));
-            for (const dir of tmpDirs) {
-                possiblePaths.push(`/tmp/${dir}/bin`);
-            }
-        } catch (e) {
-            // Ignore if we can't read /tmp
-        }
-
-        // If the command starts with 'forge', try to use the full path
-        let finalCommand = command;
-        if (command.startsWith('forge ')) {
-            for (const path of possiblePaths) {
-                const forgePath = `${path}/forge`;
-                try {
-                    require('fs').accessSync(forgePath, require('fs').constants.F_OK);
-
-                    // Ensure forge has execute permissions
-                    try {
-                        require('fs').chmodSync(forgePath, 0o755);
-                        console.log(`🔧 Set execute permissions for: ${forgePath}`);
-                    } catch (chmodError) {
-                        console.log(`⚠️ Could not set permissions for ${forgePath}: ${chmodError.message}`);
-                    }
-
-                    // Test if forge is now executable
-                    try {
-                        require('fs').accessSync(forgePath, require('fs').constants.X_OK);
-                        finalCommand = command.replace('forge ', `${forgePath} `);
-                        console.log(`✅ Using forge at: ${forgePath}`);
-                        break;
-                    } catch (execError) {
-                        console.log(`❌ forge found but not executable at: ${forgePath}`);
-                    }
-                } catch (e) {
-                    console.log(`❌ forge not found at: ${forgePath}`);
-                }
-            }
-
-            // If we couldn't find forge with absolute path, try 'which forge' as fallback
-            if (finalCommand === command) {
-                console.log('⚠️ Forge not found in predefined paths, trying "which forge"...');
-                try {
-                    const { execSync } = require('child_process');
-                    const whichResult = execSync('which forge', { encoding: 'utf8' }).trim();
-                    if (whichResult) {
-                        // Ensure found forge has execute permissions
-                        try {
-                            require('fs').chmodSync(whichResult, 0o755);
-                            console.log(`🔧 Set execute permissions for: ${whichResult}`);
-                        } catch (chmodError) {
-                            console.log(`⚠️ Could not set permissions for ${whichResult}: ${chmodError.message}`);
-                        }
-                        finalCommand = command.replace('forge ', `${whichResult} `);
-                        console.log(`✅ Found forge using 'which': ${whichResult}`);
-                    }
-                } catch (e) {
-                    console.log('❌ "which forge" failed, attempting installation...');
-                }
-            }
-
-            // If still not found, try installing it now
-            if (finalCommand === command) {
-                console.log('⚠️ Forge not found in any location, attempting installation...');
-                try {
-                    const { ensureFoundryAtRuntime } = require('../../ensure-foundry-runtime');
-                    await ensureFoundryAtRuntime();
-
-                    // Try again to find forge after installation
-                    for (const path of possiblePaths) {
-                        const forgePath = `${path}/forge`;
-                        try {
-                            require('fs').accessSync(forgePath, require('fs').constants.F_OK);
-                            finalCommand = command.replace('forge ', `${forgePath} `);
-                            console.log(`✅ Using newly installed forge at: ${forgePath}`);
-                            break;
-                        } catch (e) {
-                            // Continue to next path
-                        }
-                    }
-                } catch (installError) {
-                    console.error('❌ Failed to install Foundry:', installError);
-                }
-            }
-
-            // Final check - warn if forge still not found
-            if (finalCommand === command) {
-                console.error(`🚨 FORGE NOT FOUND! Command will likely fail: ${command}`);
-                console.error(`🔍 Searched in paths: ${possiblePaths.join(', ')}`);
-                console.error(`📊 Environment: NODE_ENV=${process.env.NODE_ENV}, HOME=${process.env.HOME}`);
-            }
-        }
-
-        // Ensure Foundry is in the PATH
-        const env = {
-            ...process.env,
-            PATH: possiblePaths.join(':') + ':' + process.env.PATH
-        };
-
-        console.log(`Executing: ${finalCommand}`);
-        console.log(`CWD: ${cwd}`);
-        console.log(`PATH: ${env.PATH}`);
-
-        // Use spawn for better process control when we have a specific forge path
-        if (finalCommand !== command && finalCommand.includes('/forge ')) {
-            // Extract forge path and arguments
-            const forgePathMatch = finalCommand.match(/^(.+\/forge) (.+)$/);
-            if (forgePathMatch) {
-                const forgePath = forgePathMatch[1];
-                // Parse arguments properly, handling quoted strings
-                const argString = forgePathMatch[2];
-                const args = argString.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(arg =>
-                    arg.startsWith('"') && arg.endsWith('"') ? arg.slice(1, -1) : arg
-                ) || [];
-
-                console.log(`Using spawn with forge at: ${forgePath}`);
-                console.log(`Args: ${JSON.stringify(args)}`);
-
-                const child = spawn(forgePath, args, {
-                    cwd,
-                    env,
-                    stdio: ['pipe', 'pipe', 'pipe']
-                });
-
-                let stdout = '';
-                let stderr = '';
-
-                child.stdout.on('data', (data) => {
-                    stdout += data.toString();
-                });
-
-                child.stderr.on('data', (data) => {
-                    stderr += data.toString();
-                });
-
-                child.on('close', (code) => {
-                    if (code !== 0) {
-                        reject({ message: `Process exited with code ${code}`, stdout, stderr });
-                    } else {
-                        resolve({ stdout, stderr });
-                    }
-                });
-
-                child.on('error', (error) => {
-                    reject({ message: error.message, stdout, stderr });
-                });
+    return new Promise((resolve, reject) => {
+        exec(command, { cwd }, (error, stdout, stderr) => {
+            if (error) {
+                reject({ message: error.message, stdout, stderr });
             } else {
-                // Fallback to exec if we can't parse the command
-                exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
-                    if (error) {
-                        reject({ message: error.message, stdout, stderr });
-                    } else {
-                        resolve({ stdout, stderr });
-                    }
-                });
+                resolve({ stdout, stderr });
             }
-        } else {
-            exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
-                if (error) {
-                    reject({ message: error.message, stdout, stderr });
-                } else {
-                    resolve({ stdout, stderr });
-                }
-            });
-        }
+        });
     });
 };
 
@@ -360,14 +173,7 @@ async function runFoundryInDocker(userCode: string, testCode: string, contractNa
         await mkdirAsync(testDir, { recursive: true });
 
         // Write foundry.toml
-        const foundryToml = `[profile.default]
-src = "src"
-out = "out"
-libs = ["lib"]
-remappings = ["user_contract/=src/"]
-
-[rpc_endpoints]
-mainnet = "https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY"
+        const foundryToml = `[profile.default]\nsrc = \"src\"\nout = \"out\"\nlibs = [\"lib\"]\nremappings = [\"user_contract/=src/\"]\n\n[rpc_endpoints]\nmainnet = \"https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY\"
 `;
         await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryToml);
 
@@ -378,7 +184,7 @@ mainnet = "https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY"
         await writeFileAsync(path.join(testDir, `${contractName}.t.sol`), testCode);
 
         // Try using Docker to run forge test
-        const dockerCommand = `docker run --rm -v "${tempDir}:/workspace" -w /workspace ghcr.io/foundry-rs/foundry:latest forge test -vvv`;
+        const dockerCommand = `docker run --rm -v \"${tempDir}:/workspace\" -w /workspace ghcr.io/foundry-rs/foundry:latest forge test -vvv`;
 
         const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
             exec(dockerCommand, { timeout: 30000 }, (error, stdout, stderr) => {
@@ -464,8 +270,8 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const normalizedOriginalTestCode = originalTestCode.replace(/\r\n/g, '\n');
 
         // Replace import paths with user_contract/ remapping using the expected contract name
-        const importRegex = new RegExp(`import "([^"]*${expectedContractName}\.sol)";`, 'g');
-        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${expectedContractName}.sol";`);
+        const importRegex = new RegExp(`import \"([^\"]*${expectedContractName}\\.sol)\";`, 'g');
+        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import \"user_contract/${expectedContractName}.sol\";`);
 
         console.log('🔨 Using pre-installed Foundry in container...');
 
@@ -487,11 +293,7 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
             await writeFileAsync(path.join(tempTestDir, lessonMapping.testFile), updatedTestCode);
 
             // Configure foundry.toml with user_contract remapping
-            const foundryTomlContent = `[profile.default]
-src = "src"
-out = "out"
-libs = ["lib"]
-remappings = ["user_contract/=src/"]`;
+            const foundryTomlContent = `[profile.default]\nsrc = \"src\"\nout = \"out\"\nlibs = [\"lib\"]\nremappings = [\"user_contract/=src/\"]`;
             await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryTomlContent);
 
             // Run tests

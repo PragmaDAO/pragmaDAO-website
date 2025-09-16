@@ -20,8 +20,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 
 # Install and set up Foundry in a single layer
 RUN curl -L https://foundry.paradigm.xyz | bash && \
-    mv /root/.foundry/bin/* /usr/local/bin/ && \
-    foundryup
+    /root/.foundry/bin/foundryup
+
+ENV PATH="/root/.foundry/bin:${PATH}"
 
 # Verify Foundry installation
 RUN forge --version
