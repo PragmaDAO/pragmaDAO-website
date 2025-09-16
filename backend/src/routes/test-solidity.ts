@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -89,13 +89,51 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
         console.log(`CWD: ${cwd}`);
         console.log(`PATH: ${env.PATH}`);
 
-        exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
-            if (error) {
+        // Use spawn instead of exec to bypass shell permission issues
+        if (finalCommand.includes('/root/.foundry/bin/forge')) {
+            const forgePath = '/root/.foundry/bin/forge';
+            const args = finalCommand.replace(`${forgePath} `, '').split(' ');
+
+            console.log(`Using spawn with forge at: ${forgePath}`);
+            console.log(`Args: ${JSON.stringify(args)}`);
+
+            const child = spawn(forgePath, args, {
+                cwd,
+                env,
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+
+            let stdout = '';
+            let stderr = '';
+
+            child.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
+
+            child.stderr.on('data', (data) => {
+                stderr += data.toString();
+            });
+
+            child.on('close', (code) => {
+                if (code !== 0) {
+                    reject({ message: `Process exited with code ${code}`, stdout, stderr });
+                } else {
+                    resolve({ stdout, stderr });
+                }
+            });
+
+            child.on('error', (error) => {
                 reject({ message: error.message, stdout, stderr });
-            } else {
-                resolve({ stdout, stderr });
-            }
-        });
+            });
+        } else {
+            exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
+                if (error) {
+                    reject({ message: error.message, stdout, stderr });
+                } else {
+                    resolve({ stdout, stderr });
+                }
+            });
+        }
     });
 };
 
