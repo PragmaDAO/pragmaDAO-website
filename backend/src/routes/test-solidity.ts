@@ -356,13 +356,15 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
     }
 
     // Map lesson IDs to the new directory structure
-    const lessonDirectoryMap: { [key: string]: { dir: string; testFile: string } } = {
-        'solidity-101': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol' },
-        'HelloWorld': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol' },
-        'integers-and-unsigned-integers': { dir: 'IntegersAndUnsignedIntegers', testFile: 'IntegersAndUnsignedIntegers.t.sol' },
-        'understanding-variables-and-types': { dir: 'UnderstandingVariablesAndTypes', testFile: 'UnderstandingVariablesAndTypes.t.sol' },
-        'state-and-local-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol' },
-        'understanding-functions': { dir: 'UnderstandingFunctions', testFile: 'UnderstandingFunctions.t.sol' }
+    const lessonDirectoryMap: { [key: string]: { dir: string; testFile: string; expectedContractName: string } } = {
+        'solidity-101': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol', expectedContractName: 'HelloWorld' },
+        'HelloWorld': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol', expectedContractName: 'HelloWorld' },
+        'HomePage': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol', expectedContractName: 'HelloWorld' },
+        'integers-and-unsigned-integers': { dir: 'IntegersAndUnsignedIntegers', testFile: 'IntegersAndUnsignedIntegers.t.sol', expectedContractName: 'IntegerBasics' },
+        'understanding-variables-and-types': { dir: 'UnderstandingVariablesAndTypes', testFile: 'UnderstandingVariablesAndTypes.t.sol', expectedContractName: 'VariableTypes' },
+        'state-and-local-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol', expectedContractName: 'StateAndLocalVariables' },
+        'understanding-functions': { dir: 'UnderstandingFunctions', testFile: 'UnderstandingFunctions.t.sol', expectedContractName: 'SimpleFunctions' },
+        'global-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol', expectedContractName: 'StateAndLocalVariables' }
     };
 
     const lessonMapping = lessonDirectoryMap[lessonId];
@@ -380,19 +382,28 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
     }
 
     try {
-        // Extract contract name from user's code
-        const contractName = extractContractName(code);
-        if (!contractName) {
+        // Use the expected contract name for this lesson
+        const expectedContractName = lessonMapping.expectedContractName;
+
+        // Extract contract name from user's code to rename it
+        const userContractName = extractContractName(code);
+        if (!userContractName) {
             return res.status(400).json({ error: 'Could not extract contract name from provided Solidity code.' });
         }
+
+        // Replace the user's contract name with the expected contract name
+        const codeWithCorrectContractName = code.replace(
+            new RegExp(`contract\\s+${userContractName}`, 'g'),
+            `contract ${expectedContractName}`
+        );
 
         // Read the original test file
         const originalTestCode = await readFileAsync(originalTestFilePath, 'utf8');
         const normalizedOriginalTestCode = originalTestCode.replace(/\r\n/g, '\n');
 
-        // Replace import paths with user_contract/ remapping
-        const importRegex = new RegExp(`import "([^"]*${contractName}\\.sol)";`, 'g');
-        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${contractName}.sol";`);
+        // Replace import paths with user_contract/ remapping using the expected contract name
+        const importRegex = new RegExp(`import "([^"]*${expectedContractName}\\.sol)";`, 'g');
+        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${expectedContractName}.sol";`);
 
         console.log('🔨 Using pre-installed Foundry in container...');
 
@@ -407,11 +418,11 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
             const tempSrcDir = path.join(tempDir, 'src');
             const tempTestDir = path.join(tempDir, 'test');
 
-            // Write user contract
-            await writeFileAsync(path.join(tempSrcDir, `${contractName}.sol`), code);
+            // Write user contract with correct contract name
+            await writeFileAsync(path.join(tempSrcDir, `${expectedContractName}.sol`), codeWithCorrectContractName);
 
             // Write test file
-            await writeFileAsync(path.join(tempTestDir, `${contractName}.t.sol`), updatedTestCode);
+            await writeFileAsync(path.join(tempTestDir, lessonMapping.testFile), updatedTestCode);
 
             // Configure foundry.toml with user_contract remapping
             const foundryTomlContent = `[profile.default]
@@ -422,7 +433,7 @@ remappings = ["user_contract/=src/"]`;
             await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryTomlContent);
 
             // Run tests
-            const { stdout: testOutput } = await execCommand(`forge test --match-path "*${contractName}.t.sol" -vvv`, tempDir);
+            const { stdout: testOutput } = await execCommand(`forge test --match-path "*${lessonMapping.testFile}" -vvv`, tempDir);
             const passed = testOutput.includes('1 passed') || (testOutput.includes('passed') && !testOutput.includes('0 passed'));
 
             result = {
@@ -470,10 +481,18 @@ remappings = ["user_contract/=src/"]`;
 
     } catch (err: any) {
         console.error('Error processing Solidity test:', err);
+
+        // If this is a forge execution error, provide the actual forge output
+        let output = `Error: ${err.message}`;
+        if (err.stdout || err.stderr) {
+            output = err.stdout ? err.stdout : err.stderr;
+        }
+
         res.status(500).json({
             success: false,
-            output: `Error: ${err.message}`,
+            output: output,
             error: err.message,
+            passed: false,
             backend: 'LOCAL_FIXED_BACKEND',
             timestamp: new Date().toISOString()
         });
