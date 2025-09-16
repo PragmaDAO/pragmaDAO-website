@@ -18,18 +18,18 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Install and set up Foundry in a single layer
-RUN curl -L https://foundry.paradigm.xyz | bash && \
-    /root/.foundry/bin/foundryup
-
-ENV PATH="/root/.foundry/bin:${PATH}"
-
-# Verify Foundry installation
-RUN forge --version
-
-# Create a non-root user and group
+# Create a non-root user and group first
 RUN groupadd --system --gid 1001 nodejs
 RUN useradd --system --uid 1001 --gid nodejs nodejs
+
+# Install Foundry to /usr/local/bin (accessible to all users)
+RUN curl -L https://foundry.paradigm.xyz | bash && \
+    /root/.foundry/bin/foundryup && \
+    cp /root/.foundry/bin/* /usr/local/bin/ && \
+    chmod +x /usr/local/bin/forge /usr/local/bin/cast /usr/local/bin/anvil /usr/local/bin/chisel
+
+# Verify Foundry installation works for nodejs user
+RUN su nodejs -c "forge --version"
 
 # Create app directory
 RUN mkdir -p /app
