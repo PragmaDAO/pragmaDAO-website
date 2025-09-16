@@ -8,7 +8,9 @@ const prisma = new PrismaClient();
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID!,
   clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-  callbackURL: "https://api.pragmadao.com/api/auth/github/callback"
+  callbackURL: process.env.NODE_ENV === 'production'
+    ? "https://api.pragmadao.com/api/auth/github/callback"
+    : "http://localhost:3003/api/auth/github/callback"
 }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
   try {
     console.log('GitHub profile:', profile);
@@ -24,7 +26,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://api.pragmadao.com/api/auth/google/callback"
+    callbackURL: process.env.NODE_ENV === 'production'
+      ? "https://api.pragmadao.com/api/auth/google/callback"
+      : "http://localhost:3003/api/auth/google/callback"
   }, async (accessToken: string, refreshToken: string, profile: any, done: any) => {
     try {
       console.log('Google profile:', profile);

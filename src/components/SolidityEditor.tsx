@@ -443,6 +443,7 @@ pragma solidity ^0.8.29;
 
         try {
             const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
+            console.log('🔍 Using backend URL:', backendUrl);
             const response = await fetch(`${backendUrl}/api/test-solidity`, {
                 method: 'POST',
                 headers: {

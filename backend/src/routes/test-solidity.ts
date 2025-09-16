@@ -19,8 +19,8 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
     return new Promise(async (resolve, reject) => {
         // Try to find forge in common locations (including Docker container paths)
         const possiblePaths = [
+            `${process.env.HOME}/.foundry/bin`, // Local user installation (macOS/Linux)
             '/root/.foundry/bin',           // Docker container default
-            `${process.env.HOME}/.foundry/bin`,
             '/tmp/.foundry/bin',
             '/opt/render/.foundry/bin',
             '/usr/local/bin',
@@ -89,42 +89,59 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
         console.log(`CWD: ${cwd}`);
         console.log(`PATH: ${env.PATH}`);
 
-        // Use spawn instead of exec to bypass shell permission issues
-        if (finalCommand.includes('/root/.foundry/bin/forge')) {
-            const forgePath = '/root/.foundry/bin/forge';
-            const args = finalCommand.replace(`${forgePath} `, '').split(' ');
+        // Use spawn for better process control when we have a specific forge path
+        if (finalCommand !== command && finalCommand.includes('/forge ')) {
+            // Extract forge path and arguments
+            const forgePathMatch = finalCommand.match(/^(.+\/forge) (.+)$/);
+            if (forgePathMatch) {
+                const forgePath = forgePathMatch[1];
+                // Parse arguments properly, handling quoted strings
+                const argString = forgePathMatch[2];
+                const args = argString.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(arg =>
+                    arg.startsWith('"') && arg.endsWith('"') ? arg.slice(1, -1) : arg
+                ) || [];
 
-            console.log(`Using spawn with forge at: ${forgePath}`);
-            console.log(`Args: ${JSON.stringify(args)}`);
+                console.log(`Using spawn with forge at: ${forgePath}`);
+                console.log(`Args: ${JSON.stringify(args)}`);
 
-            const child = spawn(forgePath, args, {
-                cwd,
-                env,
-                stdio: ['pipe', 'pipe', 'pipe']
-            });
+                const child = spawn(forgePath, args, {
+                    cwd,
+                    env,
+                    stdio: ['pipe', 'pipe', 'pipe']
+                });
 
-            let stdout = '';
-            let stderr = '';
+                let stdout = '';
+                let stderr = '';
 
-            child.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
+                child.stdout.on('data', (data) => {
+                    stdout += data.toString();
+                });
 
-            child.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
+                child.stderr.on('data', (data) => {
+                    stderr += data.toString();
+                });
 
-            child.on('close', (code) => {
-                if (code !== 0) {
-                    reject({ message: `Process exited with code ${code}`, stdout, stderr });
-                } else {
-                    resolve({ stdout, stderr });
-                }
-            });
+                child.on('close', (code) => {
+                    if (code !== 0) {
+                        reject({ message: `Process exited with code ${code}`, stdout, stderr });
+                    } else {
+                        resolve({ stdout, stderr });
+                    }
+                });
 
-            child.on('error', (error) => {
-                reject({ message: error.message, stdout, stderr });
-            });
+                child.on('error', (error) => {
+                    reject({ message: error.message, stdout, stderr });
+                });
+            } else {
+                // Fallback to exec if we can't parse the command
+                exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
+                    if (error) {
+                        reject({ message: error.message, stdout, stderr });
+                    } else {
+                        resolve({ stdout, stderr });
+                    }
+                });
+            }
         } else {
             exec(finalCommand, { cwd, env }, (error, stdout, stderr) => {
                 if (error) {
@@ -446,7 +463,9 @@ remappings = ["user_contract/=src/"]`;
             success: result.success,
             output: result.output,
             passed: result.passed,
-            method: 'docker'
+            method: 'docker',
+            backend: 'LOCAL_FIXED_BACKEND',
+            timestamp: new Date().toISOString()
         });
 
     } catch (err: any) {
@@ -455,6 +474,8 @@ remappings = ["user_contract/=src/"]`;
             success: false,
             output: `Error: ${err.message}`,
             error: err.message,
+            backend: 'LOCAL_FIXED_BACKEND',
+            timestamp: new Date().toISOString()
         });
     }
 });
