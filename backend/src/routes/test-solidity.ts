@@ -17,8 +17,26 @@ const mkdirAsync = promisify(fs.mkdir);
 
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise(async (resolve, reject) => {
-        // Try to find forge in common locations (including Docker container paths)
-        const possiblePaths = [
+        console.log(`🔧 execCommand called with:`);
+        console.log(`   Command: ${command}`);
+        console.log(`   CWD: ${cwd}`);
+        console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+        console.log(`   HOME: ${process.env.HOME}`);
+        console.log(`   PATH: ${process.env.PATH}`);
+
+        // Try to find forge in common locations (prioritize based on environment)
+        const possiblePaths = process.env.NODE_ENV === 'production' ? [
+            // Production paths (Docker/Render.com)
+            '/root/.foundry/bin',           // Docker container default
+            '/tmp/.foundry/bin',
+            '/opt/render/.foundry/bin',
+            '/app/.foundry/bin',
+            '/usr/local/bin',
+            '/usr/bin',
+            '/bin',
+            `${process.env.HOME}/.foundry/bin` // Fallback for production
+        ] : [
+            // Development paths (local machine)
             `${process.env.HOME}/.foundry/bin`, // Local user installation (macOS/Linux)
             '/root/.foundry/bin',           // Docker container default
             '/tmp/.foundry/bin',
@@ -54,7 +72,22 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
                 }
             }
 
-            // If we couldn't find forge with absolute path, try installing it now
+            // If we couldn't find forge with absolute path, try 'which forge' as fallback
+            if (finalCommand === command) {
+                console.log('⚠️ Forge not found in predefined paths, trying "which forge"...');
+                try {
+                    const { execSync } = require('child_process');
+                    const whichResult = execSync('which forge', { encoding: 'utf8' }).trim();
+                    if (whichResult) {
+                        finalCommand = command.replace('forge ', `${whichResult} `);
+                        console.log(`✅ Found forge using 'which': ${whichResult}`);
+                    }
+                } catch (e) {
+                    console.log('❌ "which forge" failed, attempting installation...');
+                }
+            }
+
+            // If still not found, try installing it now
             if (finalCommand === command) {
                 console.log('⚠️ Forge not found in any location, attempting installation...');
                 try {
@@ -76,6 +109,13 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
                 } catch (installError) {
                     console.error('❌ Failed to install Foundry:', installError);
                 }
+            }
+
+            // Final check - warn if forge still not found
+            if (finalCommand === command) {
+                console.error(`🚨 FORGE NOT FOUND! Command will likely fail: ${command}`);
+                console.error(`🔍 Searched in paths: ${possiblePaths.join(', ')}`);
+                console.error(`📊 Environment: NODE_ENV=${process.env.NODE_ENV}, HOME=${process.env.HOME}`);
             }
         }
 
