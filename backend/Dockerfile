@@ -18,9 +18,10 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Install Foundry into a global location
-RUN curl -L https://foundry.paradigm.xyz | bash
-RUN mv /root/.foundry/bin/* /usr/local/bin/
+# Install and set up Foundry in a single layer
+RUN curl -L https://foundry.paradigm.xyz | bash && \
+    mv /root/.foundry/bin/* /usr/local/bin/ && \
+    foundryup
 
 # Verify Foundry installation
 RUN forge --version
