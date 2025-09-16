@@ -1,6 +1,9 @@
 # Use Ubuntu 22.04 with newer GLIBC that supports Foundry
 FROM ubuntu:22.04
 
+# Set non-interactive frontend to avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install Node.js 18 and system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -15,20 +18,19 @@ RUN apt-get update && apt-get install -y \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Install Foundry
+# Install Foundry into a global location
 RUN curl -L https://foundry.paradigm.xyz | bash
-ENV PATH="/root/.foundry/bin:$PATH"
-RUN foundryup
+RUN mv /root/.foundry/bin/* /usr/local/bin/
 
-# Set execute permissions on Foundry binaries - be more explicit
-RUN chmod 755 /root/.foundry/bin/forge /root/.foundry/bin/anvil /root/.foundry/bin/cast /root/.foundry/bin/chisel
-RUN ls -la /root/.foundry/bin/
-
-# Verify Foundry installation and permissions
+# Verify Foundry installation
 RUN forge --version
 
-# Ensure Foundry is available in runtime PATH
-ENV PATH="/root/.foundry/bin:$PATH"
+# Create a non-root user and group
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 --gid nodejs nodejs
+
+# Create app directory
+RUN mkdir -p /app
 
 # Set working directory
 WORKDIR /app
@@ -39,11 +41,19 @@ COPY package*.json .npmrc ./
 # Copy Prisma schema (needed for postinstall script)
 COPY prisma ./prisma/
 
-# Install Node.js dependencies (including dev for building)
+# Change ownership of app directory before installing dependencies
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Install Node.js dependencies
 RUN npm install
 
-# Copy application code
-COPY . .
+# Copy application code and change ownership
+USER root
+COPY --chown=nodejs:nodejs . .
+USER nodejs
 
 # Build TypeScript
 RUN npm run build
