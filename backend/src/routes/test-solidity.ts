@@ -45,12 +45,12 @@ const execCommand = (command: string, cwd: string): Promise<{ stdout: string; st
             for (const path of possiblePaths) {
                 const forgePath = `${path}/forge`;
                 try {
-                    require('fs').accessSync(forgePath, require('fs').constants.F_OK);
+                    require('fs').accessSync(forgePath, require('fs').constants.F_OK | require('fs').constants.X_OK);
                     finalCommand = command.replace('forge ', `${forgePath} `);
                     console.log(`✅ Using forge at: ${forgePath}`);
                     break;
                 } catch (e) {
-                    // Continue to next path
+                    console.log(`❌ forge not found or not executable at: ${forgePath}`);
                 }
             }
 
