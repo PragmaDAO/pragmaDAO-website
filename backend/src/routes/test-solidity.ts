@@ -19,13 +19,7 @@ const mkdirAsync = promisify(fs.mkdir);
 // which is in the PATH for all users.
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise((resolve, reject) => {
-        // Ensure Foundry binaries are in PATH for production environments
-        const env = {
-            ...process.env,
-            PATH: `/usr/local/bin:${process.env.HOME}/.foundry/bin:${process.env.PATH}`
-        };
-
-        exec(command, { cwd, env }, (error, stdout, stderr) => {
+        exec(command, { cwd }, (error, stdout, stderr) => {
             if (error) {
                 reject({ message: error.message, stdout, stderr });
             } else {
@@ -299,8 +293,8 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const normalizedOriginalTestCode = originalTestCode.replace(/\r\n/g, '\n');
 
         // Replace import paths with user_contract/ remapping using the expected contract name
-        const importRegex = new RegExp(`import "[^ vital]*/${expectedContractName}\\.sol";`, 'g');
-        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${expectedContractName}.sol";`);
+        const importRegex = new RegExp(`import \"[^ vital]*/${expectedContractName}\\.sol\";`, 'g');
+        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import \"user_contract/${expectedContractName}.sol\";`);
 
         console.log('🔨 Using pre-installed Foundry in container...');
 
