@@ -19,7 +19,13 @@ const mkdirAsync = promisify(fs.mkdir);
 // which is in the PATH for all users.
 const execCommand = (command: string, cwd: string): Promise<{ stdout: string; stderr: string }> => {
     return new Promise((resolve, reject) => {
-        exec(command, { cwd }, (error, stdout, stderr) => {
+        // Ensure Foundry binaries are in PATH for production environments
+        const env = {
+            ...process.env,
+            PATH: `/usr/local/bin:${process.env.HOME}/.foundry/bin:${process.env.PATH}`
+        };
+
+        exec(command, { cwd, env }, (error, stdout, stderr) => {
             if (error) {
                 reject({ message: error.message, stdout, stderr });
             } else {
@@ -55,7 +61,12 @@ router.get('/docker-status', async (_req: Request, res: Response) => {
     // Check if docker command exists
     try {
         const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-            exec('which docker', (error, stdout, stderr) => {
+            const env = {
+                ...process.env,
+                PATH: `/usr/local/bin:${process.env.HOME}/.foundry/bin:${process.env.PATH}`
+            };
+
+            exec('which docker', { env }, (error, stdout, stderr) => {
                 if (error) {
                     reject({ message: error.message, stdout, stderr });
                 } else {
@@ -74,7 +85,12 @@ router.get('/docker-status', async (_req: Request, res: Response) => {
     if (status.docker.available) {
         try {
             const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-                exec('docker --version', (error, stdout, stderr) => {
+                const env = {
+                    ...process.env,
+                    PATH: `/usr/local/bin:${process.env.HOME}/.foundry/bin:${process.env.PATH}`
+                };
+
+                exec('docker --version', { env }, (error, stdout, stderr) => {
                     if (error) {
                         reject({ message: error.message, stdout, stderr });
                     } else {
@@ -92,7 +108,12 @@ router.get('/docker-status', async (_req: Request, res: Response) => {
     if (status.docker.available) {
         try {
             const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-                exec('docker run --rm hello-world', { timeout: 10000 }, (error, stdout, stderr) => {
+                const env = {
+                    ...process.env,
+                    PATH: `/usr/local/bin:${process.env.HOME}/.foundry/bin:${process.env.PATH}`
+                };
+
+                exec('docker run --rm hello-world', { timeout: 10000, env }, (error, stdout, stderr) => {
                     if (error) {
                         reject({ message: error.message, stdout, stderr });
                     } else {
@@ -173,21 +194,29 @@ async function runFoundryInDocker(userCode: string, testCode: string, contractNa
         await mkdirAsync(testDir, { recursive: true });
 
         // Write foundry.toml
-        const foundryToml = `[profile.default]\nsrc = \"src\"\nout = \"out\"\nlibs = [\"lib\"]\nremappings = [\"user_contract/=src/\"]\n\n[rpc_endpoints]\nmainnet = \"https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY\"
+        const foundryToml = `[profile.default]\nsrc = \"src\"
+out = \"out\"
+libs = [\"lib\"]\nnremappings = [\"user_contract/=src/\"]\n\n[rpc_endpoints]\nmainnet = \"https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY\"
 `;
         await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryToml);
 
         // Write user contract
         await writeFileAsync(path.join(srcDir, `${contractName}.sol`), userCode);
 
-        // Write test file
+        // Write test file (Note: This function should receive proper lesson info)
         await writeFileAsync(path.join(testDir, `${contractName}.t.sol`), testCode);
 
         // Try using Docker to run forge test
         const dockerCommand = `docker run --rm -v \"${tempDir}:/workspace\" -w /workspace ghcr.io/foundry-rs/foundry:latest forge test -vvv`;
 
         const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-            exec(dockerCommand, { timeout: 30000 }, (error, stdout, stderr) => {
+            // Ensure Foundry binaries are in PATH for Docker commands too
+            const env = {
+                ...process.env,
+                PATH: `/usr/local/bin:${process.env.HOME}/.foundry/bin:${process.env.PATH}`
+            };
+
+            exec(dockerCommand, { timeout: 30000, env }, (error, stdout, stderr) => {
                 if (error) {
                     reject({ message: error.message, stdout, stderr });
                 } else {
@@ -270,8 +299,8 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
         const normalizedOriginalTestCode = originalTestCode.replace(/\r\n/g, '\n');
 
         // Replace import paths with user_contract/ remapping using the expected contract name
-        const importRegex = new RegExp(`import \"([^\"]*${expectedContractName}\\.sol)\";`, 'g');
-        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import \"user_contract/${expectedContractName}.sol\";`);
+        const importRegex = new RegExp(`import "[^ vital]*/${expectedContractName}\\.sol";`, 'g');
+        const updatedTestCode = normalizedOriginalTestCode.replace(importRegex, `import "user_contract/${expectedContractName}.sol";`);
 
         console.log('🔨 Using pre-installed Foundry in container...');
 
@@ -293,7 +322,9 @@ router.post('/test-solidity', async (req: Request, res: Response) => {
             await writeFileAsync(path.join(tempTestDir, lessonMapping.testFile), updatedTestCode);
 
             // Configure foundry.toml with user_contract remapping
-            const foundryTomlContent = `[profile.default]\nsrc = \"src\"\nout = \"out\"\nlibs = [\"lib\"]\nremappings = [\"user_contract/=src/\"]`;
+            const foundryTomlContent = `[profile.default]\nsrc = \"src\"
+out = \"out\"
+libs = [\"lib\"]\nnremappings = [\"user_contract/=src/\"]`;
             await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryTomlContent);
 
             // Run tests

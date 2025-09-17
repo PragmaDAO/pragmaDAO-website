@@ -340,11 +340,8 @@ pragma solidity ^0.8.29;
     }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
     
     useEffect(() => {
-        // Use backend server for development and production
-        const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3003';
-        const soljsonUrl = process.env.NODE_ENV === 'production' 
-            ? window.location.origin + process.env.PUBLIC_URL + '/soljson.js'
-            : `${backendUrl}/soljson.js`;
+        // Use local soljson.js for both development and production
+        const soljsonUrl = window.location.origin + process.env.PUBLIC_URL + '/soljson.js';
         const workerCode = `
             var solc; // Declare solc globally
             var Module; // Declare Module globally

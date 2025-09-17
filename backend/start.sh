@@ -27,6 +27,9 @@ if [ -n "$FOUNDRY_PATH" ]; then
     export PATH="$FOUNDRY_PATH:$PATH"
     echo "✅ Foundry available for testing"
     "$FOUNDRY_PATH/forge" --version
+
+    # Also ensure /usr/local/bin is in PATH (where Dockerfile installs forge)
+    export PATH="/usr/local/bin:$PATH"
 else
     echo "⚠️ Warning: Foundry not found in any expected location"
     echo "PATH: $PATH"
@@ -49,17 +52,27 @@ else
                 fi
             done
         done
+
+        # Ensure /usr/local/bin is in PATH (where Dockerfile should install forge)
+        export PATH="/usr/local/bin:$PATH"
     else
         echo "❌ Foundry installation failed"
     fi
 fi
 
+# Ensure /usr/local/bin is always in PATH as final fallback
+export PATH="/usr/local/bin:$PATH"
+
 # Show final PATH and forge status
 echo "Final PATH: $PATH"
 if command -v forge &> /dev/null; then
     echo "✅ forge command available"
+    forge --version
 else
     echo "❌ forge command not available"
+    echo "Checking if forge exists in common locations:"
+    ls -la /usr/local/bin/forge 2>/dev/null || echo "  /usr/local/bin/forge: not found"
+    ls -la ~/.foundry/bin/forge 2>/dev/null || echo "  ~/.foundry/bin/forge: not found"
 fi
 
 # Start the application
