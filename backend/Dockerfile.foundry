@@ -1,0 +1,25 @@
+# Custom Foundry Docker image for fast testing
+FROM ubuntu:22.04
+
+# Set non-interactive frontend
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update -qq && \
+    apt-get install -y curl git ca-certificates -qq && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Foundry
+RUN curl -L https://foundry.paradigm.xyz | bash && \
+    /root/.foundry/bin/foundryup && \
+    cp /root/.foundry/bin/* /usr/local/bin/ && \
+    chmod +x /usr/local/bin/forge /usr/local/bin/cast /usr/local/bin/anvil /usr/local/bin/chisel
+
+# Verify installation
+RUN forge --version
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command
+CMD ["bash"]

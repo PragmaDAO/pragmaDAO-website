@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
@@ -14,8 +14,50 @@ const readFileAsync = promisify(fs.readFile);
 const rmAsync = promisify(fs.rm);
 const mkdirAsync = promisify(fs.mkdir);
 
+// Helper function to ensure Docker image is available
+async function ensureFoundryImageExists(): Promise<string> {
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+
+    console.log('🔍 Checking for pragma-foundry:latest...');
+
+    try {
+        // First try to run a simple command with the image to test if it exists and works
+        await execAsync('docker run --rm pragma-foundry:latest echo "test"', {
+            timeout: 10000,
+            env: process.env
+        });
+        console.log('✅ Using local pragma-foundry:latest image - FAST MODE');
+        return 'pragma-foundry:latest';
+    } catch (error: any) {
+        console.log('❌ pragma-foundry:latest not available, trying to build it...');
+
+        try {
+            // Try to build the image
+            console.log('🔨 Building pragma-foundry:latest...');
+            await execAsync('docker build -f Dockerfile.foundry -t pragma-foundry:latest .', {
+                timeout: 300000,
+                env: process.env
+            });
+
+            // Test if the newly built image works
+            await execAsync('docker run --rm pragma-foundry:latest echo "test"', {
+                timeout: 10000,
+                env: process.env
+            });
+            console.log('✅ Built and using pragma-foundry:latest - FAST MODE');
+            return 'pragma-foundry:latest';
+        } catch (buildError: any) {
+            console.log('❌ Failed to build pragma-foundry:latest, falling back to Ubuntu + install - SLOW MODE');
+            console.log('Build error:', buildError.message);
+            return 'ubuntu:22.04';
+        }
+    }
+}
+
 // External Foundry service using Docker
-async function runFoundryInDocker(userCode: string, testCode: string, contractName: string): Promise<{ success: boolean; output: string; passed: boolean }> {
+async function runFoundryInDocker(userCode: string, testCode: string, contractName: string, lessonMapping?: any): Promise<{ success: boolean; output: string; passed: boolean }> {
     const tempDir = await mkdtempAsync(path.join(require('os').tmpdir(), 'pragma-docker-'));
 
     try {
@@ -26,38 +68,140 @@ async function runFoundryInDocker(userCode: string, testCode: string, contractNa
         await mkdirAsync(srcDir, { recursive: true });
         await mkdirAsync(testDir, { recursive: true });
 
-        // Write foundry.toml
+        // Write foundry.toml with simpler config
         const foundryToml = `[profile.default]
 src = "src"
 out = "out"
 libs = ["lib"]
-remappings = ["user_contract/=src/"]
-
-[rpc_endpoints]
-mainnet = "https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY"
+remappings = ["user_contract/=src/", "forge-std/=lib/forge-std/src/"]
 `;
         await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryToml);
 
-        // Write user contract
-        await writeFileAsync(path.join(srcDir, `${contractName}.sol`), userCode);
+        // Create lib directory and minimal forge-std setup
+        const libDir = path.join(tempDir, 'lib', 'forge-std', 'src');
+        await mkdirAsync(libDir, { recursive: true });
 
-        // Write test file
-        await writeFileAsync(path.join(testDir, `${contractName}.t.sol`), testCode);
+        // Create a comprehensive Test.sol file to avoid import errors
+        const minimalTest = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
-        // Try using Docker to run forge test
-        const dockerCommand = `docker run --rm -v "${tempDir}:/workspace" -w /workspace ghcr.io/foundry-rs/foundry:latest forge test -vvv`;
+contract Test {
+    // Use only the most general types to avoid overload ambiguity
+    function assertEq(uint256 a, uint256 b) internal pure {
+        require(a == b, "assertion failed");
+    }
+
+    function assertEq(int256 a, int256 b) internal pure {
+        require(a == b, "assertion failed");
+    }
+
+    function assertEq(string memory a, string memory b, string memory message) internal pure {
+        require(keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b)), message);
+    }
+
+    function assertEq(string memory a, string memory b) internal pure {
+        require(keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b)), "assertion failed");
+    }
+
+    function assertEq(bool a, bool b) internal pure {
+        require(a == b, "assertion failed");
+    }
+
+    function assertTrue(bool condition) internal pure {
+        require(condition, "assertion failed");
+    }
+
+    function assertFalse(bool condition) internal pure {
+        require(!condition, "assertion failed");
+    }
+}
+`;
+        await writeFileAsync(path.join(libDir, 'Test.sol'), minimalTest);
+
+        // Write user contract with expected contract name
+        const expectedContractName = lessonMapping ? lessonMapping.expectedContractName : contractName;
+        await writeFileAsync(path.join(srcDir, `${expectedContractName}.sol`), userCode);
+
+        // Write test file with lesson-specific naming
+        const testFileName = lessonMapping ? lessonMapping.testFile : `${contractName}.t.sol`;
+        await writeFileAsync(path.join(testDir, testFileName), testCode);
+
+        // Determine which Docker image to use
+        const dockerImage = await ensureFoundryImageExists();
+
+        // Prepare Docker command based on available image
+        let dockerCommand: string;
+        if (dockerImage === 'pragma-foundry:latest') {
+            dockerCommand = 'forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+        } else {
+            dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+        }
+
+        console.log(`🐳 Using Docker image: ${dockerImage}`);
+        console.log(`📋 Docker command: ${dockerCommand.substring(0, 100)}...`);
 
         const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-            exec(dockerCommand, { timeout: 30000 }, (error, stdout, stderr) => {
-                if (error) {
-                    reject({ message: error.message, stdout, stderr });
+            // Use spawn for better output handling
+            const env = {
+                ...process.env
+            };
+
+            const dockerArgs = [
+                'run', '--rm',
+                '-v', `${tempDir}:/workspace`,
+                '-w', '/workspace',
+                dockerImage,
+                'bash', '-c',
+                dockerCommand
+            ];
+
+            const child = spawn('docker', dockerArgs, {
+                env,
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+
+            // Set a manual timeout
+            const timeoutHandle = setTimeout(() => {
+                child.kill('SIGTERM');
+                reject({ message: 'Docker command timed out after 120 seconds', stdout: '', stderr: '' });
+            }, 120000);
+
+            let stdoutData = '';
+            let stderrData = '';
+
+            child.stdout?.on('data', (data) => {
+                stdoutData += data.toString();
+            });
+
+            child.stderr?.on('data', (data) => {
+                stderrData += data.toString();
+            });
+
+            child.on('close', (code) => {
+                clearTimeout(timeoutHandle);
+                if (code !== 0) {
+                    console.error('Docker spawn error, exit code:', code);
+                    console.error('Docker stdout:', stdoutData);
+                    console.error('Docker stderr:', stderrData);
+                    reject({ message: `Docker exited with code ${code}`, stdout: stdoutData, stderr: stderrData });
                 } else {
-                    resolve({ stdout, stderr });
+                    resolve({ stdout: stdoutData, stderr: stderrData });
                 }
+            });
+
+            child.on('error', (error) => {
+                clearTimeout(timeoutHandle);
+                console.error('Docker spawn error:', error);
+                reject({ message: error.message, stdout: stdoutData, stderr: stderrData });
             });
         });
 
-        const passed = stdout.includes('1 passed') && !stdout.includes('0 failed');
+        console.log('Docker stdout:', stdout || 'NO STDOUT');
+        console.log('Docker stderr:', stderr || 'NO STDERR');
+        console.log('Docker stdout length:', stdout ? stdout.length : 0);
+        console.log('Docker stderr length:', stderr ? stderr.length : 0);
+
+        const passed = stdout.includes('Test result: ok') || stdout.includes('1 passed') || (stdout.includes('passed') && !stdout.includes('0 passed') && !stdout.includes('FAILED'));
 
         return {
             success: true,
@@ -66,7 +210,7 @@ mainnet = "https://eth-mainnet.alchemyapi.io/v2/YOUR_API_KEY"
         };
 
     } catch (error: any) {
-        console.log('Docker forge test failed:', error);
+        console.error('runFoundryInDocker failed:', error);
         return {
             success: false,
             output: `Docker test failed: ${error.message}\n\nSTDOUT: ${error.stdout}\nSTDERR: ${error.stderr}`,
@@ -112,13 +256,15 @@ router.post('/test-solidity-external', async (req: Request, res: Response) => {
     }
 
     // Map lesson IDs to the new directory structure
-    const lessonDirectoryMap: { [key: string]: { dir: string; testFile: string } } = {
-        'solidity-101': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol' },
-        'HelloWorld': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol' },
-        'integers-and-unsigned-integers': { dir: 'IntegersAndUnsignedIntegers', testFile: 'IntegersAndUnsignedIntegers.t.sol' },
-        'understanding-variables-and-types': { dir: 'UnderstandingVariablesAndTypes', testFile: 'UnderstandingVariablesAndTypes.t.sol' },
-        'state-and-local-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol' },
-        'understanding-functions': { dir: 'UnderstandingFunctions', testFile: 'UnderstandingFunctions.t.sol' }
+    const lessonDirectoryMap: { [key: string]: { dir: string; testFile: string; expectedContractName: string } } = {
+        'solidity-101': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol', expectedContractName: 'HelloWorld' },
+        'HelloWorld': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol', expectedContractName: 'HelloWorld' },
+        'HomePage': { dir: 'HelloWorld', testFile: 'HelloWorld.t.sol', expectedContractName: 'HelloWorld' },
+        'integers-and-unsigned-integers': { dir: 'IntegersAndUnsignedIntegers', testFile: 'IntegersAndUnsignedIntegers.t.sol', expectedContractName: 'IntegerBasics' },
+        'understanding-variables-and-types': { dir: 'UnderstandingVariablesAndTypes', testFile: 'UnderstandingVariablesAndTypes.t.sol', expectedContractName: 'VariableTypes' },
+        'state-and-local-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol', expectedContractName: 'StateAndLocalVariables' },
+        'understanding-functions': { dir: 'UnderstandingFunctions', testFile: 'UnderstandingFunctions.t.sol', expectedContractName: 'SimpleFunctions' },
+        'global-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol', expectedContractName: 'StateAndLocalVariables' }
     };
 
     const lessonMapping = lessonDirectoryMap[lessonId];
@@ -138,23 +284,29 @@ router.post('/test-solidity-external', async (req: Request, res: Response) => {
         return res.status(400).json({ error: `No test file found for lesson: ${lessonId} at ${originalTestFilePath}` });
     }
 
-    const contractName = extractContractName(code);
-    if (!contractName) {
+    const userContractName = extractContractName(code);
+    if (!userContractName) {
         return res.status(400).json({ error: 'Could not extract contract name from provided Solidity code.' });
     }
+
+    // Use the expected contract name for this lesson
+    const expectedContractName = lessonMapping.expectedContractName;
+
+    // Replace the user's contract name with the expected contract name
+    const codeWithCorrectContractName = code.replace(
+        new RegExp(`contract\\s+${userContractName}`, 'g'),
+        `contract ${expectedContractName}`
+    );
+
+    // Update test code import paths
+    const normalizedTestCode = testCode.replace(/\r\n/g, '\n');
+    const importRegex = new RegExp(`import \"[^\"]*/${expectedContractName}\\.sol\";`, 'g');
+    const updatedTestCode = normalizedTestCode.replace(importRegex, `import \"user_contract/${expectedContractName}.sol\";`);
 
     try {
         console.log('🐳 Attempting Docker-based Foundry test...');
 
-        // Try Docker first
-        let result = await runFoundryInDocker(code, testCode, contractName);
-
-        // If Docker fails, use online compiler as fallback
-        if (!result.success) {
-            console.log('📡 Falling back to online compiler...');
-            result = await useOnlineCompiler(code);
-            result.output += '\n\nNote: Used fallback validation (Docker/Foundry not available)';
-        }
+        const result = await runFoundryInDocker(codeWithCorrectContractName, updatedTestCode, expectedContractName, lessonMapping);
 
         // Store the submission
         const userId = (req as any).user?.id;
