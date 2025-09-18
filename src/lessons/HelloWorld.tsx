@@ -3,6 +3,7 @@ import SolidityEditor from "../components/SolidityEditor";
 import { CompiledOutput, TestCase } from "../types";
 import Lesson from "../components/Lesson";
 import ScrollIndicator from "../components/ScrollIndicator";
+import SignupModal from "../components/SignupModal";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
 import { lessons } from "../lessons"; // Import lessons array
 import helloWorldMarkdown from './assets/markdown/hello-world.md';
@@ -23,6 +24,7 @@ const HelloWorld: React.FC<{
   const testResultsContainerRef = useRef<HTMLDivElement>(null);
   const [isLessonCompleted, setIsLessonCompleted] = useState(false); // New state for completion
   const [canMarkComplete, setCanMarkComplete] = useState(false); // New state for test pass status
+  const [showSignupModal, setShowSignupModal] = useState(false); // New state for signup modal
 
   // Clear problematic localStorage for solidity-101 lesson to ensure initialCode is used
   useEffect(() => {
@@ -34,7 +36,9 @@ const HelloWorld: React.FC<{
 
   const handleToggleLessonCompletion = useCallback(async (completed: boolean) => {
     if (!user || !token) {
-      setCurrentPage('login');
+      if (completed) {
+        setShowSignupModal(true);
+      }
       return;
     }
 
@@ -158,6 +162,20 @@ const HelloWorld: React.FC<{
     }
   };
 
+  const handleSignupModalClose = () => {
+    setShowSignupModal(false);
+  };
+
+  const handleSignupFromModal = () => {
+    setShowSignupModal(false);
+    setCurrentPage('signup');
+  };
+
+  const handleLoginFromModal = () => {
+    setShowSignupModal(false);
+    setCurrentPage('login');
+  };
+
   return (
     <main className="pt-32 pb-20 flex-grow">
       <section className="container mx-auto px-6">
@@ -226,6 +244,13 @@ const HelloWorld: React.FC<{
           </div>
         </div>
       </section>
+      <SignupModal
+        isOpen={showSignupModal}
+        onClose={handleSignupModalClose}
+        onSignUp={handleSignupFromModal}
+        onLogin={handleLoginFromModal}
+        lessonTitle="Hello World"
+      />
     </main>
   );
 };
