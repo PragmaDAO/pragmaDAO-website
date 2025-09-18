@@ -146,7 +146,7 @@ const IntegersAndUnsignedIntegers: React.FC<{
   };
 
   return (
-    <main className="pt-16 pb-20 flex-grow">
+    <main className="pt-14 pb-20 flex-grow">
       <section className="container mx-auto px-6">
         <div className="flex justify-between items-center mb-8">
           <button

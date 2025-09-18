@@ -5,6 +5,11 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { PrismaClient } from '@prisma/client';
 
+// Cache for foundry availability to avoid repeated checks
+let foundryAvailable: boolean | null = null;
+let lastFoundryCheck = 0;
+const FOUNDRY_CHECK_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 const prisma = new PrismaClient();
 const router = Router();
 
@@ -13,6 +18,50 @@ const writeFileAsync = promisify(fs.writeFile);
 const readFileAsync = promisify(fs.readFile);
 const rmAsync = promisify(fs.rm);
 const mkdirAsync = promisify(fs.mkdir);
+
+// Fast cached check for Foundry availability
+async function isFoundryAvailable(): Promise<boolean> {
+    const now = Date.now();
+
+    // Return cached result if still valid
+    if (foundryAvailable !== null && (now - lastFoundryCheck) < FOUNDRY_CHECK_CACHE_TTL) {
+        return foundryAvailable;
+    }
+
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+
+    try {
+        // Check multiple possible forge locations quickly
+        const possiblePaths = [
+            'forge',
+            '/usr/local/bin/forge',
+            '/tmp/.foundry/bin/forge',
+            '~/.foundry/bin/forge'
+        ];
+
+        for (const forgePath of possiblePaths) {
+            try {
+                await execAsync(`${forgePath} --version`, { timeout: 2000 });
+                console.log(`✅ Found Foundry at: ${forgePath}`);
+                foundryAvailable = true;
+                lastFoundryCheck = now;
+                return true;
+            } catch (error) {
+                // Continue to next path
+            }
+        }
+
+        foundryAvailable = false;
+        lastFoundryCheck = now;
+        return false;
+    } catch (error) {
+        foundryAvailable = false;
+        lastFoundryCheck = now;
+        return false;
+    }
+}
 
 // Helper function to ensure Docker image is available
 async function ensureFoundryImageExists(): Promise<string | null> {
@@ -166,42 +215,49 @@ contract Test {
             const execAsync = promisify(exec);
 
             try {
-                // Check if forge is available, try multiple paths
-                console.log('🔍 Checking Foundry installation...');
-                console.log('  Current PATH:', process.env.PATH);
+                // Use fast cached check for Foundry availability
+                const foundryReady = await isFoundryAvailable();
 
                 let forgeCommand = 'forge';
-                try {
-                    await execAsync('forge --version', { timeout: 5000 });
-                    console.log('✅ Foundry found in PATH');
-                } catch (pathError: any) {
-                    console.log('❌ Foundry not in PATH, trying /usr/local/bin/forge...');
-                    try {
-                        await execAsync('/usr/local/bin/forge --version', { timeout: 5000 });
-                        forgeCommand = '/usr/local/bin/forge';
-                        console.log('✅ Foundry found at /usr/local/bin/forge');
-                    } catch (localError: any) {
-                        console.log('❌ Foundry not found, attempting installation...');
+                if (foundryReady) {
+                    // Quick verification to get the exact command
+                    const possiblePaths = ['forge', '/usr/local/bin/forge', '/tmp/.foundry/bin/forge', '~/.foundry/bin/forge'];
 
-                        // Try to install Foundry
-                        console.log('📦 Installing Foundry...');
-                        await execAsync('curl -L https://foundry.paradigm.xyz | bash', {
-                            timeout: 180000,
-                            env: { ...process.env, HOME: '/tmp' }
-                        });
-
-                        // Try to run foundryup
-                        await execAsync('/tmp/.foundry/bin/foundryup', {
-                            timeout: 180000,
-                            env: { ...process.env, HOME: '/tmp' }
-                        });
-
-                        forgeCommand = '/tmp/.foundry/bin/forge';
-
-                        // Verify installation
-                        await execAsync(`${forgeCommand} --version`, { timeout: 5000 });
-                        console.log('✅ Foundry installed and verified');
+                    for (const forgePath of possiblePaths) {
+                        try {
+                            await execAsync(`${forgePath} --version`, { timeout: 2000 });
+                            forgeCommand = forgePath;
+                            console.log(`✅ Using cached Foundry at: ${forgePath}`);
+                            break;
+                        } catch (error) {
+                            // Continue to next path
+                        }
                     }
+                } else {
+                    console.log('❌ Foundry not found in cache, attempting installation...');
+
+                    // Try to install Foundry
+                    console.log('📦 Installing Foundry...');
+                    await execAsync('curl -L https://foundry.paradigm.xyz | bash', {
+                        timeout: 180000,
+                        env: { ...process.env, HOME: '/tmp' }
+                    });
+
+                    // Try to run foundryup
+                    await execAsync('/tmp/.foundry/bin/foundryup', {
+                        timeout: 180000,
+                        env: { ...process.env, HOME: '/tmp' }
+                    });
+
+                    forgeCommand = '/tmp/.foundry/bin/forge';
+
+                    // Update cache after successful installation
+                    foundryAvailable = true;
+                    lastFoundryCheck = Date.now();
+
+                    // Verify installation
+                    await execAsync(`${forgeCommand} --version`, { timeout: 5000 });
+                    console.log('✅ Foundry installed and verified');
                 }
 
                 // Run forge test directly
