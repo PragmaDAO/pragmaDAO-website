@@ -168,7 +168,7 @@ const HelloWorld: React.FC<{
 
   const handleSignupFromModal = () => {
     setShowSignupModal(false);
-    setCurrentPage('signup');
+    setCurrentPage('register');
   };
 
   const handleLoginFromModal = () => {
