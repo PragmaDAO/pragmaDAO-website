@@ -21,11 +21,15 @@ async function ensureFoundryImageExists(): Promise<string | null> {
     const execAsync = promisify(exec);
 
     // First check if Docker is available
+    console.log('🔍 Checking Docker availability...');
     try {
-        await execAsync('docker --version', { timeout: 5000, env: process.env });
-        console.log('🐳 Docker is available');
+        const dockerResult = await execAsync('docker --version', { timeout: 5000, env: process.env });
+        console.log('🐳 Docker is available:', dockerResult.stdout.trim());
     } catch (dockerCheckError: any) {
-        console.log('❌ Docker not available on this system:', dockerCheckError.message);
+        console.log('❌ Docker not available on this system:');
+        console.log('  Error code:', dockerCheckError.code);
+        console.log('  Error message:', dockerCheckError.message);
+        console.log('  Error signal:', dockerCheckError.signal);
         console.log('⚠️  Solidity testing requires Docker installation');
         return null; // Signal Docker unavailable
     }
@@ -138,11 +142,20 @@ contract Test {
 
         // Check if we're in a container environment (like Render)
         // Force direct Foundry execution if DOCKER_IN_DOCKER is false or if we detect common container environments
+        console.log('🔍 Environment Detection:');
+        console.log('  DOCKER_IN_DOCKER:', process.env.DOCKER_IN_DOCKER);
+        console.log('  RENDER:', process.env.RENDER);
+        console.log('  RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT);
+        console.log('  NODE_ENV:', process.env.NODE_ENV);
+        console.log('  DOCKER_HOST:', process.env.DOCKER_HOST);
+
         const isContainerEnv = process.env.DOCKER_IN_DOCKER === 'false' ||
                               process.env.RENDER ||
                               process.env.RAILWAY_ENVIRONMENT ||
                               process.env.NODE_ENV === 'production' ||
                               !process.env.DOCKER_HOST;
+
+        console.log('  isContainerEnv:', isContainerEnv);
 
         if (isContainerEnv) {
             // Run Foundry directly (for Render and similar platforms)
