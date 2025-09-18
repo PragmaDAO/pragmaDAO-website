@@ -15,10 +15,20 @@ const rmAsync = promisify(fs.rm);
 const mkdirAsync = promisify(fs.mkdir);
 
 // Helper function to ensure Docker image is available
-async function ensureFoundryImageExists(): Promise<string> {
+async function ensureFoundryImageExists(): Promise<string | null> {
     const { exec } = require('child_process');
     const { promisify } = require('util');
     const execAsync = promisify(exec);
+
+    // First check if Docker is available
+    try {
+        await execAsync('docker --version', { timeout: 5000, env: process.env });
+        console.log('🐳 Docker is available');
+    } catch (dockerCheckError: any) {
+        console.log('❌ Docker not available on this system:', dockerCheckError.message);
+        console.log('🔄 Falling back to online compiler validation');
+        return null; // Signal to use fallback
+    }
 
     console.log('🔍 Checking for pragma-foundry:latest...');
 
@@ -128,6 +138,13 @@ contract Test {
 
         // Determine which Docker image to use
         const dockerImage = await ensureFoundryImageExists();
+
+        // If Docker is not available, use online compiler fallback
+        if (dockerImage === null) {
+            console.log('🌐 Using online compiler validation (Docker not available)');
+            const result = await useOnlineCompiler(userCode);
+            return result;
+        }
 
         // Prepare Docker command based on available image
         let dockerCommand: string;
