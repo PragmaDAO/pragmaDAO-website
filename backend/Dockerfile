@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 # Set non-interactive frontend to avoid prompts
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Node.js 18 and system dependencies
+# Install Node.js 18, Docker, and system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     git \
@@ -12,15 +12,24 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     gnupg \
     lsb-release \
+    apt-transport-https \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Docker
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce docker-ce-cli containerd.io \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 18
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
-# Create a non-root user and group first
+# Create a non-root user and group first, add to docker group
 RUN groupadd --system --gid 1001 nodejs
 RUN useradd --system --uid 1001 --gid nodejs nodejs
+RUN usermod -aG docker nodejs
 
 # Install Foundry to /usr/local/bin (accessible to all users)
 RUN curl -L https://foundry.paradigm.xyz | bash && \
@@ -63,5 +72,9 @@ RUN npm run build
 # Expose port
 EXPOSE 3003
 
-# Start the application
-CMD ["npm", "start"]
+# Copy startup script
+COPY --chown=nodejs:nodejs start-with-docker.sh /app/start-with-docker.sh
+RUN chmod +x /app/start-with-docker.sh
+
+# Start the application with Docker daemon
+CMD ["/app/start-with-docker.sh"]

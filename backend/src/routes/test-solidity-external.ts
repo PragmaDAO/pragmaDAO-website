@@ -241,27 +241,7 @@ contract Test {
     }
 }
 
-// Alternative: Use online Solidity compiler API
-async function useOnlineCompiler(userCode: string): Promise<{ success: boolean; output: string; passed: boolean }> {
-    // This would use a service like Remix IDE API or similar
-    // For now, just basic validation
-
-    const basicChecks = {
-        hasPragma: userCode.includes('pragma solidity'),
-        hasContract: userCode.includes('contract '),
-        balancedBraces: (userCode.match(/{/g) || []).length === (userCode.match(/}/g) || []).length
-    };
-
-    const allChecksPassed = Object.values(basicChecks).every(check => check);
-
-    return {
-        success: true,
-        output: allChecksPassed
-            ? '✅ External compilation successful! Code structure is valid.'
-            : '❌ Code structure validation failed.',
-        passed: allChecksPassed
-    };
-}
+// Docker is required for proper Solidity testing
 
 const extractContractName = (solidityCode: string): string | null => {
     const match = solidityCode.match(/contract\s+(\w+)\s*{/);
