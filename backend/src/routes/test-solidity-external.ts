@@ -26,8 +26,8 @@ async function ensureFoundryImageExists(): Promise<string | null> {
         console.log('🐳 Docker is available');
     } catch (dockerCheckError: any) {
         console.log('❌ Docker not available on this system:', dockerCheckError.message);
-        console.log('🔄 Falling back to online compiler validation');
-        return null; // Signal to use fallback
+        console.log('⚠️  Solidity testing requires Docker installation');
+        return null; // Signal Docker unavailable
     }
 
     console.log('🔍 Checking for pragma-foundry:latest...');
@@ -139,11 +139,14 @@ contract Test {
         // Determine which Docker image to use
         const dockerImage = await ensureFoundryImageExists();
 
-        // If Docker is not available, use online compiler fallback
+        // If Docker is not available, return an error
         if (dockerImage === null) {
-            console.log('🌐 Using online compiler validation (Docker not available)');
-            const result = await useOnlineCompiler(userCode);
-            return result;
+            console.log('❌ Docker is required for Solidity testing but not available');
+            return {
+                success: false,
+                output: 'Docker is required for Solidity testing but is not installed or available on this server. Please install Docker to enable Solidity testing.',
+                passed: false
+            };
         }
 
         // Prepare Docker command based on available image
