@@ -66,8 +66,8 @@ async function ensureFoundryImageExists(): Promise<string | null> {
     }
 }
 
-// External Foundry service using Docker
-async function runFoundryInDocker(userCode: string, testCode: string, contractName: string, lessonMapping?: any): Promise<{ success: boolean; output: string; passed: boolean }> {
+// External Foundry service - runs directly or in Docker based on environment
+async function runFoundryTest(userCode: string, testCode: string, contractName: string, lessonMapping?: any): Promise<{ success: boolean; output: string; passed: boolean }> {
     const tempDir = await mkdtempAsync(path.join(require('os').tmpdir(), 'pragma-docker-'));
 
     try {
@@ -136,49 +136,94 @@ contract Test {
         const testFileName = lessonMapping ? lessonMapping.testFile : `${contractName}.t.sol`;
         await writeFileAsync(path.join(testDir, testFileName), testCode);
 
-        // Determine which Docker image to use
-        const dockerImage = await ensureFoundryImageExists();
+        // Check if we're in a container environment (like Render)
+        // Force direct Foundry execution if DOCKER_IN_DOCKER is false or if we detect common container environments
+        const isContainerEnv = process.env.DOCKER_IN_DOCKER === 'false' ||
+                              process.env.RENDER ||
+                              process.env.RAILWAY_ENVIRONMENT ||
+                              process.env.NODE_ENV === 'production' ||
+                              !process.env.DOCKER_HOST;
 
-        // If Docker is not available, return an error
-        if (dockerImage === null) {
-            console.log('❌ Docker is required for Solidity testing but not available');
-            return {
-                success: false,
-                output: 'Docker is required for Solidity testing but is not installed or available on this server. Please install Docker to enable Solidity testing.',
-                passed: false
-            };
-        }
+        if (isContainerEnv) {
+            // Run Foundry directly (for Render and similar platforms)
+            console.log('🔨 Running Foundry directly in container environment');
 
-        // Prepare Docker command based on available image
-        let dockerCommand: string;
-        if (dockerImage === 'pragma-foundry:latest') {
-            dockerCommand = 'forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+            const { exec } = require('child_process');
+            const { promisify } = require('util');
+            const execAsync = promisify(exec);
+
+            try {
+                // Check if forge is available
+                await execAsync('forge --version', { timeout: 5000 });
+                console.log('✅ Foundry is available');
+
+                // Run forge test directly
+                const { stdout, stderr } = await execAsync('forge test --root . -vvv', {
+                    cwd: tempDir,
+                    timeout: 60000,
+                    env: { ...process.env, PATH: `${process.env.PATH}:/usr/local/bin` }
+                });
+
+                const passed = stdout.includes('Test result: ok') || stdout.includes('1 passed') || (stdout.includes('passed') && !stdout.includes('0 passed') && !stdout.includes('FAILED'));
+
+                return {
+                    success: true,
+                    output: stdout,
+                    passed
+                };
+
+            } catch (error: any) {
+                console.error('Direct Foundry execution failed:', error);
+                return {
+                    success: false,
+                    output: `Foundry test failed: ${error.message}\n\nSTDOUT: ${error.stdout}\nSTDERR: ${error.stderr}`,
+                    passed: false
+                };
+            }
         } else {
-            dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
-        }
+            // Use Docker-in-Docker for local development
+            const dockerImage = await ensureFoundryImageExists();
 
-        console.log(`🐳 Using Docker image: ${dockerImage}`);
-        console.log(`📋 Docker command: ${dockerCommand.substring(0, 100)}...`);
+            // If Docker is not available, return an error
+            if (dockerImage === null) {
+                console.log('❌ Docker is required for Solidity testing but not available');
+                return {
+                    success: false,
+                    output: 'Docker is required for Solidity testing but is not installed or available on this server. Please install Docker to enable Solidity testing.',
+                    passed: false
+                };
+            }
 
-        const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-            // Use spawn for better output handling
-            const env = {
-                ...process.env
-            };
+            // Prepare Docker command based on available image
+            let dockerCommand: string;
+            if (dockerImage === 'pragma-foundry:latest') {
+                dockerCommand = 'forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+            } else {
+                dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+            }
 
-            const dockerArgs = [
-                'run', '--rm',
-                '-v', `${tempDir}:/workspace`,
-                '-w', '/workspace',
-                dockerImage,
-                'bash', '-c',
-                dockerCommand
-            ];
+            console.log(`🐳 Using Docker image: ${dockerImage}`);
+            console.log(`📋 Docker command: ${dockerCommand.substring(0, 100)}...`);
 
-            const child = spawn('docker', dockerArgs, {
-                env,
-                stdio: ['pipe', 'pipe', 'pipe']
-            });
+            const { stdout, stderr } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+                // Use spawn for better output handling
+                const env = {
+                    ...process.env
+                };
+
+                const dockerArgs = [
+                    'run', '--rm',
+                    '-v', `${tempDir}:/workspace`,
+                    '-w', '/workspace',
+                    dockerImage,
+                    'bash', '-c',
+                    dockerCommand
+                ];
+
+                const child = spawn('docker', dockerArgs, {
+                    env,
+                    stdio: ['pipe', 'pipe', 'pipe']
+                });
 
             // Set a manual timeout
             const timeoutHandle = setTimeout(() => {
@@ -223,11 +268,12 @@ contract Test {
 
         const passed = stdout.includes('Test result: ok') || stdout.includes('1 passed') || (stdout.includes('passed') && !stdout.includes('0 passed') && !stdout.includes('FAILED'));
 
-        return {
-            success: true,
-            output: stdout,
-            passed
-        };
+            return {
+                success: true,
+                output: stdout,
+                passed
+            };
+        }
 
     } catch (error: any) {
         console.error('runFoundryInDocker failed:', error);
@@ -306,7 +352,7 @@ router.post('/test-solidity-external', async (req: Request, res: Response) => {
     try {
         console.log('🐳 Attempting Docker-based Foundry test...');
 
-        const result = await runFoundryInDocker(codeWithCorrectContractName, updatedTestCode, expectedContractName, lessonMapping);
+        const result = await runFoundryTest(codeWithCorrectContractName, updatedTestCode, expectedContractName, lessonMapping);
 
         // Store the submission
         const userId = (req as any).user?.id;

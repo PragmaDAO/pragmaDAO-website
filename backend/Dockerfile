@@ -76,5 +76,9 @@ EXPOSE 3003
 COPY --chown=nodejs:nodejs start-with-docker.sh /app/start-with-docker.sh
 RUN chmod +x /app/start-with-docker.sh
 
-# Start the application with Docker daemon
-CMD ["/app/start-with-docker.sh"]
+# For Render: Start without Docker daemon (Docker-in-Docker not supported)
+# Use environment variable to detect if we're in a container
+ENV DOCKER_IN_DOCKER=false
+
+# Start the application
+CMD ["npm", "start"]
