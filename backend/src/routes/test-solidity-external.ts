@@ -166,15 +166,50 @@ contract Test {
             const execAsync = promisify(exec);
 
             try {
-                // Check if forge is available
-                await execAsync('forge --version', { timeout: 5000 });
-                console.log('✅ Foundry is available');
+                // Check if forge is available, try multiple paths
+                console.log('🔍 Checking Foundry installation...');
+                console.log('  Current PATH:', process.env.PATH);
+
+                let forgeCommand = 'forge';
+                try {
+                    await execAsync('forge --version', { timeout: 5000 });
+                    console.log('✅ Foundry found in PATH');
+                } catch (pathError: any) {
+                    console.log('❌ Foundry not in PATH, trying /usr/local/bin/forge...');
+                    try {
+                        await execAsync('/usr/local/bin/forge --version', { timeout: 5000 });
+                        forgeCommand = '/usr/local/bin/forge';
+                        console.log('✅ Foundry found at /usr/local/bin/forge');
+                    } catch (localError: any) {
+                        console.log('❌ Foundry not found, attempting installation...');
+
+                        // Try to install Foundry
+                        console.log('📦 Installing Foundry...');
+                        await execAsync('curl -L https://foundry.paradigm.xyz | bash', {
+                            timeout: 180000,
+                            env: { ...process.env, HOME: '/tmp' }
+                        });
+
+                        // Try to run foundryup
+                        await execAsync('/tmp/.foundry/bin/foundryup', {
+                            timeout: 180000,
+                            env: { ...process.env, HOME: '/tmp' }
+                        });
+
+                        forgeCommand = '/tmp/.foundry/bin/forge';
+
+                        // Verify installation
+                        await execAsync(`${forgeCommand} --version`, { timeout: 5000 });
+                        console.log('✅ Foundry installed and verified');
+                    }
+                }
 
                 // Run forge test directly
-                const { stdout, stderr } = await execAsync('forge test --root . -vvv', {
+                console.log(`🔨 Running forge test with: ${forgeCommand}`);
+                const { stdout, stderr } = await execAsync(`${forgeCommand} test --root . -vvv`, {
                     cwd: tempDir,
                     timeout: 60000,
-                    env: { ...process.env, PATH: `${process.env.PATH}:/usr/local/bin` }
+                    env: { ...process.env, PATH: `${process.env.PATH}:/usr/local/bin:/tmp/.foundry/bin` }
                 });
 
                 const passed = stdout.includes('Test result: ok') || stdout.includes('1 passed') || (stdout.includes('passed') && !stdout.includes('0 passed') && !stdout.includes('FAILED'));
