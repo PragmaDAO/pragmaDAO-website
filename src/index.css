@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global selection override to prevent white backgrounds */
+::selection {
+  background-color: #4338ca !important;
+  color: white !important;
+}
+
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
@@ -74,7 +80,44 @@ body {
 }
 
 .cm-selectionBackground {
-  background-color: #2a303c !important; /* Match active line background for selection */
+  background-color: #4338ca !important; /* Distinct indigo color for text selection */
+  min-height: 1.2em !important; /* Ensure minimum height for small selections */
+}
+
+.cm-focused .cm-selectionBackground {
+  background-color: #4338ca !important; /* Ensure selection is visible when editor is focused */
+}
+
+.cm-line.cm-selectionMatch {
+  background-color: #4338ca !important; /* Highlight for any part of line selection */
+}
+
+/* More specific selection styling for partial line selections */
+.cm-editor .cm-selectionLayer .cm-selectionBackground {
+  background-color: #4338ca !important;
+  border-radius: 2px;
+}
+
+/* Ensure any selected content within a line gets highlighted */
+.cm-content[contenteditable="true"] {
+  caret-color: white !important;
+}
+
+/* Override default browser selection to prevent white background */
+.cm-editor ::selection {
+  background-color: #4338ca !important;
+  color: white !important;
+}
+
+.cm-content ::selection {
+  background-color: #4338ca !important;
+  color: white !important;
+}
+
+/* Force CodeMirror selection to always use indigo */
+.cm-editor .cm-content ::selection {
+  background-color: #4338ca !important;
+  color: white !important;
 }
 
 /* Modal animations */
