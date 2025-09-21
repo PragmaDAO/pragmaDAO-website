@@ -66,6 +66,57 @@ body {
   color: #a78bfa !important; /* Brighter purple for keywords */
 }
 
+/* Boolean literals (true/false) with high contrast colors */
+.cm-literal {
+  color: #fde047 !important; /* Bright yellow for true/false */
+  font-weight: 600 !important; /* Make them bold */
+}
+
+/* More specific targeting for boolean values */
+.cm-atom {
+  color: #fde047 !important; /* Bright yellow for atomic values like true/false */
+  font-weight: 600 !important;
+}
+
+/* Numbers and boolean literals */
+.cm-number {
+  color: #34d399 !important; /* Bright green for numbers */
+  font-weight: 500 !important;
+}
+
+/* Solidity-specific boolean targeting */
+.cm-builtin {
+  color: #fde047 !important; /* Bright yellow for built-in values like true/false */
+  font-weight: 700 !important;
+}
+
+/* Additional targeting for any boolean-like tokens */
+.cm-variable-2 {
+  color: #fde047 !important; /* Sometimes booleans are tagged as variable-2 */
+  font-weight: 600 !important;
+}
+
+/* String literals for contrast */
+.cm-string {
+  color: #10b981 !important; /* Bright green for strings */
+}
+
+/* Aggressive targeting for all possible boolean token types */
+.cm-editor span[title="true"],
+.cm-editor span[title="false"],
+.cm-editor .shtk-true,
+.cm-editor .shtk-false,
+.cm-editor .cm-token.cm-keyword.cm-true,
+.cm-editor .cm-token.cm-keyword.cm-false {
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+}
+
+/* Catch-all for any span containing boolean text */
+.cm-content span {
+  /* This will be handled by JavaScript if needed */
+}
+
 .cm-activeLineGutter {
   color: #e2e8f0 !important; /* Ensure active line number stays the same color */
   background-color: transparent !important; /* Ensure background is transparent */
@@ -118,6 +169,23 @@ body {
 .cm-editor .cm-content ::selection {
   background-color: #4338ca !important;
   color: white !important;
+}
+
+/* Ensure boolean literals remain visible when selected */
+.cm-selectionBackground .cm-literal,
+.cm-selectionBackground .cm-atom,
+.cm-selectionBackground .boolean-highlight {
+  color: #fef3c7 !important; /* Bright amber for selected booleans */
+  font-weight: 700 !important;
+}
+
+/* Ensure numbers remain visible when selected */
+.cm-selectionBackground .cm-number {
+  color: #dcfce7 !important; /* Light green for selected numbers */
+  background-color: #16a34a !important; /* Darker green background */
+  border-radius: 2px !important;
+  padding: 0 2px !important;
+  font-weight: 600 !important;
 }
 
 /* Modal animations */

@@ -1,12 +1,49 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, Decoration, DecorationSet } from '@codemirror/view';
 import { basicSetup } from 'codemirror';
-import { EditorState } from '@codemirror/state';
+import { EditorState, StateField, StateEffect } from '@codemirror/state';
 import { solidity } from '@replit/codemirror-lang-solidity';
 import { indentWithTab } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { useAuth } from '../context/AuthContext';
 import { CompiledOutput, TestCase } from '../types';
+
+// Boolean highlighting extension
+const booleanHighlightMark = Decoration.mark({
+  class: "boolean-highlight",
+  attributes: { style: "color: #fde047 !important; font-weight: 700 !important;" }
+});
+
+const booleanHighlightField = StateField.define<DecorationSet>({
+  create(state) {
+    return highlightBooleans(state);
+  },
+  update(decorations, tr) {
+    if (tr.docChanged) {
+      return highlightBooleans(tr.state);
+    }
+    return decorations.map(tr.changes);
+  },
+  provide: field => EditorView.decorations.from(field)
+});
+
+function highlightBooleans(state: EditorState): DecorationSet {
+  const decorations: any[] = [];
+  const doc = state.doc;
+  const text = doc.toString();
+
+  // Find all instances of 'true' and 'false' as whole words
+  const booleanRegex = /\b(true|false)\b/g;
+  let match;
+
+  while ((match = booleanRegex.exec(text)) !== null) {
+    const from = match.index;
+    const to = from + match[0].length;
+    decorations.push(booleanHighlightMark.range(from, to));
+  }
+
+  return Decoration.set(decorations);
+}
 
 const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
      initialCode?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void, onCodeChange?: (code: string) => void }> = ({ onCompile,
@@ -75,6 +112,7 @@ pragma solidity ^0.8.7;
             extensions: [
                 basicSetup,
                 solidity,
+                booleanHighlightField, // Add boolean highlighting
                 keymap.of([indentWithTab]),
                 indentUnit.of("    "), // Set tab size to 4 spaces
                 EditorView.updateListener.of((update) => {
