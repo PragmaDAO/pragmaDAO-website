@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { EditorView, keymap, Decoration, DecorationSet } from '@codemirror/view';
+import { EditorView, keymap, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { basicSetup } from 'codemirror';
 import { EditorState, StateField, StateEffect } from '@codemirror/state';
 import { solidity } from '@replit/codemirror-lang-solidity';
@@ -8,10 +8,12 @@ import { indentUnit } from '@codemirror/language';
 import { useAuth } from '../context/AuthContext';
 import { CompiledOutput, TestCase } from '../types';
 
-// Boolean highlighting extension
+// Boolean highlighting extension with enhanced targeting
 const booleanHighlightMark = Decoration.mark({
   class: "boolean-highlight",
-  attributes: { style: "color: #fde047 !important; font-weight: 700 !important;" }
+  attributes: {
+    style: "color: #ffeb3b !important; font-weight: 700 !important;"
+  }
 });
 
 const booleanHighlightField = StateField.define<DecorationSet>({
@@ -32,8 +34,8 @@ function highlightBooleans(state: EditorState): DecorationSet {
   const doc = state.doc;
   const text = doc.toString();
 
-  // Find all instances of 'true' and 'false' as whole words
-  const booleanRegex = /\b(true|false)\b/g;
+  // More comprehensive regex to catch various boolean contexts
+  const booleanRegex = /\b(true|false)\b/gi;
   let match;
 
   while ((match = booleanRegex.exec(text)) !== null) {
@@ -44,6 +46,52 @@ function highlightBooleans(state: EditorState): DecorationSet {
 
   return Decoration.set(decorations);
 }
+
+// Add a view plugin to force DOM updates
+const booleanViewPlugin = ViewPlugin.fromClass(class {
+  constructor(view: EditorView) {
+    this.applyBooleanStyling(view);
+  }
+
+  update(update: ViewUpdate) {
+    // Apply styling on any change, focus, or selection change
+    if (update.docChanged || update.focusChanged || update.selectionSet) {
+      this.applyBooleanStyling(update.view);
+    }
+  }
+
+  applyBooleanStyling(view: EditorView) {
+    // Apply immediately and after a short delay to catch any theme overrides
+    const applyStyles = () => {
+      // Target all spans in content
+      const spans = view.dom.querySelectorAll('.cm-content span');
+      spans.forEach((span: Element) => {
+        if (span.textContent === 'true' || span.textContent === 'false') {
+          const element = span as HTMLElement;
+          element.style.setProperty('color', '#ffeb3b', 'important');
+          element.style.setProperty('font-weight', '700', 'important');
+          element.classList.add('boolean-highlight');
+        }
+      });
+
+      // Also target spans within selection backgrounds
+      const selectedSpans = view.dom.querySelectorAll('.cm-selectionBackground span, .cm-selectionBackground');
+      selectedSpans.forEach((span: Element) => {
+        if (span.textContent === 'true' || span.textContent === 'false') {
+          const element = span as HTMLElement;
+          element.style.setProperty('color', '#ffeb3b', 'important');
+          element.style.setProperty('font-weight', '700', 'important');
+          element.classList.add('boolean-highlight');
+        }
+      });
+    };
+
+    applyStyles();
+    setTimeout(applyStyles, 10);
+    setTimeout(applyStyles, 100); // Extra delay to catch theme changes
+    setTimeout(applyStyles, 200); // Extra delay for selection changes
+  }
+});
 
 const SolidityEditor: React.FC<{ onCompile?: (result: CompiledOutput | null) => void,
      initialCode?: string, lessonId?: string, onTestResults: (testCases: TestCase[]) => void, onAllTestsPassed: (passed: boolean) => void, onCodeChange?: (code: string) => void }> = ({ onCompile,
@@ -113,6 +161,7 @@ pragma solidity ^0.8.7;
                 basicSetup,
                 solidity,
                 booleanHighlightField, // Add boolean highlighting
+                booleanViewPlugin, // Add view plugin for DOM manipulation
                 keymap.of([indentWithTab]),
                 indentUnit.of("    "), // Set tab size to 4 spaces
                 EditorView.updateListener.of((update) => {

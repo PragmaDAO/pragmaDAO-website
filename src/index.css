@@ -68,13 +68,13 @@ body {
 
 /* Boolean literals (true/false) with high contrast colors */
 .cm-literal {
-  color: #fde047 !important; /* Bright yellow for true/false */
+  color: #ffeb3b !important; /* Vibrant yellow for true/false */
   font-weight: 600 !important; /* Make them bold */
 }
 
 /* More specific targeting for boolean values */
 .cm-atom {
-  color: #fde047 !important; /* Bright yellow for atomic values like true/false */
+  color: #ffeb3b !important; /* Vibrant yellow for atomic values like true/false */
   font-weight: 600 !important;
 }
 
@@ -86,13 +86,13 @@ body {
 
 /* Solidity-specific boolean targeting */
 .cm-builtin {
-  color: #fde047 !important; /* Bright yellow for built-in values like true/false */
+  color: #ffeb3b !important; /* Vibrant yellow for built-in values like true/false */
   font-weight: 700 !important;
 }
 
 /* Additional targeting for any boolean-like tokens */
 .cm-variable-2 {
-  color: #fde047 !important; /* Sometimes booleans are tagged as variable-2 */
+  color: #ffeb3b !important; /* Sometimes booleans are tagged as variable-2 */
   font-weight: 600 !important;
 }
 
@@ -108,13 +108,66 @@ body {
 .cm-editor .shtk-false,
 .cm-editor .cm-token.cm-keyword.cm-true,
 .cm-editor .cm-token.cm-keyword.cm-false {
-  color: #fbbf24 !important;
+  color: #ffeb3b !important;
   font-weight: 700 !important;
 }
 
 /* Catch-all for any span containing boolean text */
 .cm-content span {
   /* This will be handled by JavaScript if needed */
+}
+
+/* Boolean highlighting extension class - highest priority */
+.boolean-highlight {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
+}
+
+/* Force boolean highlighting on all possible elements */
+.cm-editor .boolean-highlight,
+.cm-content .boolean-highlight,
+.cm-line .boolean-highlight {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
+}
+
+/* Prevent focus state from overriding boolean colors */
+.cm-editor.cm-focused .boolean-highlight,
+.cm-editor.cm-focused .cm-literal,
+.cm-editor.cm-focused .cm-atom,
+.cm-editor.cm-focused .cm-builtin,
+.cm-editor.cm-focused .cm-variable-2 {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
+}
+
+/* Override any theme-specific focusing that might change colors */
+.cm-focused .boolean-highlight,
+.cm-focused .cm-literal,
+.cm-focused .cm-atom,
+.cm-focused .cm-builtin {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
+}
+
+/* Ultra-aggressive boolean targeting - catch all possible variations */
+.cm-editor span:contains("true"),
+.cm-editor span:contains("false") {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
+}
+
+/* Target any text content that matches boolean values */
+.cm-content span {
+  /* This will be enhanced by JavaScript */
+}
+
+/* Solidity language specific targeting */
+.cm-editor .cm-solidity-boolean,
+.cm-editor [data-token="boolean"],
+.cm-editor .tok-boolean {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
 }
 
 .cm-activeLineGutter {
@@ -174,9 +227,23 @@ body {
 /* Ensure boolean literals remain visible when selected */
 .cm-selectionBackground .cm-literal,
 .cm-selectionBackground .cm-atom,
-.cm-selectionBackground .boolean-highlight {
-  color: #fef3c7 !important; /* Bright amber for selected booleans */
+.cm-selectionBackground .boolean-highlight,
+.cm-selectionBackground .cm-builtin,
+.cm-selectionBackground .cm-variable-2 {
+  color: #ffeb3b !important; /* Keep same yellow for selected booleans */
   font-weight: 700 !important;
+}
+
+/* Additional targeting for selected boolean text */
+.cm-editor .cm-selectionBackground .boolean-highlight,
+.cm-content .cm-selectionBackground .boolean-highlight {
+  color: #ffeb3b !important;
+  font-weight: 700 !important;
+}
+
+/* Aggressive selection override */
+.cm-selectionBackground span {
+  /* Will be handled by JavaScript for boolean text */
 }
 
 /* Ensure numbers remain visible when selected */

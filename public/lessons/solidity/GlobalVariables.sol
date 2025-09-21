@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.29;
+pragma solidity ^0.8.26;
 
 contract GlobalVariables {
     function getSender() public view returns (address) {
