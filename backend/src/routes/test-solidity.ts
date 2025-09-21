@@ -284,9 +284,9 @@ contract Test {
         // Prepare Docker command based on available image
         let dockerCommand: string;
         if (dockerImage === 'pragma-foundry:latest') {
-            dockerCommand = 'echo "=== Starting Forge Test ===" && ls -la && echo "=== Project structure ===" && find . -type f -name "*.sol" && echo "=== Running forge test ===" && forge test --root . -vvvv 2>&1 || echo "Test completed with exit code: $?"';
+            dockerCommand = 'echo "=== Starting Forge Test ===" && ls -la && echo "=== Project structure ===" && find . -type f -name "*.sol" && echo "=== Running forge test ===" && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
         } else {
-            dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && echo "=== Starting Forge Test ===" && ls -la && echo "=== Project structure ===" && find . -type f -name "*.sol" && echo "=== Running forge test ===" && forge test --root . -vvvv 2>&1 || echo "Test completed with exit code: $?"';
+            dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && echo "=== Starting Forge Test ===" && ls -la && echo "=== Project structure ===" && find . -type f -name "*.sol" && echo "=== Running forge test ===" && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
         }
 
         console.log(`🐳 Using Docker image: ${dockerImage}`);

@@ -131,12 +131,14 @@ async function runFoundryTest(userCode: string, testCode: string, contractName: 
         await mkdirAsync(srcDir, { recursive: true });
         await mkdirAsync(testDir, { recursive: true });
 
-        // Write foundry.toml with simpler config
+        // Write foundry.toml with correct solc version
         const foundryToml = `[profile.default]
 src = "src"
 out = "out"
 libs = ["lib"]
 remappings = ["user_contract/=src/", "forge-std/=lib/forge-std/src/"]
+extra_output = ["abi", "evm.bytecode"]
+solc_version = "0.8.26"
 `;
         await writeFileAsync(path.join(tempDir, 'foundry.toml'), foundryToml);
 
@@ -154,6 +156,10 @@ contract Test {
         require(a == b, "assertion failed");
     }
 
+    function assertEq(uint256 a, uint256 b, string memory message) internal pure {
+        require(a == b, message);
+    }
+
     function assertEq(int256 a, int256 b) internal pure {
         require(a == b, "assertion failed");
     }
@@ -168,6 +174,26 @@ contract Test {
 
     function assertEq(bool a, bool b) internal pure {
         require(a == b, "assertion failed");
+    }
+
+    function assertEq(bool a, bool b, string memory message) internal pure {
+        require(a == b, message);
+    }
+
+    function assertEq(address a, address b) internal pure {
+        require(a == b, "assertion failed");
+    }
+
+    function assertEq(address a, address b, string memory message) internal pure {
+        require(a == b, message);
+    }
+
+    function assertEq(bytes32 a, bytes32 b) internal pure {
+        require(a == b, "assertion failed");
+    }
+
+    function assertEq(bytes32 a, bytes32 b, string memory message) internal pure {
+        require(a == b, message);
     }
 
     function assertTrue(bool condition) internal pure {
@@ -260,7 +286,25 @@ contract Test {
                     console.log('✅ Foundry installed and verified');
                 }
 
-                // Run forge test directly
+                // First try to build to catch all compilation errors
+                console.log(`🔨 Running forge build with: ${forgeCommand}`);
+                try {
+                    await execAsync(`${forgeCommand} build --root .`, {
+                        cwd: tempDir,
+                        timeout: 30000,
+                        env: { ...process.env, PATH: `${process.env.PATH}:/usr/local/bin:/tmp/.foundry/bin` }
+                    });
+                    console.log(`✅ Build successful, running tests`);
+                } catch (buildError: any) {
+                    console.log(`❌ Build failed, returning compilation errors`);
+                    return {
+                        success: false,
+                        output: `Compilation failed: ${buildError.message}\n\nSTDOUT: ${buildError.stdout}\nSTDERR: ${buildError.stderr}`,
+                        passed: false
+                    };
+                }
+
+                // If build succeeds, run tests
                 console.log(`🔨 Running forge test with: ${forgeCommand}`);
                 const { stdout, stderr } = await execAsync(`${forgeCommand} test --root . -vvv`, {
                     cwd: tempDir,
@@ -301,9 +345,9 @@ contract Test {
             // Prepare Docker command based on available image
             let dockerCommand: string;
             if (dockerImage === 'pragma-foundry:latest') {
-                dockerCommand = 'forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+                dockerCommand = 'forge build --root . 2>&1 || (echo "BUILD_FAILED" && forge build --root . 2>&1 && exit 1) && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
             } else {
-                dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
+                dockerCommand = 'apt-get update -qq && apt-get install -y curl git -qq && curl -L https://foundry.paradigm.xyz | bash && export PATH="$PATH:/root/.foundry/bin" && foundryup && forge build --root . 2>&1 || (echo "BUILD_FAILED" && forge build --root . 2>&1 && exit 1) && forge test --root . -vvv 2>&1 || echo "Test completed with exit code: $?"';
             }
 
             console.log(`🐳 Using Docker image: ${dockerImage}`);
@@ -398,6 +442,98 @@ const extractContractName = (solidityCode: string): string | null => {
     return match ? match[1] : null;
 };
 
+// Function to extract all function names from Solidity code
+const extractFunctionNames = (solidityCode: string): string[] => {
+    const functionRegex = /function\s+(\w+)\s*\(/g;
+    const functions: string[] = [];
+    let match;
+    while ((match = functionRegex.exec(solidityCode)) !== null) {
+        functions.push(match[1]);
+    }
+    return functions;
+};
+
+// Function to extract public variable names (which have auto-generated getters)
+const extractPublicVariables = (solidityCode: string): string[] => {
+    const variableRegex = /(?:uint\d*|int\d*|string|bool|address|bytes\d*)\s+public\s+(\w+)(?:\s*=\s*[^;]+)?;/g;
+    const variables: string[] = [];
+    let match;
+    while ((match = variableRegex.exec(solidityCode)) !== null) {
+        variables.push(match[1]);
+    }
+    return variables;
+};
+
+// Function to extract required functions from test code
+const extractRequiredFunctions = (testCode: string, contractName: string): string[] => {
+    // Look for patterns like: simpleFunctions.functionName(, integerBasics.functionName(, etc.
+    const contractNameLower = contractName.charAt(0).toLowerCase() + contractName.slice(1);
+
+    // More specific patterns to avoid false positives - use proper escaping
+    const patterns = [
+        new RegExp(contractNameLower + '\\.(\\w+)\\(', 'g'), // simpleFunctions.add(
+        new RegExp(contractName + '\\.(\\w+)\\(', 'g'),      // SimpleFunctions.add(
+    ];
+
+    const functions: Set<string> = new Set();
+    const excludeFunctions = ['setUp', 'assertEq', 'assertTrue', 'assertFalse', 'assert', 'require', 'revert', 'type', 'max'];
+
+    for (const pattern of patterns) {
+        let match;
+        while ((match = pattern.exec(testCode)) !== null) {
+            const funcName = match[1];
+            if (!excludeFunctions.includes(funcName)) {
+                functions.add(funcName);
+            }
+        }
+        // Reset lastIndex for reuse
+        pattern.lastIndex = 0;
+    }
+
+    return Array.from(functions);
+};
+
+// Function to generate comprehensive error report for missing functions
+const generateMissingFunctionsReport = (userFunctions: string[], requiredFunctions: string[], lessonId: string): string => {
+    const missingFunctions = requiredFunctions.filter(func => !userFunctions.includes(func));
+
+    if (missingFunctions.length === 0) {
+        return '';
+    }
+
+    // Check if this is a variable-based lesson
+    const isVariableLesson = lessonId === 'understanding-variables-and-types';
+
+    let report = `Compilation failed: Missing required ${isVariableLesson ? 'variables' : 'functions'}\n\n`;
+    report += 'STDOUT: Compiler run failed:\n';
+
+    missingFunctions.forEach((func, index) => {
+        report += `Error (9582): Member "${func}" not found or not visible after argument-dependent lookup in contract.\n`;
+        report += `  --> Missing ${isVariableLesson ? 'variable' : 'function'} ${index + 1} of ${missingFunctions.length}\n`;
+        report += `   |\n`;
+
+        if (isVariableLesson) {
+            // Suggest variable declaration with appropriate type
+            const varType = func.includes('Uint') || func.includes('uint') ? 'uint256' :
+                          func.includes('String') || func.includes('string') ? 'string' :
+                          func.includes('Bool') || func.includes('bool') ? 'bool' :
+                          func.includes('Address') || func.includes('address') ? 'address' :
+                          func.includes('Bytes') || func.includes('bytes') ? 'bytes32' : 'uint256';
+            report += `   | ${varType} public ${func}; // Add this public variable\n`;
+        } else {
+            report += `   | function ${func}(...) public { /* implementation needed */ }\n`;
+        }
+
+        report += `   |\n\n`;
+    });
+
+    report += `Total missing ${isVariableLesson ? 'variables' : 'functions'}: ${missingFunctions.length}\n`;
+    report += `${isVariableLesson ? 'Variables to declare' : 'Functions to implement'}: ${missingFunctions.join(', ')}\n\n`;
+    report += 'STDERR: Compilation failed';
+
+    return report;
+};
+
 router.post('/test-solidity-external', async (req: Request, res: Response) => {
     let { code, lessonId } = req.body;
 
@@ -414,7 +550,7 @@ router.post('/test-solidity-external', async (req: Request, res: Response) => {
         'understanding-variables-and-types': { dir: 'UnderstandingVariablesAndTypes', testFile: 'UnderstandingVariablesAndTypes.t.sol', expectedContractName: 'VariableTypes' },
         'state-and-local-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol', expectedContractName: 'StateAndLocalVariables' },
         'understanding-functions': { dir: 'UnderstandingFunctions', testFile: 'UnderstandingFunctions.t.sol', expectedContractName: 'SimpleFunctions' },
-        'global-variables': { dir: 'StateAndLocalVariables', testFile: 'StateAndLocalVariables.t.sol', expectedContractName: 'StateAndLocalVariables' }
+        'global-variables': { dir: 'GlobalVariables', testFile: 'GlobalVariables.t.sol', expectedContractName: 'GlobalVariables' }
     };
 
     const lessonMapping = lessonDirectoryMap[lessonId];
@@ -438,6 +574,40 @@ router.post('/test-solidity-external', async (req: Request, res: Response) => {
     if (!userContractName) {
         return res.status(400).json({ error: 'Could not extract contract name from provided Solidity code.' });
     }
+
+    // PREPROCESSING: Check for missing functions and generate comprehensive error report
+    const userFunctions = extractFunctionNames(code);
+    const userVariables = extractPublicVariables(code);
+    const availableFunctions = [...userFunctions, ...userVariables]; // Combine explicit functions + auto-generated getters
+    const allRequiredFunctions = extractRequiredFunctions(testCode, lessonMapping.expectedContractName);
+
+    // For variable-based lessons, only check if variables are missing (not functions)
+    const isVariableLesson = lessonId === 'understanding-variables-and-types';
+
+    let requiredFunctions = allRequiredFunctions;
+    if (isVariableLesson) {
+        // For variable lessons, we only care about missing variables, not missing functions
+        // If all required functions are satisfied by public variables, don't report errors
+        const missingVariables = allRequiredFunctions.filter(func => !userVariables.includes(func));
+        requiredFunctions = missingVariables;
+    }
+
+    // Log preprocessing results
+    console.log(`✅ Preprocessing complete: Found ${userFunctions.length} user functions, ${userVariables.length} public variables, ${allRequiredFunctions.length} total required, ${requiredFunctions.length} missing`)
+
+    const missingFunctionsReport = generateMissingFunctionsReport(availableFunctions, requiredFunctions, lessonId);
+
+    if (missingFunctionsReport) {
+        console.log(`❌ Missing functions detected: ${requiredFunctions.filter(f => !availableFunctions.includes(f)).join(', ')}`);
+        return res.status(200).json({
+            success: false,
+            output: missingFunctionsReport,
+            passed: false,
+            method: 'external'
+        });
+    }
+
+    console.log(`✅ All required functions found: ${requiredFunctions.join(', ')}`);
 
     // Use the expected contract name for this lesson
     const expectedContractName = lessonMapping.expectedContractName;
