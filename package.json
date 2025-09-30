@@ -57,7 +57,8 @@
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "install-foundry": "node scripts/install-foundry.js"
   },
   "eslintConfig": {
     "extends": [
