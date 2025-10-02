@@ -52,6 +52,9 @@ COPY package*.json .npmrc ./
 # Copy Prisma schema (needed for postinstall script)
 COPY prisma ./prisma/
 
+# Copy scripts directory (needed for postinstall script)
+COPY scripts ./scripts/
+
 # Change ownership of app directory before installing dependencies
 RUN chown -R nodejs:nodejs /app
 
